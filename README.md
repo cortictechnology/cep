@@ -65,3 +65,7 @@ Please refer to the Python sample codes included in the ``examples`` folder to g
 ## How to contribute
 
 We welcome contributions from all our users. You can contribute by requesting features or reporting bugs under "Issues."  You can also submit proposed code updates through pull requests to our "dev" branch.
+
+## Follow us on social media
+
+If you are interested in upcoming features and applications of CEP, please follow us on [Twitter](https://twitter.com/CorticTechnolo1) or [LinkedIn](https://www.linkedin.com/company/cortic/).
