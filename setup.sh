@@ -1,7 +1,6 @@
 sudo apt update
 sudo apt -y full-upgrade
 
-curl -fsSL get.docker.com -o get-docker.sh && bash get-docker.sh
 sudo groupadd docker
 sudo gpasswd -a $USER docker
 sudo touch /etc/docker/daemon.json

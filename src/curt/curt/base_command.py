@@ -100,20 +100,6 @@ class BaseCommand:
     def on_message_sync(self, client, userdata, msg):
         data = msg.payload.decode()
         data = json.loads(data)
-        data_matched = True
-        # print("Got data")
-        # print(msg.topic, data["dataValue"]["worker"], data["dataValue"]["self_guid"])
-        # if self.remote_guid_to_sync is not None:
-        # if data["dataValue"]["worker"] == self.remote_worker_to_sync:
-        #     if data["dataValue"]["self_guid"] == self.remote_guid_to_sync:
-        #         self.remote_result = data
-        #     else:
-        #         data_matched = False
-        # else:
-        #     data_matched = False
-
-        # if not data_matched:
-        #     # print("Putting data into unclaimed queue")
         self.unclaimed_data.append(data)
 
     def on_connect_sync_stream(self, client, userdata, flags, rc):
@@ -126,16 +112,6 @@ class BaseCommand:
         if data["dataValue"]["worker"] == self.remote_worker_to_sync_stream:
             if data["dataValue"]["self_guid"] == self.remote_guid_to_sync_stream:
                 self.remote_result_stream = data
-        # else:
-        #     print(self.result_channels)
-        #     for channel in self.result_channels:
-        #         callback_remaining = []
-        #         for result_callback in self.result_channels[channel]:
-        #             if result_callback[0] == data['dataValue']['self_guid']:
-        #                 result_callback[1](data)
-        #             else:
-        #                 callback_remaining.append(result_callback)
-        #         self.result_channels[channel] = callback_remaining
 
     def on_connect_hearbeat(self, client, userdata, flags, rc):
         # heartbeat client should subscribe to heartbeat
@@ -239,19 +215,12 @@ class BaseCommand:
             },
         }
         task = json.dumps(task)
-        # if isinstance(source_channel, list):
         for channel in source_channel:
             if channel != "":
                 if channel not in worker.input_channels:
                     self.subscribe_to(worker, channel)
                     worker.input_channels.append(channel)
-        # else:
-        #     if source_channel != "":
-        #         if source_channel not in worker.input_channels:
-        #             self.subscribe_to(worker, source_channel)
-        #             worker.input_channels.append(source_channel)
         self.command_client.publish(worker.task_channel, task, retain=True)
-        # return [worker.output_channel + "/" + worker.name, self_guid, worker.name]
         return Handler(
             worker.output_channel + "/" + worker.name, self_guid, worker.name
         )
@@ -260,27 +229,15 @@ class BaseCommand:
         # if callback is None:
         if not for_streaming:
             remote_result = None
-            # self.remote_result = None
-            # self.remote_worker_to_sync = handler.name
-            # self.remote_guid_to_sync = handler.guid
-            # if self.current_sync_channel != handler.output_channel:
-            #    if self.current_sync_channel != "":
-            # print("Unsubscribe from:", self.current_sync_channel)
-            #         self.sync_client.unsubscribe(self.current_sync_channel)
             if handler.output_channel not in self.current_listening_topics:
                 self.sync_client.subscribe(handler.output_channel)
                 self.current_listening_topics.append(handler.output_channel)
-            # print("Subscribe to:", handler.output_channel)
-            # self.current_sync_channel = handler.output_channel
             while remote_result == None:
                 for data in list(self.unclaimed_data):
                     if data["dataValue"]["worker"] == handler.name:
                         if data["dataValue"]["self_guid"] == handler.guid:
                             remote_result = data
                             self.unclaimed_data.remove(data)
-                # time.sleep(0.001)
-            # self.remote_worker_to_sync = None
-            # self.remote_guid_to_sync = None
             return remote_result
         else:
             self.remote_result_stream = None
@@ -298,17 +255,3 @@ class BaseCommand:
             self.remote_worker_to_sync_stream = None
             self.remote_guid_to_sync_stream = None
             return self.remote_result_stream
-
-        # if self.current_sync_channel != "":
-        #     self.sync_client.unsubscribe(self.current_sync_channel)
-        # self.remote_result = None
-        # self.remote_worker_to_sync = handler[2]
-        # self.remote_guid_to_sync = handler[1]
-        # self.sync_client.subscribe(handler[0])
-        # print("Subscribed to:", handler[0])
-        # self.current_sync_channel = handler[0]
-        # while self.remote_result == None:
-        #     time.sleep(0.005)
-        # self.sync_client.unsubscribe(handler[0])
-        # self.current_sync_channel = ""
-        # return self.remote_result

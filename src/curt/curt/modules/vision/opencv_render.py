@@ -304,7 +304,7 @@ class OpenCVRender(BaseRender):
                     cv2.circle(img, (pt[0], pt[1]), 3, JOINT_COLOR[i], -1)
         return img[pad_h : pad_h + h, pad_w : pad_w + w]
 
-    def reander_results(self, data, window_id):
+    def render_results(self, data, window_id):
         img = None
         if isinstance(data["mirror_oakd_rgb_camera"], str):
             data["mirror_oakd_rgb_camera"] = decode_image_byte(
