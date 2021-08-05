@@ -1,12 +1,16 @@
-sudo apt update
-sudo apt -y full-upgrade
-
+curl -sSL get.docker.com -o get-docker.sh
+sudo sh get-docker.sh 
 sudo groupadd docker
 sudo gpasswd -a $USER docker
 sudo touch /etc/docker/daemon.json
 sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
 sudo mkdir ~/cait_workspace
 sudo systemctl restart docker
+rm get-docker.sh
+
+sudo apt update
+sudo apt -y full-upgrade
+
 sudo docker pull homeassistant/home-assistant:stable
 sudo docker pull cortictech/speech:0.52
 sudo docker pull cortictech/nlp:0.52
@@ -31,7 +35,6 @@ sudo touch /opt/accounts
 sudo npm install -g configurable-http-proxy
 sudo pip3 install notebook
 sudo pip3 install jupyterhub
-sudo rm get-docker.sh
 sudo cp setup_scripts/chkpass.sh /opt
 sudo chmod +x /opt/chkpass.sh
 cp -R setup_scripts/homeassistant /home/pi
