@@ -44,10 +44,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable curt_containers.service
 sudo systemctl enable cait_webapp.service
 
-git clone https://github.com/respeaker/seeed-voicecard.git
-cd seeed-voicecard
-sudo ./install.sh
-
 echo "export CURT_PATH=$PWD/src/curt/" >> ~/.bashrc 
 echo "export CAIT_PATH=$PWD/src/cait/" >> ~/.bashrc 
 echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> ~/.bashrc 
@@ -58,4 +54,9 @@ sudo sh -c 'echo "export CAIT_PATH=$PWD/src/cait/" >> /root/.bashrc'
 sudo sh -c 'echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> /root/.bashrc'
 sudo sh -c 'echo "export PYTHONPATH=$PWD/src/curt/:$PWD/src/cait/:$PYTHONPATH" >> /root/.bashrc'
 
+git clone https://github.com/respeaker/seeed-voicecard.git
+cd seeed-voicecard
+sudo ./install.sh
+cd ..
+rm -rf seeed-voicecard
 sudo reboot now
