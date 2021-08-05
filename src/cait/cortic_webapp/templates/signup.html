@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/images/favicon.ico"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/signup.css">
+    <script src="{{url_for('static', filename='js/string_locale.js') }}"></script> 
+</head>
+<body>
+    <div class="user">
+        <header class="user__header">
+            <img src="/static/images/cortic_logo.png" alt="" class="logo"/>
+            <h1 id="signupTitle" class="user__title"></h1>
+            <script>document.getElementById('signupTitle').innerHTML = localizedStrings.signupTitle[locale];</script>
+        </header>
+        
+        <div class="form">
+            <div class="form__group">
+                <input type="text" id="username" placeholder="" class="form__input" />
+                <script>document.getElementById('username').placeholder = localizedStrings.username[locale];</script>
+            </div>
+            
+            <div class="form__group">
+                <input type="password" id="pass" placeholder="" class="form__input" />
+                <script>document.getElementById('pass').placeholder = localizedStrings.pass[locale];</script>
+            </div>
+            
+            <button id="register" class="btn-register" type="button"></button>
+            <script>document.getElementById('register').innerHTML = localizedStrings.register[locale];</script>
+            <button id="cancel" class="btn-cancel" type="button" onclick="index()"></button>
+            <script>document.getElementById('cancel').innerHTML = localizedStrings.cancel[locale];</script>
+        </div>
+    </div>
+
+    <script>
+        function index() {
+            window.location.href = "/";
+        }
+    </script>
+    <script src="{{url_for('static', filename='vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+    <script src="{{url_for('static', filename='js/signup.js') }}"></script>
+</body>
+</html>

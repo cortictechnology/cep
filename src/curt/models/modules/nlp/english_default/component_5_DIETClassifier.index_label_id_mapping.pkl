@@ -1,0 +1,1 @@
+{"0": "user_answer_affirmative", "1": "user_give_name", "2": "user_remain_anonymous", "3": "user_say_follow_face", "4": "user_say_move_backward", "5": "user_say_move_forward", "6": "user_say_turn_left", "7": "user_say_turn_right"}

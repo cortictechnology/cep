@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CAIT Visual Programming</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css"
+    integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/loading-bar.css">
+  <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+  <link rel="icon" type="image/png" href="/static/images/favicon.ico" />
+  <script type=text/javascript src="{{url_for('static', filename='js/blockly_compressed.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/blocks_compressed.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/acorn_interpreter.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/python_compressed.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/javascript_compressed.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/fr.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+  <script src="{{url_for('static', filename='js/string_locale.js') }}"></script>
+  <script src="{{url_for('static', filename='js/version.js') }}"></script>
+  <script>var locale = "fr/CA";</script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 140%;
+      float: left;
+      margin-right: 10px;
+    }
+
+    table {
+      height: 100%;
+      width: 100%;
+    }
+
+    #blocklyArea {
+      height: 99%;
+    }
+
+    .cameraFeed {
+      background-image: url('/static/img/background.jpg');
+      width: 30vw;
+    }
+
+    .responsive {
+      width: 100%;
+      max-width: 480px;
+      height: auto;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .blocklyText,
+    .blocklyHtmlInput,
+    .blocklyTreeLabel {
+      font-family: 'Kanit', sans-serif !important;
+    }
+
+    .blocklyTreeLabel {
+      font-size: 18px !important;
+      color: black;
+    }
+
+    .blocklyTreeRow {
+      margin-top: 7px !important;
+      margin-bottom: 7px !important;
+    }
+
+    .blocklyTreeIconCustom {
+      background: none !important;
+      font-family: 'Font Awesome\ 5 Free';
+      font-weight: 900;
+      margin-top: 0px;
+      margin-bottom: 7px;
+      margin-left: 7px;
+      margin-right: 7px;
+
+    }
+
+    .blocklyTreeIconCustom::before {
+      content: "\f12e";
+      color: #1d8cf7;
+    }
+
+    .blocklyTreeIconCustom.logic::before {
+      content: "\f074";
+      color: #009FA1;
+    }
+
+    .blocklyTreeIconCustom.loops::before {
+      content: "\f01e";
+      color: #00A500;
+    }
+
+    .blocklyTreeIconCustom.math::before {
+      content: "\f1ec";
+      color: #9000CD;
+    }
+
+    .blocklyTreeIconCustom.text::before {
+      content: "\f031";
+      color: #B2820B;
+    }
+
+    .blocklyTreeIconCustom.dicts::before {
+      content: "\f02d";
+      color: #001F4E;
+    }
+
+    .blocklyTreeIconCustom.lists::before {
+      content: "\f0ca";
+      color: #D5133A;
+    }
+
+    .blocklyTreeIconCustom.colour::before {
+      content: "\f53f";
+      color: #F7C773;
+    }
+
+    .blocklyTreeIconCustom.variables::before {
+      content: "\f0c9";
+      color: #D5133A;
+    }
+
+    .blocklyTreeIconCustom.functions::before {
+      content: "\f141";
+      color: #3252D4;
+    }
+
+    .blocklyTreeIconCustom.vision::before {
+      content: "\f06e";
+      color: #5D0095;
+    }
+
+    .blocklyTreeIconCustom.voice::before {
+      content: "\f2a2";
+      color: #019191;
+    }
+
+    .blocklyTreeIconCustom.nlp::before {
+      content: "\f086";
+      color: #3ACFF7;
+    }
+
+    .blocklyTreeIconCustom.control::before {
+      content: "\f544";
+      color: #F78C00;
+    }
+
+    .blocklyTreeIconCustom.smarthome::before {
+      content: "\f015";
+      color: #F70090;
+    }
+
+    .blocklyTreeIconCustom.snippets::before {
+      content: "\f5fc";
+      color: #3252D4;
+    }
+
+    .loader-wrapper {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #242f3f;
+      opacity: 0.75;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes glow {
+      50% {
+        border-color: lime;
+        width: 95%;
+        box-shadow: 0px 0px 10px -2px green;
+      }
+
+      100% {
+        border-color: green;
+        width: 35%;
+        box-shadow: 0px 0px 10px -2px green;
+      }
+    }
+
+    .sep {
+      width: 35%;
+      border-bottom: 2px solid green;
+      margin-bottom: 20px;
+      animation: glow 8s infinite;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: black;
+      width: 75%;
+      padding: 10%;
+      flex-wrap: wrap;
+    }
+
+    .loader {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 20px;
+    }
+
+    @keyframes load {
+      50% {
+        transform: rotatez(180deg) scale(0.2);
+        border-color: orange;
+      }
+
+      100% {
+        transform: rotatez(360deg) scale(1.1);
+      }
+    }
+
+    @keyframes load7 {
+      100% {
+        transform: rotatez(360deg);
+      }
+    }
+
+    .loader::before {
+      content: "";
+      color: white;
+      height: 50px;
+      width: 50px;
+      background: transparent;
+      border-radius: 50%;
+      border: 10px solid rgb(255, 196, 0);
+      border-color: rgb(253, 166, 51) rgb(253, 177, 42) rgb(254, 186, 44) rgb(254, 196, 42);
+      animation: load7 .6s infinite ease-in-out;
+      box-shadow: 0px 0px 40px -2px skyblue;
+    }
+
+    i {
+      font-size: 60%
+    }
+
+    button {
+      display: inline-block;
+      height: 40px;
+      padding: 0;
+      margin: 0;
+      vertical-align: top;
+      width: 40px;
+      border: none;
+      background-color: #FFFFFF;
+      cursor: pointer;
+    }
+
+    #new {
+      background-image: url('/static/images/icons8-new-file-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    #save {
+      background-image: url('/static/images/icons-save-close-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    #load {
+      background-image: url('/static/images/icons-open-file-folder-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    #run {
+      background-image: url('/static/images/icons-play-property-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+      margin-left: 40px;
+    }
+
+    #stop {
+      background-image: url('/static/images/icons-stop-sign-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    #genPython {
+      background-image: url('/static/images/icons-python-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+      margin-left: 40px;
+    }
+
+    #genPyNB {
+      background-image: url('/static/images/Jupyter.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    #logout {
+      background-image: url('/static/images/icons-logout-96.png');
+      background-size: 40px 40px;
+      height: 40px;
+      width: 40px;
+    }
+
+    .vl {
+      display: inline-block;
+      border-left: 2px solid gray;
+      height: 40px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .leftButton {
+      width: 60px;
+    }
+  </style>
+</head>
+
+<body>
+  <table>
+    <tr>
+      <td>
+        <h1><span id="vpTitle"></span><i id="version"></i></h1>
+        <script>document.getElementById('vpTitle').innerHTML = localizedStrings.vpTitle[locale];</script>
+        <script>document.getElementById('version').innerHTML = "    version: " + VERSION;</script>
+      </td>
+      <td>
+        <span id="loggedUser" style="float: right;"></span>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <script>
+          function click_new() {
+            $("#new_dialog").dialog(
+              {
+                buttons: [
+                  {
+                    id: "yes_save",
+                    text: "Yes",
+                    class: 'leftButton',
+                    click: new_workspace_save
+                  },
+                  {
+                    id: "no_save",
+                    text: "No",
+                    class: 'leftButton',
+                    click: new_workspace
+                  }
+                ]
+              }
+            );
+          }
+        </script>
+        <button id="new" onclick="click_new()"></button>
+        <script>document.getElementById('new').title = localizedStrings.new[locale];</script>
+        <button id="load" onclick="load_workspace()"></button>
+        <script>document.getElementById('load').title = localizedStrings.load[locale];</script>
+        <button id="save" onclick="save_workspace()"></button>
+        <script>document.getElementById('save').title = localizedStrings.save[locale];</script>
+        <!-- <div class="vl"></div> -->
+        <button id="run" onclick="run_code()"></button>
+        <script>document.getElementById('run').title = localizedStrings.run[locale];</script>
+        <button id="stop" onclick="stop_code()"></button>
+        <script>document.getElementById('stop').title = localizedStrings.stop[locale];</script>
+        <!-- <div class="vl"></div> -->
+        <button id="genPython" onclick="gen_py_code()"></button>
+        <script>document.getElementById('genPython').title = localizedStrings.genPython[locale];</script>
+        <button id="genPyNB" onclick="gen_py_notebook()"></button>
+        <script>document.getElementById('genPyNB').title = localizedStrings.genPyNB[locale];</script>
+        <button id="logout" onclick="logout()" style="float: right;"></button>
+        <script>document.getElementById('logout').title = localizedStrings.logout[locale];</script>
+        <select name="language" id="languageDropdown" onchange="switch_lang()"
+          style="float: right; margin-top: 10px; margin-right: 30px;">
+          <option value="english">English</option>
+          <option value="french" selected>Française</option>
+          <option value="chinese">中文(简体)</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td id="blocklyArea">
+      </td>
+      <td id="camereFeedArea" class="cameraFeed">
+        <!-- {{ url_for('camerafeed') }} -->
+        <!-- /static/img/video_placeholder.png -->
+        <img src="/static/img/video_placeholder.png" id="cameraImage" class="responsive">
+      </td>
+    </tr>
+  </table>
+
+  <div id="blocklyDiv" style="position: absolute"></div>
+
+  <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+    <category name="Basiques" colour="#1d8cf7" iconclass="blocklyTreeIconCustom">
+      <block type="setup_block"></block>
+      <block type="main_block"></block>
+      <block type="set_parameter"></block>
+    </category>
+    <sep></sep>
+    <category name="Logique" colour="#009FA1" iconclass="blocklyTreeIconCustom logic">
+      <block type="controls_if"></block>
+      <block type="logic_compare">
+        <field name="OP">EQ</field>
+      </block>
+      <block type="logic_operation">
+        <field name="OP">AND</field>
+      </block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean">
+        <field name="BOOL">TRUE</field>
+      </block>
+      <block type="logic_null"></block>
+      <block type="logic_ternary"></block>
+    </category>
+    <sep></sep>
+    <category name="Boucles" colour="#00A500" iconclass="blocklyTreeIconCustom loops">
+      <block type="controls_repeat_ext">
+        <value name="TIMES">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="controls_whileUntil">
+        <field name="MODE">WHILE</field>
+      </block>
+      <block type="controls_for">
+        <field name="VAR" id="7nMd{`N:iVm0i3CY1cyg">i</field>
+        <value name="FROM">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="TO">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="BY">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="controls_forEach">
+        <field name="VAR" id="BR^S;_@U{]RZ9PnSb4iI">j</field>
+      </block>
+      <block type="controls_flow_statements">
+        <field name="FLOW">BREAK</field>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Mathématiques" colour="#9000CD" iconclass="blocklyTreeIconCustom math">
+      <block type="math_number">
+        <field name="NUM">0</field>
+      </block>
+      <block type="math_arithmetic">
+        <field name="OP">ADD</field>
+        <value name="A">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="B">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_single">
+        <field name="OP">ROOT</field>
+        <value name="NUM">
+          <shadow type="math_number">
+            <field name="NUM">9</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_trig">
+        <field name="OP">SIN</field>
+        <value name="NUM">
+          <shadow type="math_number">
+            <field name="NUM">45</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_constant">
+        <field name="CONSTANT">PI</field>
+      </block>
+      <block type="math_number_property">
+        <mutation divisor_input="false"></mutation>
+        <field name="PROPERTY">EVEN</field>
+        <value name="NUMBER_TO_CHECK">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_round">
+        <field name="OP">ROUND</field>
+        <value name="NUM">
+          <shadow type="math_number">
+            <field name="NUM">3.1</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_on_list">
+        <mutation op="SUM"></mutation>
+        <field name="OP">SUM</field>
+      </block>
+      <block type="math_modulo">
+        <value name="DIVIDEND">
+          <shadow type="math_number">
+            <field name="NUM">64</field>
+          </shadow>
+        </value>
+        <value name="DIVISOR">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_constrain">
+        <value name="VALUE">
+          <shadow type="math_number">
+            <field name="NUM">50</field>
+          </shadow>
+        </value>
+        <value name="LOW">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="HIGH">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_random_int">
+        <value name="FROM">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="TO">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="math_random_float"></block>
+    </category>
+    <sep></sep>
+    <category name="Texte" colour="#B2820B" iconclass="blocklyTreeIconCustom text">
+      <block type="comment"></block>
+      <block type="text">
+        <field name="TEXT"></field>
+      </block>
+      <block type="text_join">
+        <mutation items="2"></mutation>
+      </block>
+      <block type="text_append">
+        <field name="VAR" id="cJIyv@7?=e1awWt,DE?b">item</field>
+        <value name="TEXT">
+          <shadow type="text">
+            <field name="TEXT"></field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_length">
+        <value name="VALUE">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_isEmpty">
+        <value name="VALUE">
+          <shadow type="text">
+            <field name="TEXT"></field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_indexOf">
+        <field name="END">FIRST</field>
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR" id="*Hi;*;oHf1}3TWY/rw~s">text</field>
+          </block>
+        </value>
+        <value name="FIND">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_charAt">
+        <mutation at="true"></mutation>
+        <field name="WHERE">FROM_START</field>
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR" id="*Hi;*;oHf1}3TWY/rw~s">text</field>
+          </block>
+        </value>
+      </block>
+      <block type="text_getSubstring">
+        <mutation at1="true" at2="true"></mutation>
+        <field name="WHERE1">FROM_START</field>
+        <field name="WHERE2">FROM_START</field>
+        <value name="STRING">
+          <block type="variables_get">
+            <field name="VAR" id="*Hi;*;oHf1}3TWY/rw~s">text</field>
+          </block>
+        </value>
+      </block>
+      <block type="text_changeCase">
+        <field name="CASE">UPPERCASE</field>
+        <value name="TEXT">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_trim">
+        <field name="MODE">BOTH</field>
+        <value name="TEXT">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_print">
+        <value name="TEXT">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="text_prompt_ext">
+        <mutation type="TEXT"></mutation>
+        <field name="TYPE">TEXT</field>
+        <value name="TEXT">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Dictionnaires" colour="#001F4E" iconclass="blocklyTreeIconCustom dicts">
+      <block type="create_empty_dictionary"></block>
+      <block type="dictionary_add"></block>
+      <block type="dictionary_keys"></block>
+      <block type="dictionary_value"></block>
+      <block type="dictionary_value_set"></block>
+      <block type="dictionary_remove"></block>
+    </category>
+    <sep></sep>
+    <category name="Listes" colour="#D5133A" iconclass="blocklyTreeIconCustom lists">
+      <block type="lists_create_with">
+        <mutation items="0"></mutation>
+      </block>
+      <block type="lists_create_with">
+        <mutation items="3"></mutation>
+      </block>
+      <block type="lists_repeat">
+        <value name="NUM">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="lists_length"></block>
+      <block type="lists_isEmpty"></block>
+      <block type="lists_indexOf">
+        <field name="END">FIRST</field>
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR" id="w5i!(pYvm?df]jh(n*Y2">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_getIndex">
+        <mutation statement="false" at="true"></mutation>
+        <field name="MODE">GET</field>
+        <field name="WHERE">FROM_START</field>
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR" id="w5i!(pYvm?df]jh(n*Y2">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_setIndex">
+        <mutation at="true"></mutation>
+        <field name="MODE">SET</field>
+        <field name="WHERE">FROM_START</field>
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR" id="w5i!(pYvm?df]jh(n*Y2">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_getSublist">
+        <mutation at1="true" at2="true"></mutation>
+        <field name="WHERE1">FROM_START</field>
+        <field name="WHERE2">FROM_START</field>
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR" id="w5i!(pYvm?df]jh(n*Y2">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_split">
+        <mutation mode="SPLIT"></mutation>
+        <field name="MODE">SPLIT</field>
+        <value name="DELIM">
+          <shadow type="text">
+            <field name="TEXT">,</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="lists_sort">
+        <field name="TYPE">NUMERIC</field>
+        <field name="DIRECTION">1</field>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Couleur" colour="#F7C773" iconclass="blocklyTreeIconCustom colour">
+      <block type="colour_picker">
+        <field name="COLOUR">#ff0000</field>
+      </block>
+      <block type="colour_random"></block>
+      <block type="colour_rgb">
+        <value name="RED">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="GREEN">
+          <shadow type="math_number">
+            <field name="NUM">50</field>
+          </shadow>
+        </value>
+        <value name="BLUE">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="colour_blend">
+        <value name="COLOUR1">
+          <shadow type="colour_picker">
+            <field name="COLOUR">#ff0000</field>
+          </shadow>
+        </value>
+        <value name="COLOUR2">
+          <shadow type="colour_picker">
+            <field name="COLOUR">#3333ff</field>
+          </shadow>
+        </value>
+        <value name="RATIO">
+          <shadow type="math_number">
+            <field name="NUM">0.5</field>
+          </shadow>
+        </value>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Variables" colour="#D5133A" custom="VARIABLE" iconclass="blocklyTreeIconCustom variables">
+    </category>
+    <sep></sep>
+    <category name="Functions" colour="#3252D4" custom="PROCEDURE" iconclass="blocklyTreeIconCustom functions">
+    </category>
+    <sep></sep>
+    <sep></sep>
+    <category name="Vision" colour="#5D0095" iconclass="blocklyTreeIconCustom vision">
+      <category name="Raspberry Pi Vision" colour="#5D0095" iconclass="blocklyTreeIconCustom vision">
+        <block type="init_vision_pi"></block>
+        <block type="vision_detect_face"></block>
+        <block type="vision_recognize_face"></block>
+        <block type="vision_add_person"></block>
+        <block type="vision_remove_person"></block>
+        <block type="vision_detect_objects"></block>
+        <block type="vision_classify_image"></block>
+      </category>
+      <category name="OAK-D Vision" colour="#5D0095" iconclass="blocklyTreeIconCustom vision">
+        <block type="init_vision"></block>
+        <block type="add_pipeline_node"></block>
+        <block type="vision_detect_face"></block>
+        <block type="vision_recognize_face"></block>
+        <block type="vision_add_person"></block>
+        <block type="vision_remove_person"></block>
+        <block type="vision_detect_objects"></block>
+        <block type="vision_classify_image"></block>
+      </category>
+    </category>
+    <category name="Speech" colour="#019191" iconclass="blocklyTreeIconCustom voice">
+      <block type="init_voice"></block>
+      <block type="listen"></block>
+      <block type="say"></block>
+    </category>
+    <category name="NLP" colour="#3ACFF7" iconclass="blocklyTreeIconCustom nlp">
+      <block type="init_nlp"></block>
+      <block type="analyze"></block>
+    </category>
+    <category name="Control" colour="#F78C00" iconclass="blocklyTreeIconCustom control">
+      <block type="init_control"></block>
+      <block type="add_control_hub"></block>
+      <block type="ev3_motor_block"></block>
+      <block type="robot_inventor_motor_block"></block>
+      <block type="init_pid"></block>
+      <block type="update_pid"></block>
+      <block type="motor_control_block"></block>
+      <block type="motor_control"></block>
+      <block type="motor_rotate"></block>
+      <block type="motor_position"></block>
+      <block type="motor_power"></block>
+    </category>
+    <category name="Smart Home" colour="#F70090" iconclass="blocklyTreeIconCustom smarthome">
+      <block type="init_smarthome"></block>
+      <block type="lights"></block>
+      <block type="media_player"></block>
+    </category>
+    <category name="Cortic Snippets" colour="#3252D4" iconclass="blocklyTreeIconCustom snippets">
+      <block type="get_name"></block>
+    </category>
+  </xml>
+  <div id="loader" class="loader-wrapper">
+    <div class="loader"></div>
+    <div id="loading_text" style="color: white"></div>
+    <!-- <div class="ldBar" data-preset="bubble" data-value="50"></div> -->
+  </div>
+  <script type=text/javascript src="{{url_for('static', filename='js/paho-mqtt-min.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/workspace_utils.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/entry_setup.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/cait_functions.js') }}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='js/cait_blocks.js') }}"></script>
+  <script>
+    function logout() {
+      window.location.href =
+        window.location.protocol + "//" +
+        "logout" + ":" + "logout" + "@" +
+        window.location.hostname + "/programming";
+    }
+  </script>
+  <script>
+    var blocklyArea = document.getElementById('blocklyArea');
+    var blocklyDiv = document.getElementById('blocklyDiv');
+    var loader = document.getElementById('loader');
+    var workspace = Blockly.inject(blocklyDiv,
+      {
+        toolbox: document.getElementById('toolbox'),
+        theme: Blockly.Themes.Cortic,
+        zoom:
+        {
+          controls: true,
+          wheel: true,
+          startScale: 1.0,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2
+        },
+        grid:
+        {
+          spacing: 40,
+          length: 3,
+          colour: '#ccc',
+          snap: true
+        },
+        trashcan: true
+      });
+    workspace.addChangeListener(updateFunction);
+    var onresize = function (e) {
+      // Compute the absolute coordinates and dimensions of blocklyArea.
+      var element = blocklyArea;
+      var x = 0;
+      var y = 0;
+      do {
+        x += element.offsetLeft;
+        y += element.offsetTop;
+        element = element.offsetParent;
+      } while (element);
+      // Position blocklyDiv over blocklyArea.
+      blocklyDiv.style.left = x + 'px';
+      blocklyDiv.style.top = y + 'px';
+      blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
+      blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
+      Blockly.svgResize(workspace);
+      loader.style.left = workspace.toolbox_.getWidth() + 'px';
+      loader.style.top = y + 'px';
+      loader.style.width = blocklyArea.offsetWidth - workspace.toolbox_.getWidth() + 'px';
+      loader.style.height = blocklyArea.offsetHeight + 'px';
+      loader.style.display = "none";
+    };
+    window.addEventListener('resize', onresize, false);
+    onresize();
+    Blockly.svgResize(workspace);
+  </script>
+
+  <div id="new_dialog" title="New workspace">
+    <p>Voulez-vous enregistrer votre espace de travail actuel?</p>
+  </div>
+
+</body>
+
+</html>

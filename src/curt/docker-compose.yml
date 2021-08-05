@@ -1,0 +1,67 @@
+version: '3'
+services:
+    curt_broker:
+       network_mode: "host"
+       privileged: true
+       image: "cortictech/broker:0.51"
+       restart: always 
+       volumes:
+           - ./curt/modules/broker:/data
+       command: bash -c "python3 /data/main.py"
+
+    curt_vision:
+        network_mode: "host"
+        privileged: true
+        image: "cortictech/vision:0.52"
+        restart: always 
+        environment:
+            - PYTHONPATH=/data:/root/tvm/python
+        volumes:
+            - /lib/modules:/lib/modules
+            - /dev:/dev
+            - ./:/data
+            - ./models/modules/vision/platforms:/models
+        user: root
+        command:  bash -c "python3 /data/curt/modules/vision/main.py"
+
+    curt_voice:
+        network_mode: "host"
+        privileged: true
+        image: "cortictech/speech:0.52"
+        restart: always 
+        environment:
+            - PYTHONPATH=/data
+        volumes:
+            - /sys/bus/usb:/sys/bus/usb
+            - /dev/bus/usb:/dev/bus/usb
+            - /dev/snd:/dev/snd
+            - /usr/share/alsa/:/usr/share/alsa/
+            - ./:/data
+            - ./models/modules/vision/platforms:/models
+        user: root
+        command:  bash -c "python3 /data/curt/modules/voice/main.py"
+
+    curt_control:
+        network_mode: "host"
+        privileged: true
+        image: "cortictech/control:0.52"
+        restart: always 
+        environment:
+            - PYTHONPATH=/data
+        volumes:
+            - /dev:/dev
+            - ./:/data
+        user: root
+        command:  bash -c "python3 /data/curt/modules/control/main.py"
+
+    curt_nlp:
+        network_mode: "host"
+        privileged: true
+        image: "cortictech/nlp:0.52"
+        restart: always 
+        environment:
+            - PYTHONPATH=/data
+        volumes:
+        - ./:/data
+        - ./models/modules/nlp:/models
+        command: bash -c "python3 /data/curt/modules/nlp/main.py"

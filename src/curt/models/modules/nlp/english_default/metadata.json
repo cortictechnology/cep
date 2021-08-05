@@ -1,0 +1,234 @@
+{
+    "language": "en",
+    "pipeline": [
+        {
+            "intent_tokenization_flag": false,
+            "intent_split_symbol": "_",
+            "case_sensitive": true,
+            "name": "WhitespaceTokenizer",
+            "class": "rasa.nlu.tokenizers.whitespace_tokenizer.WhitespaceTokenizer"
+        },
+        {
+            "name": "RegexFeaturizer",
+            "file": "component_1_RegexFeaturizer.pkl",
+            "class": "rasa.nlu.featurizers.sparse_featurizer.regex_featurizer.RegexFeaturizer"
+        },
+        {
+            "features": [
+                [
+                    "low",
+                    "title",
+                    "upper"
+                ],
+                [
+                    "BOS",
+                    "EOS",
+                    "low",
+                    "upper",
+                    "title",
+                    "digit"
+                ],
+                [
+                    "low",
+                    "title",
+                    "upper"
+                ]
+            ],
+            "name": "LexicalSyntacticFeaturizer",
+            "file": "component_2_LexicalSyntacticFeaturizer",
+            "class": "rasa.nlu.featurizers.sparse_featurizer.lexical_syntactic_featurizer.LexicalSyntacticFeaturizer"
+        },
+        {
+            "use_shared_vocab": false,
+            "analyzer": "word",
+            "token_pattern": "(?u)\\b\\w\\w+\\b",
+            "strip_accents": null,
+            "stop_words": null,
+            "min_df": 1,
+            "max_df": 1.0,
+            "min_ngram": 1,
+            "max_ngram": 1,
+            "max_features": null,
+            "lowercase": true,
+            "OOV_token": null,
+            "OOV_words": [],
+            "name": "CountVectorsFeaturizer",
+            "file": "component_3_CountVectorsFeaturizer.pkl",
+            "class": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer"
+        },
+        {
+            "use_shared_vocab": false,
+            "analyzer": "char_wb",
+            "token_pattern": "(?u)\\b\\w\\w+\\b",
+            "strip_accents": null,
+            "stop_words": null,
+            "min_df": 1,
+            "max_df": 1.0,
+            "min_ngram": 1,
+            "max_ngram": 4,
+            "max_features": null,
+            "lowercase": true,
+            "OOV_token": null,
+            "OOV_words": [],
+            "name": "CountVectorsFeaturizer",
+            "file": "component_4_CountVectorsFeaturizer.pkl",
+            "class": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer"
+        },
+        {
+            "hidden_layers_sizes": {
+                "text": [],
+                "label": []
+            },
+            "share_hidden_layers": false,
+            "transformer_size": 256,
+            "number_of_transformer_layers": 2,
+            "number_of_attention_heads": 4,
+            "use_key_relative_attention": false,
+            "use_value_relative_attention": false,
+            "max_relative_position": null,
+            "unidirectional_encoder": false,
+            "batch_size": [
+                64,
+                256
+            ],
+            "batch_strategy": "balanced",
+            "epochs": 100,
+            "random_seed": null,
+            "learning_rate": 0.001,
+            "embedding_dimension": 20,
+            "dense_dimension": {
+                "text": 512,
+                "label": 20
+            },
+            "number_of_negative_examples": 20,
+            "similarity_type": "inner",
+            "loss_type": "softmax",
+            "ranking_length": 10,
+            "maximum_positive_similarity": 0.8,
+            "maximum_negative_similarity": -0.4,
+            "use_maximum_negative_similarity": true,
+            "scale_loss": false,
+            "regularization_constant": 0.002,
+            "negative_margin_scale": 0.8,
+            "drop_rate": 0.2,
+            "drop_rate_attention": 0,
+            "weight_sparsity": 0.8,
+            "use_sparse_input_dropout": true,
+            "use_dense_input_dropout": true,
+            "evaluate_every_number_of_epochs": 20,
+            "evaluate_on_number_of_examples": 0,
+            "intent_classification": true,
+            "entity_recognition": true,
+            "use_masked_language_model": false,
+            "BILOU_flag": true,
+            "tensorboard_log_directory": null,
+            "tensorboard_log_level": "epoch",
+            "name": "DIETClassifier",
+            "file": "component_5_DIETClassifier",
+            "class": "rasa.nlu.classifiers.diet_classifier.DIETClassifier"
+        },
+        {
+            "BILOU_flag": true,
+            "features": [
+                [
+                    "low",
+                    "title",
+                    "upper"
+                ],
+                [
+                    "low",
+                    "bias",
+                    "prefix5",
+                    "prefix2",
+                    "suffix5",
+                    "suffix3",
+                    "suffix2",
+                    "upper",
+                    "title",
+                    "digit",
+                    "pattern"
+                ],
+                [
+                    "low",
+                    "title",
+                    "upper"
+                ]
+            ],
+            "max_iterations": 50,
+            "L1_c": 0.1,
+            "L2_c": 0.1,
+            "name": "CRFEntityExtractor",
+            "files": {
+                "entity": "component_6_CRFEntityExtractor.entity.pkl"
+            },
+            "class": "rasa.nlu.extractors.crf_entity_extractor.CRFEntityExtractor"
+        },
+        {
+            "name": "EntitySynonymMapper",
+            "file": null,
+            "class": "rasa.nlu.extractors.entity_synonyms.EntitySynonymMapper"
+        },
+        {
+            "hidden_layers_sizes": {
+                "text": [
+                    256,
+                    128
+                ],
+                "label": [
+                    256,
+                    128
+                ]
+            },
+            "share_hidden_layers": false,
+            "transformer_size": null,
+            "number_of_transformer_layers": 0,
+            "number_of_attention_heads": 4,
+            "use_key_relative_attention": false,
+            "use_value_relative_attention": false,
+            "max_relative_position": null,
+            "unidirectional_encoder": false,
+            "batch_size": [
+                64,
+                256
+            ],
+            "batch_strategy": "balanced",
+            "epochs": 100,
+            "random_seed": null,
+            "learning_rate": 0.001,
+            "embedding_dimension": 20,
+            "dense_dimension": {
+                "text": 512,
+                "label": 512
+            },
+            "number_of_negative_examples": 20,
+            "similarity_type": "inner",
+            "loss_type": "softmax",
+            "ranking_length": 10,
+            "maximum_positive_similarity": 0.8,
+            "maximum_negative_similarity": -0.4,
+            "use_maximum_negative_similarity": true,
+            "scale_loss": true,
+            "regularization_constant": 0.002,
+            "weight_sparsity": 0.0,
+            "negative_margin_scale": 0.8,
+            "drop_rate": 0.2,
+            "drop_rate_attention": 0,
+            "use_sparse_input_dropout": false,
+            "use_dense_input_dropout": false,
+            "evaluate_every_number_of_epochs": 20,
+            "evaluate_on_number_of_examples": 0,
+            "use_masked_language_model": false,
+            "retrieval_intent": null,
+            "tensorboard_log_directory": null,
+            "tensorboard_log_level": "epoch",
+            "name": "ResponseSelector",
+            "intent_classification": true,
+            "entity_recognition": false,
+            "BILOU_flag": null,
+            "file": null,
+            "class": "rasa.nlu.selectors.response_selector.ResponseSelector"
+        }
+    ],
+    "trained_at": "20210509-210905",
+    "rasa_version": "1.10.18"
+}

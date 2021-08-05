@@ -1,0 +1,96 @@
+{
+    "vision": {
+        "oakd_pipeline": "OAKDPipeline",
+        "oakd_rgb_camera_input": "OAKDRgbCamera",
+        "oakd_stereo_camera_input": "OAKDStereoCamera",
+        "oakd_spatial_calculator": "OAKDSpatialCalculator",
+        "oakd_face_detection": "OAKDFaceDetection",
+        "oakd_face_landmarks": "OAKDFaceLandmarks",
+        "oakd_face_recognition": "OAKDFaceRecognition",
+        "oakd_object_detection": "OAKDObjectDetection",
+        "oakd_face_emotions": "OAKDFaceEmotions",
+        "oakd_facemesh": "OAKDFaceMesh",
+        "oakd_pose_estimation": "OAKDPoseEstimation",
+        "oakd_hand_landmarks": "OAKDHandLandmarks",
+        "oakd_hand_asl": "OAKDASL",
+        "heartrate_measure": "HeartrateMeasure",
+        "face_detection": "FaceDetection",
+        "oakd_service": {
+            "class": "OAKDPipelineService",
+            "friendly_name": "OAK-D Pipeline Service",
+            "worker_list": [
+                "oakd_pipeline",
+                "oakd_rgb_camera_input",
+                "oakd_stereo_camera_input",
+                "oakd_spatial_calculator",
+                "oakd_face_detection",
+                "oakd_face_landmarks",
+                "oakd_face_recognition",
+                "oakd_object_detection",
+                "oakd_face_emotions",
+                "oakd_facemesh",
+                "oakd_pose_estimation",
+                "oakd_hand_landmarks",
+                "oakd_hand_asl"
+            ]
+        },
+        "vision_processor_service": {
+            "class": "VisionProcessorService",
+            "friendly_name": "Vision Processor Service",
+            "worker_list": [
+                "face_detection",
+                "heartrate_measure"
+            ]
+        }
+    },
+    "voice": {
+        "respeaker_input": "RespeakerInput",
+        "online_voice_processing": "OnlineVoiceProcessing",
+        "offline_voice_processing": "OfflineVoiceProcessing",
+        "online_voice_generation": "OnlineVoiceGeneration",
+        "offline_voice_generation": "OfflineVoiceGeneration",
+        "voice_input_service": {
+            "class": "VoiceInputService",
+            "friendly_name": "Voice Input Service",
+            "worker_list": [
+                "respeaker_input"
+            ]
+        },
+        "speech_to_text_service": {
+            "class": "SpeechToTextService",
+            "friendly_name": "Speech To Text Service",
+            "worker_list": [
+                "online_voice_processing",
+                "offline_voice_processing"
+            ]
+        },
+        "text_to_speech_service": {
+            "class": "TextToSpeechService",
+            "friendly_name": "Text to Speech Service",
+            "worker_list": [
+                "online_voice_generation",
+                "offline_voice_generation"
+            ]
+        }
+    },
+    "nlp": {
+        "rasa_intent_classifier": "RasaIntentClassifier",
+        "nlp_intent_classify_service": {
+            "class": "NLPIntentClassifyService",
+            "friendly_name": "NLP Intent Classify Service",
+            "worker_list": [
+                "rasa_intent_classifier"
+            ]
+        }
+    },
+    "control": {
+        "robot_inventor_control": "RobotInventorControl",
+        "control_service": {
+            "class": "ControlService",
+            "friendly_name": "Control Service",
+            "worker_list": [
+                "robot_inventor_control"
+            ]
+        }
+    }
+}

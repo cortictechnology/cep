@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>CAIT Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="{{url_for('static', filename='js/string_locale.js') }}"></script> 
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="/static/images/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="/static/vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/css/util.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+<!--===============================================================================================-->
+	<style>
+		.loader-wrapper {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          background-color: #242f3f;
+          opacity: 0.75;
+          display:flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        @keyframes glow{
+          50%{
+            border-color:lime;
+            width:95%;
+            box-shadow:0px 0px 10px -2px green;
+          }
+          100%{
+            border-color:green;
+            width:35%;
+            box-shadow:0px 0px 10px -2px green;
+          }
+        }
+        .sep{
+          width:35%;
+          border-bottom:2px solid green;
+          margin-bottom:20px;
+          animation:glow 8s infinite;
+        }
+        .container{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:black;
+          width:75%;
+          padding:10%;
+          flex-wrap:wrap;
+        }
+        .loader{
+          width:100px;
+          height:100px;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          margin:10px 20px;
+        }
+        @keyframes load{
+          50%{
+            transform:rotatez(180deg) scale(0.2);
+            border-color:orange;
+          }
+          100%{
+            transform:rotatez(360deg) scale(1.1);
+          }
+        }
+
+        @keyframes load7{
+          100%{
+            transform:rotatez(360deg);
+          }
+        }
+        .loader::before{
+          content:"";
+          color:white;
+          height:50px;
+          width:50px;
+          background:transparent;
+          border-radius:50%;
+          border:10px solid rgb(255, 196, 0);
+          border-color:rgb(253, 166, 51) rgb(253, 177, 42) rgb(254, 186, 44) rgb(254, 196, 42);
+          animation:load7 .6s infinite ease-in-out;
+          box-shadow:0px 0px 40px -2px skyblue;
+        }
+	</style>
+</head>
+<body>
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100">
+				<div class="login100-pic js-tilt" data-tilt>
+					<img src="/static/images/cortic_logo.png" alt="IMG">
+				</div>
+
+				<div class="login100-form validate-form">
+					<span id="login" class="login100-form-title">
+					</span>
+					<script>document.getElementById('login').innerHTML = localizedStrings.login[locale];</script>
+
+					<div id="usernameReq" class="wrap-input100 validate-input" data-validate="Username is required">
+						<input class="input100" type="text" id="username" placeholder="">
+						<script>document.getElementById('username').placeholder = localizedStrings.username[locale];</script>
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<i class="fa fa-envelope" aria-hidden="true"></i>
+						</span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate="Password is required">
+						<input class="input100" type="password" id="pass" placeholder="">
+						<script>document.getElementById('pass').placeholder = localizedStrings.pass[locale];</script>
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<i class="fa fa-lock" aria-hidden="true"></i>
+						</span>
+					</div>
+					
+					<div class="container-login100-form-btn">
+						<button id="loginBtn" class="login100-form-btn" onclick="login()">
+						</button>
+						<script>document.getElementById('loginBtn').innerHTML = localizedStrings.loginBtn[locale];</script>
+					</div>
+
+					<!-- <div class="text-center p-t-12">
+						<span class="txt1">
+							Forgot
+						</span>
+						<a class="txt2" href="#">
+							Username / Password?
+						</a>
+					</div> -->
+
+					<div class="text-center p-t-136">
+						<a class="txt2" href="/signup_page">
+							<b id="createAcc" >Create your Account</b>
+							<script>document.getElementById('createAcc').innerHTML = localizedStrings.createAcc[locale];</script>
+							<i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="loader" class="loader-wrapper">
+			<div class="loader"></div>
+			<div id="loading_text" style="color: white"></div>
+			<script>document.getElementById('loading_text').innerHTML = localizedStrings.initCAIT[locale];</script>
+		</div>
+	</div>
+	
+<!--===============================================================================================-->	
+	<script src="{{url_for('static', filename='vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{url_for('static', filename='vendor/bootstrap/js/popper.js') }}"></script>
+	<script src="{{url_for('static', filename='vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{url_for('static', filename='vendor/select2/select2.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{url_for('static', filename='vendor/tilt/tilt.jquery.min.js') }}"></script>
+	<script >
+		$('.js-tilt').tilt({
+			scale: 1.1
+		})
+	</script>
+	<script>
+		var loader = document.getElementById('loader');
+		loader.style.display = "none";
+	</script>
+<!--===============================================================================================-->
+	<script src="{{url_for('static', filename='js/paho-mqtt-min.js') }}"></script>
+	<script src="{{url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
