@@ -53,38 +53,13 @@ while ret != True:
 
 
 def get_video_devices():
-    camera_workers = []
-    oakd_camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
-    if oakd_camera_worker is not None:
-        camera_workers.append(oakd_camera_worker)
-    webcam_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/vision_input_service/webcam_input"
-    )
-    if webcam_worker is not None:
-        camera_workers.append(webcam_worker)
-    picam_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/vision_input_service/picam_input"
-    )
-    if picam_worker is not None:
-        camera_workers.append(picam_worker)
-    return camera_workers
+    return device_manager.get_video_devices()
 
+def get_usb_devices():
+    return device_manager.get_usb_devices()
 
 def get_audio_devices():
-    voice_inputs = []
-    respeaker_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/respeaker_input"
-    )
-    if respeaker_input_worker is not None:
-        voice_inputs.append(respeaker_input_worker)
-    live_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/live_input"
-    )
-    if live_input_worker is not None:
-        voice_inputs.append(live_input_worker)
-    return voice_inputs
+    return device_manager.get_audio_devices()
 
 
 def get_control_devices():
@@ -124,19 +99,26 @@ def initialize_vision(processor="local", mode=[], from_web=False):
     current_video_device = None
     if processor == "oakd":
         # available_video_devices = CURTCommands.get_oakd_services("oakd_pipeline")
-        current_video_device = CURTCommands.get_worker(
+        all_usb_devices = get_usb_devices()
+        for udev in all_usb_devices:
+            if udev['tag'] == 'Intel Movidius MyriadX':
+                current_video_device = 'Intel Movidius MyriadX'
+        current_video_worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_pipeline"
         )
     else:
-        available_video_devices = get_video_devices()
-        if len(available_video_devices) != 0:
-            current_video_device = available_video_devices[0]
+        all_video_devices = get_video_devices()
+        if len(all_video_devices) > 0:
+            current_video_device = all_video_devices[0]
+        current_video_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
     if current_video_device is None:
+        vision_initialized = False
         return (
             False,
-            "No video device is detected, or connected device is not supported",
+            "No video input device is detected, or connected device is not supported",
         )
-
     if processor == "oakd":
         for node in mode:
             if node[0] == "add_rgb_cam_node":
@@ -153,13 +135,22 @@ def initialize_vision(processor="local", mode=[], from_web=False):
                 elif node[1] == "object_detection":
                     spatial_object_detection = False
 
-        CURTCommands.config_worker(current_video_device, mode)
+        config_handler = CURTCommands.config_worker(current_video_worker, mode)
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        if not success:
+            vision_initialized = False
+            return False, "Failed to initialzie oakd pipeline, please check if the device is connected."
     else:
         # Selecting a VGA resolution, future work should provide a list of selected resolution
-        CURTCommands.config_worker(
-            current_video_device,
+        config_handler = CURTCommands.config_worker(
+            current_video_worker,
             {"camera_index": 0, "capture_width": 640, "capture_height": 480},
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        if not success:
+            vision_initialized = False
+            return False, "Failed to initialize local camera, please check if the device is connected."
+    
     drawing_modes = {
         "Depth Mode": False,
         "Face Detection": [],
@@ -170,7 +161,6 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
-    time.sleep(10)
     vision_initialized = True
     stream_thread = threading.Thread(target=streaming_func, daemon=True)
     stream_thread.start()
@@ -202,6 +192,21 @@ def get_nlp_models():
 def initialize_voice(mode="online", account="default", language="english"):
     global voice_initialized
     global voice_mode
+    speaker_attached = False
+    microphone_attached = False
+    audio_devices = get_audio_devices()
+    for device in audio_devices:
+        if device['type'] == 'Output':
+            speaker_attached = True
+        if device['type'] == 'Input':
+            microphone_attached = True
+    if not speaker_attached:
+        voice_initialized = False
+        return False, "No audio output deveice is detected, or connected device is not supported",
+    if not microphone_attached:
+        voice_initialized = False
+        return False, "No audio input deveice is detected, or connected device is not supported",
+
     if language == "english":
         processing_language = "en-UK"
         generation_language = "en"
@@ -251,8 +256,10 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice generation is detected, or connected device is not supported",
         )
-    CURTCommands.config_worker(voice_input_worker, {"audio_in_index": 0})
-    time.sleep(0.5)
+    config_handler = CURTCommands.config_worker(voice_input_worker, {"audio_in_index": 0})
+    success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    if not success:
+        return False, "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again."
     CURTCommands.request(voice_input_worker, params=["start"])
     # CURTCommands.start_voice_recording(voice_input_worker)
     if mode == "online":
@@ -260,7 +267,7 @@ def initialize_voice(mode="online", account="default", language="english"):
         account_file = cloud_accounts[account]
         with open(curt_path + "models/modules/voice/" + account_file) as f:
             account_info = json.load(f)
-        CURTCommands.config_worker(
+        config_handler = CURTCommands.config_worker(
             voice_processing_worker,
             {
                 "account_crediential": account_info,
@@ -269,10 +276,16 @@ def initialize_voice(mode="online", account="default", language="english"):
                 "channel_count": 4,
             },
         )
-        CURTCommands.config_worker(
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        if not success:
+            return False, "Cannot initialize voice processing worker."
+        config_handler = CURTCommands.config_worker(
             voice_generation_worker,
             {"language": generation_language, "accents": generation_accents},
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        if not success:
+            return False, "Cannot initialize voice generation worker."
     time.sleep(1)
     voice_initialized = True
     return True, "OK"
@@ -360,7 +373,7 @@ def get_camera_image(for_streaming=False):
         logging.info(
             "Please call initialize_vision() function before using the vision module"
         )
-        return None
+        return False, "Vision module is not initialized"
     worker = CURTCommands.get_worker(
         full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
     )

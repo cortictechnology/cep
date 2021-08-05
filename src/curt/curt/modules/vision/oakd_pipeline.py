@@ -10,10 +10,6 @@ from curt.modules.vision.oakd_node_types import OAKDNodeTypes
 import numpy as np
 import logging
 from pathlib import Path
-import os
-import time
-import cv2
-import base64
 import threading
 
 
@@ -100,13 +96,23 @@ class OAKDPipeline:
             elif data[0] == "add_nn_node_pipeline":
                 self.add_nn_node_pipeline(data[1], data[2], data[3], data[4])
         # logging.info("finished adding nodes")
-        sysLog = self.pipeline.createSystemLogger()
-        linkOut = self.pipeline.createXLinkOut()
-        linkOut.setStreamName("sysinfo")
-        sysLog.setRate(1)  # 1 Hz
-        sysLog.out.link(linkOut.input)
+        #sysLog = self.pipeline.createSystemLogger()
+        #linkOut = self.pipeline.createXLinkOut()
+        #linkOut.setStreamName("sysinfo")
+        #sysLog.setRate(1)  # 1 Hz
+        #sysLog.out.link(linkOut.input)
         # self.stream_nodes["sysinfo"] = None
-        self.start_pipeline()
+        success = False
+        retry_count = 0
+        while not success:
+            logging.warning("Trying to start oakd pipeline")
+            success = self.start_pipeline()
+            retry_count += 1
+            if retry_count > 3:
+                logging.warning("Failed to start oakd pipeline")
+                break
+        if not success:
+            return False
         self.pipeline_started = True
         self.reset = False
         print("Starting thread")
@@ -117,11 +123,11 @@ class OAKDPipeline:
 
     def config_pipeline_version(self, version):
         if version == "2021.1":
-            pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_1)
+            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_1)
         elif version == "2021.2":
-            pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_2)
+            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_2)
         elif version == "2021.3":
-            pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_3)
+            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_3)
 
     def run_inference(self, request_data):
         if request_data[-1]:
@@ -450,8 +456,11 @@ class OAKDPipeline:
         return output_data
 
     def start_pipeline(self):
+        success = True
         logging.info("Creating OAK-D device")
         self.device = dai.Device(self.pipeline)
-        # logging.info("Starting OAK-D Pipeline")
-        self.device.startPipeline()
+        if self.device.isClosed():
+            success = False
+        success = self.device.startPipeline()
         logging.info("Started OAK-D Pipeline")
+        return success

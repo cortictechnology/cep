@@ -22,7 +22,7 @@ logging.getLogger().setLevel(logging.WARNING)
 EXCLUDED_DEVICES = ['bcm2835-codec-decode (platform:bcm2835-codec):', 'bcm2835-isp (platform:bcm2835-isp):']
 TESTED_CAMERAS = {'Webcam C170': [320,240], 'HD Webcam C615':[640,480], 'UVC': [320, 240], 'PiCamera':[640,480], 'C922': [640, 480], 'C310': [640, 480]}
 SUPPORTED_SPEAKERS = ['bcm2835 HDMI 1', 'bcm2835 Headphones', 'USB']
-SUPPORTED_MIC = ['Webcam C170', 'HD Webcam C615', 'USB', 'C922', 'C310', 'UVC']
+SUPPORTED_MIC = ['Webcam C170', 'HD Webcam C615', 'USB', 'C922', 'C310', 'UVC', 'seeed-4mic-voicecard']
 SUPPORTED_CONTROL_HAT = ['BrickPi', 'Adafruit Servo HAT', "Makebot"]
 
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)

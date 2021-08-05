@@ -37,6 +37,14 @@ def get_nlp_models():
     model_list = core.get_nlp_models()
     return {"models": model_list}
 
+def get_usb_devices():
+    """Get a list of connected usb device
+
+    Returns:
+        video_device_list (list): List of camera device
+    """
+    return core.get_usb_devices()
+
 
 def get_video_devices():
     """Get a list of connected camera device
@@ -45,33 +53,6 @@ def get_video_devices():
         video_device_list (list): List of camera device
     """
     return core.get_video_devices()
-
-
-def get_video_services():
-    """Get a list of connected camera device
-
-    Returns:
-        video_device_list (list): List of camera device
-    """
-    return core.get_video_devices()
-
-
-def get_oakd_devices():
-    """Get a list of connected oakd device
-
-    Returns:
-        video_device_list (list): List of camera device
-    """
-    return core.get_oakd_devices()
-
-
-def get_oakd_services():
-    """Get a list of connected oakd device
-
-    Returns:
-        video_device_list (list): List of camera device
-    """
-    return core.get_oakd_devices()
 
 
 def get_audio_devices():
@@ -83,28 +64,6 @@ def get_audio_devices():
     return core.get_audio_devices()
 
 
-def get_respeaker_services():
-    return core.get_respeaker_services()
-
-
-def get_voice_processing_services():
-    """Get a list of voice processing services
-
-    Returns:
-        (list): List of audio device
-    """
-    return core.get_voice_processing_services()
-
-
-def get_voice_generation_services(online=True):
-    """Get a list of voice generation services
-
-    Returns:
-        (list): List of audio device
-    """
-    return core.get_voice_generation_services(online)
-
-
 def get_control_devices():
     """Get a list of connected control device
 
@@ -112,15 +71,6 @@ def get_control_devices():
         (list): List of control device
     """
     return core.get_control_devices()
-
-
-def get_control_services():
-    """Get a list of control services
-
-    Returns:
-        (list): List of control service
-    """
-    return core.get_control_services()
 
 
 def test_camera(index):

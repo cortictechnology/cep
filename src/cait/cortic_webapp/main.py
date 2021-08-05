@@ -254,12 +254,22 @@ def testhardware():
     return render_template("testhardware.html")
 
 
+@application.route("/getusbdev", methods=["GET"])
+def getusbdev():
+    devices = essentials.get_usb_devices()
+    usb_devices = []
+    for udev in devices:
+        if udev["tag"] == "Intel Movidius MyriadX":
+            dev = {"tag": udev["tag"], "device": udev["device"]}
+            usb_devices.append(dev)
+    return jsonify(usb_devices)
+
 @application.route("/getvideodev", methods=["GET"])
 def getvideodev():
     devices = essentials.get_video_devices()
     video_devices = []
     for vid_dev in devices:
-        dev = {"name": vid_dev.name}
+        dev = {"index": vid_dev["index"], "device": vid_dev["device"]}
         video_devices.append(dev)
     return jsonify(video_devices)
 
@@ -269,7 +279,7 @@ def getaudiodev():
     devices = essentials.get_audio_devices()
     audio_devices = []
     for aud_dev in devices:
-        dev = {"name": aud_dev.name}
+        dev = {"index": aud_dev["index"], "device": aud_dev["device"], "type": aud_dev["type"]}
         audio_devices.append(dev)
     return jsonify(audio_devices)
 
@@ -333,31 +343,31 @@ def testspeaker():
 def testmicrophone():
     data = request.get_json()
     index = data["index"]
-    BLOCKS_PER_SECOND = 50
-    sample_format = pyaudio.paInt16  # 16 bits per sample
-    channels = 1
-    fs = 16000
-    seconds = 5
-    filename = "output.wav"
+    RESPEAKER_RATE = 16000
+    RESPEAKER_CHANNELS = 2 
+    RESPEAKER_WIDTH = 2
+    # run getDeviceInfo.py to get index
+    RESPEAKER_INDEX = 1  # refer to input device id
+    CHUNK = 1024
+    RECORD_SECONDS = 5
+    WAVE_OUTPUT_FILENAME = "output.wav"
     try:
         p = pyaudio.PyAudio()  # Create an interface to PortAudio
 
         print("Recording")
-        block_size = int(fs / float(BLOCKS_PER_SECOND))
-        chunk = int(fs / float(BLOCKS_PER_SECOND))
         stream = p.open(
-            format=sample_format,
-            channels=channels,
-            rate=fs,
-            frames_per_buffer=chunk,
+            rate=RESPEAKER_RATE,
+            format=p.get_format_from_width(RESPEAKER_WIDTH),
+            channels=RESPEAKER_CHANNELS,
             input=True,
+            input_device_index=RESPEAKER_INDEX
         )
 
         frames = []  # Initialize array to store frames
 
         # Store data in chunks for 3 seconds
-        for i in range(0, int(fs / chunk * seconds)):
-            data = stream.read(chunk)
+        for i in range(0, int(RESPEAKER_RATE / CHUNK * RECORD_SECONDS)):
+            data = stream.read(CHUNK)
             frames.append(data)
 
         # Stop and close the stream
@@ -369,16 +379,16 @@ def testmicrophone():
         print("Finished recording")
 
         # Save the recorded data as a WAV file
-        wf = wave.open(filename, "wb")
-        wf.setnchannels(channels)
-        wf.setsampwidth(p.get_sample_size(sample_format))
-        wf.setframerate(fs)
-        wf.writeframes(b"".join(frames))
+        wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+        wf.setnchannels(RESPEAKER_CHANNELS)
+        wf.setsampwidth(p.get_sample_size(p.get_format_from_width(RESPEAKER_WIDTH)))
+        wf.setframerate(RESPEAKER_RATE)
+        wf.writeframes(b''.join(frames))
         wf.close()
 
-        os.system("sudo -u pi aplay " + filename)
+        os.system("sudo -u pi aplay -f cd -Dhw:0 " + WAVE_OUTPUT_FILENAME)
 
-        out = os.system("rm " + filename)
+        out = os.system("rm " + WAVE_OUTPUT_FILENAME)
 
         result = {"result": out}
         return jsonify(result)

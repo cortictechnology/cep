@@ -41,25 +41,35 @@ class RespeakerInput(BaseVoiceInput):
         self.recording_thread = threading.Thread(
             target=self.recording_thread, daemon=True
         )
+        self.recording_thread_started = False
+        self.no_microphone = False
         self.last_speech_chunk_time = time.monotonic()
         self.time_since_last_speech = 99999
         self.collecting_speech = False
         self.direction = -1
 
     def config_input_handler(self, params):
+        if self.no_microphone:
+            logging.warning("No microphone attached")
+            return False
         if self.audio_index != -1:
             logging.warning("Please release the current audio input device first")
             return False
         else:
             self.audio_index = params["audio_in_index"]
+            if not self.recording_thread_started:
+                self.recording_thread = threading.Thread(
+                    target=self.recording_thread, daemon=True
+                )
             return True
 
     def recording_thread(self):
         try:
-            print("Starting to record")
+            logging.warning("Starting to record")
             with MicArray(
                 self.RATE, self.CHANNELS, self.RATE * self.VAD_FRAMES / 1000
             ) as mic:
+                self.recording_thread_started = True
                 for chunk in mic.read_chunks():
                     if self.started_recording:
                         # Use single channel audio to detect voice activity
@@ -86,7 +96,8 @@ class RespeakerInput(BaseVoiceInput):
                             self.chunks = []
 
         except KeyboardInterrupt:
-            pass
+            logging.warning("recording thread qutting")
+            self.no_microphone = True
 
     def start_recording(self):
         if self.audio_index != -1:

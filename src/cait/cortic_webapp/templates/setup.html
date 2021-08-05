@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base href="/">
 
@@ -14,11 +15,12 @@
   <link rel="apple-touch-icon" href="/static/images/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/static/images/favicon.ico"/>
+  <link rel="icon" type="image/png" href="/static/images/favicon.ico" />
 
   <title>CAIT Setup</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
   <!-- This script installs service_worker.js to provide PWA functionality to
        application. For more information, see:
@@ -26,10 +28,11 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('flutter-first-frame', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js?v=30398180');
+        navigator.serviceWorker.register('flutter_service_worker.js?v=2139468365');
       });
     }
   </script>
   <script src="{{url_for('static', filename='js/main.dart.js')}}" type="application/javascript"></script>
 </body>
+
 </html>
