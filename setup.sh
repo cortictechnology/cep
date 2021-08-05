@@ -17,6 +17,7 @@ sudo docker pull cortictech/nlp:0.52
 sudo docker pull cortictech/vision:0.52
 sudo docker pull cortictech/control:0.52
 sudo docker pull cortictech/broker:0.51
+git clone https://github.com/respeaker/seeed-voicecard.git
 sudo sh -c "echo 'dtparam=spi=on' >> /boot/config.txt"
 sudo apt-get install v4l-utils whois -y
 sudo apt-get install portaudio19-dev mplayer graphviz libbluetooth-dev bluez-tools -y
@@ -38,8 +39,10 @@ sudo pip3 install jupyterhub
 sudo cp setup_scripts/chkpass.sh /opt
 sudo chmod +x /opt/chkpass.sh
 cp -R setup_scripts/homeassistant /home/pi
-sudo cp setup_scripts/curt_containers.service setup_scripts/cait_webapp.service /etc/systemd/system
-sudo cp setup_scripts/start_curt_containers.sh setup_scripts/start_cait.sh /opt
+sudo cp setup_scripts/curt_containers.service
+sudo cp setup_scripts/cait_webapp.service /etc/systemd/system
+sudo cp setup_scripts/start_curt_containers.sh /opt
+sudo cp setup_scripts/start_cait.sh /opt
 sudo systemctl daemon-reload
 sudo systemctl enable curt_containers.service
 sudo systemctl enable cait_webapp.service
@@ -54,7 +57,6 @@ sudo sh -c 'echo "export CAIT_PATH=$PWD/src/cait/" >> /root/.bashrc'
 sudo sh -c 'echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> /root/.bashrc'
 sudo sh -c 'echo "export PYTHONPATH=$PWD/src/curt/:$PWD/src/cait/:$PYTHONPATH" >> /root/.bashrc'
 
-git clone https://github.com/respeaker/seeed-voicecard.git
 cd seeed-voicecard
 sudo ./install.sh
 cd ..
