@@ -1,13 +1,12 @@
 sudo apt update
 sudo apt -y full-upgrade
 
-curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+curl -fsSL get.docker.com -o get-docker.sh && bash get-docker.sh
 sudo groupadd docker
 sudo gpasswd -a $USER docker
 sudo touch /etc/docker/daemon.json
 sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
 sudo mkdir ~/cait_workspace
-sudo cp ../samples/block_samples/* ~/cait_workspace
 sudo systemctl restart docker
 sudo docker pull homeassistant/home-assistant:stable
 sudo docker pull cortictech/speech:0.52
