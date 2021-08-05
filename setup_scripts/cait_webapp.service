@@ -1,0 +1,14 @@
+[Unit]
+Description=CAIT Webapp service
+After=apache2.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/opt
+ExecStart=/usr/bin/bash start_cait.sh
+
+[Install]
+WantedBy=multi-user.target

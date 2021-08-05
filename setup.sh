@@ -35,6 +35,11 @@ sudo rm get-docker.sh
 sudo cp setup_scripts/chkpass.sh /opt
 sudo chmod +x /opt/chkpass.sh
 cp -R setup_scripts/homeassistant /home/pi
+sudo cp setup_scripts/curt_containers.service setup_scripts/cait_webapp.service /etc/systemd/system
+sudo cp setup_scripts/start_curt_containers.sh setup_scripts/start_cait.sh /opt
+sudo systemctl daemon-reload
+sudo systemctl enable curt_containers.service
+sudo systemctl enable cait_webapp.service
 
 git clone https://github.com/respeaker/seeed-voicecard.git
 cd seeed-voicecard
@@ -44,5 +49,10 @@ echo "export CURT_PATH=$PWD/src/curt/" >> ~/.bashrc
 echo "export CAIT_PATH=$PWD/src/cait/" >> ~/.bashrc 
 echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> ~/.bashrc 
 echo "export PYTHONPATH=$PWD/src/curt/:$PWD/src/cait/:$PYTHONPATH" >> ~/.bashrc 
+
+sudo sh -c 'echo "export CURT_PATH=$PWD/src/curt/" >> /root/.bashrc'
+sudo sh -c 'echo "export CAIT_PATH=$PWD/src/cait/" >> /root/.bashrc'
+sudo sh -c 'echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> /root/.bashrc'
+sudo sh -c 'echo "export PYTHONPATH=$PWD/src/curt/:$PWD/src/cait/:$PYTHONPATH" >> /root/.bashrc'
 
 sudo reboot now
