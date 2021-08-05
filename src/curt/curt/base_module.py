@@ -274,7 +274,6 @@ class BaseModule:
         self.publish_client.publish(
             self.output_channel + "/" + worker, msg, qos=1, retain=True
         )
-        print(msg)
         # if worker == "oakd_facemesh":
         #    print("***********Facemesh published***********    ", self_guid)
         # if self.enable_streaming:

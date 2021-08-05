@@ -4,13 +4,15 @@ Copyright (C) Cortic Technology Corp. - All Rights Reserved
 Written by Michael Ng <michaelng@cortic.ca>, December 2019
 
 """
-
+import os
+import sys
+curt_path = os.getenv("CURT_PATH")
+sys.path.insert(0, curt_path)
 from curt.command import CURTCommands
 import paho.mqtt.client as mqtt
 import logging
 import time
 import json
-import os
 import socket
 import requests
 import base64
@@ -51,20 +53,37 @@ while ret != True:
 
 
 def get_video_devices():
-    all_vision_input = CURTCommands.get_vision_input_services()
     camera_workers = []
-    for vision_input in all_vision_input:
-        if vision_input.name == "webcam" or vision_input.name == "picam_input":
-            camera_workers.append(vision_input)
+    oakd_camera_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+    )
+    if oakd_camera_worker is not None:
+        camera_workers.append(oakd_camera_worker)
+    webcam_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/webcam_input"
+    )
+    if webcam_worker is not None:
+        camera_workers.append(webcam_worker)
+    picam_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/picam_input"
+    )
+    if picam_worker is not None:
+        camera_workers.append(picam_worker)
     return camera_workers
 
 
 def get_audio_devices():
     voice_inputs = []
-    all_voice_input_services = CURTCommands.get_voice_input_services()
-    for voice_input in all_voice_input_services:
-        if voice_input.name == "live_input":
-            voice_inputs.append(voice_input)
+    respeaker_input_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/respeaker_input"
+    )
+    if respeaker_input_worker is not None:
+        voice_inputs.append(respeaker_input_worker)
+    live_input_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/live_input"
+    )
+    if live_input_worker is not None:
+        voice_inputs.append(live_input_worker)
     return voice_inputs
 
 
@@ -291,11 +310,14 @@ def initialize_control(hub_address):
     )
     if robot_inventor_control_worker is None:
         return False, "No control worker available"
-    address = hub_address[hub_address.find(": ") + 2 : -2]
+    if isinstance(hub_address, list):
+        hub_address = hub_address[0]
+        address = hub_address[hub_address.find(": ") + 2:]
+    else:
+        address = hub_address[hub_address.find(": ") + 2 : -2]
     config_handler = CURTCommands.config_worker(
         robot_inventor_control_worker, {"hub_address": address}
     )
-    print({"hub_address": address})
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
         control_initialized = False

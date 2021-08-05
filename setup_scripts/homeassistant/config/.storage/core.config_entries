@@ -1,0 +1,57 @@
+{
+    "data": {
+        "entries": [
+            {
+                "connection_class": "cloud_poll",
+                "data": {
+                    "track_home": true
+                },
+                "domain": "met",
+                "entry_id": "589186739dca4eeea0fa7913ee585926",
+                "options": {},
+                "source": "onboarding",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Home",
+                "unique_id": null,
+                "version": 1
+            },
+            {
+                "connection_class": "local_push",
+                "data": {
+                    "user_id": "29c5f4b4246c43a29955c0e13a000264"
+                },
+                "domain": "cast",
+                "entry_id": "d48102b0d1ec4bf19bfe8f79f1d6cc9b",
+                "options": {},
+                "source": "zeroconf",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Google Cast",
+                "unique_id": null,
+                "version": 1
+            },
+            {
+                "connection_class": "local_poll",
+                "data": {
+                    "host": "192.168.1.242",
+                    "username": "xrHw-yW9QkJDcGGckknEwmDAmXJkkQZIJiNy4yNc"
+                },
+                "domain": "hue",
+                "entry_id": "0e32e68ec1244eb78f59b8f5899e6fb9",
+                "options": {},
+                "source": "homekit",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Philips hue",
+                "unique_id": "001788a2c021",
+                "version": 1
+            }
+        ]
+    },
+    "key": "core.config_entries",
+    "version": 1
+}

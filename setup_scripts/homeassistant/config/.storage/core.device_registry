@@ -1,0 +1,212 @@
+{
+    "version": 1,
+    "key": "core.device_registry",
+    "data": {
+        "devices": [
+            {
+                "config_entries": [
+                    "d48102b0d1ec4bf19bfe8f79f1d6cc9b"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "cast",
+                        "74a4fb698afe0f04bcb55aad7dee7495"
+                    ]
+                ],
+                "manufacturer": "Unknown manufacturer",
+                "model": "Google Nest Hub",
+                "name": "Living Room Display",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "314d7b2e748b494d889815fafc271a0f",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "d48102b0d1ec4bf19bfe8f79f1d6cc9b"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "cast",
+                        "d037784cb2bd55bee86cfd91b8ea5cd1"
+                    ]
+                ],
+                "manufacturer": "Google Inc.",
+                "model": "Google Home",
+                "name": "Bedroom speaker",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "9598a36d6d574465a06d584d269a574a",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "0e32e68ec1244eb78f59b8f5899e6fb9"
+                ],
+                "connections": [
+                    [
+                        "mac",
+                        "00:17:88:a2:c0:21"
+                    ]
+                ],
+                "identifiers": [
+                    [
+                        "hue",
+                        "001788FFFEA2C021"
+                    ]
+                ],
+                "manufacturer": "Signify",
+                "model": "BSB002",
+                "name": "Philips hue",
+                "sw_version": "01033990",
+                "entry_type": null,
+                "id": "1b1de20db5da49778f5691769cd0e122",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "0e32e68ec1244eb78f59b8f5899e6fb9"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:53:d1:eb-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "LCT016",
+                "name": "Hue color lamp 2",
+                "sw_version": "",
+                "entry_type": null,
+                "id": "1b23a2fb0d254343929f174270def207",
+                "via_device_id": "1b1de20db5da49778f5691769cd0e122",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "0e32e68ec1244eb78f59b8f5899e6fb9"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:23:bd:0b-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "LCT016",
+                "name": "Hue color lamp 4",
+                "sw_version": "",
+                "entry_type": null,
+                "id": "43975a4f24e949d6984ec8b222934ba4",
+                "via_device_id": "1b1de20db5da49778f5691769cd0e122",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "0e32e68ec1244eb78f59b8f5899e6fb9"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:20:c4:28-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "LCT016",
+                "name": "Hue color lamp 1",
+                "sw_version": "",
+                "entry_type": null,
+                "id": "69480651563344fbb47f55de41c4e36b",
+                "via_device_id": "1b1de20db5da49778f5691769cd0e122",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "0e32e68ec1244eb78f59b8f5899e6fb9"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:01:13:51-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "LCT016",
+                "name": "Hue color lamp 3",
+                "sw_version": "1.19.0_r19755",
+                "entry_type": null,
+                "id": "89efad608e1840c3a258269d42e65343",
+                "via_device_id": "1b1de20db5da49778f5691769cd0e122",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "d48102b0d1ec4bf19bfe8f79f1d6cc9b"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "cast",
+                        "e3dfde8c1fa0cdd51e9c153aa8a5333a"
+                    ]
+                ],
+                "manufacturer": "Google Inc.",
+                "model": "Google Home Mini",
+                "name": "Office speaker",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "593915ef3294e0e00fd0036b8d333f0b",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "d48102b0d1ec4bf19bfe8f79f1d6cc9b"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "cast",
+                        "8b9dc7a503960beb70d6250a8d091cf6"
+                    ]
+                ],
+                "manufacturer": "Google Inc.",
+                "model": "Google Nest Hub",
+                "name": "Living Room Display",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "30c59a7ff0e85911d89b46a9fe3f0f93",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            }
+        ],
+        "deleted_devices": []
+    }
+}

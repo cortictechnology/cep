@@ -1,0 +1,26 @@
+{
+    "version": 1,
+    "key": "core.restore_state",
+    "data": [
+        {
+            "state": {
+                "entity_id": "person.ai_learner",
+                "state": "unknown",
+                "attributes": {
+                    "editable": false,
+                    "id": "ai_learner",
+                    "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                    "friendly_name": "AI Learner"
+                },
+                "last_changed": "2021-08-05T01:47:26.689506+00:00",
+                "last_updated": "2021-08-05T01:48:07.983328+00:00",
+                "context": {
+                    "id": "478774f401b81717961954b7d8327575",
+                    "parent_id": null,
+                    "user_id": null
+                }
+            },
+            "last_seen": "2021-08-05T04:33:08.002222+00:00"
+        }
+    ]
+}

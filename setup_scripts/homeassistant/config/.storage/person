@@ -1,0 +1,14 @@
+{
+    "data": {
+        "items": [
+            {
+                "device_trackers": [],
+                "id": "ai_learner",
+                "name": "AI Learner",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c"
+            }
+        ]
+    },
+    "key": "person",
+    "version": 2
+}

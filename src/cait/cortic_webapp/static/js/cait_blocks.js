@@ -5,11 +5,11 @@ Written by Michael Ng <michaelng@cortic.ca>, December 2019
   
  */
 
-var vision_func = ["detect_face", "recognize_face", "add_person", "delete_person", "detect_objects", "classify_image"];
-var speech_func = ["listen", "say"];
-var nlp_func = ["analyze"];
-var control_func = ["rotate_motor", "control_motor", "control_motor_speed_group", "control_motor_degree_group", "move", "rotate"];
-var smart_home_func = ["control_light", "control_media_player"]
+var vision_func = ["cait_detect_face", "cait_recognize_face", "cait_add_person", "cait_delete_person", "cait_detect_objects", "cait_classify_image"];
+var speech_func = ["cait_listen", "cait_say"];
+var nlp_func = ["cait_analyze"];
+var control_func = ["cait_rotate_motor", "cait_control_motor", "cait_control_motor_speed_group", "cait_control_motor_degree_group", "cait_move", "cait_rotate"];
+var smart_home_func = ["cait_control_light", "cait_control_media_player"]
 var spatial_face_detection = false;
 
 Blockly.defineBlocksWithJsonArray([
@@ -2175,7 +2175,7 @@ Blockly.Python['motor_control_block'] = function (block) {
     speed = speed.replace(')', '')
     duration = statements_statements.substring(duration_begin_idx, duration_end_idx);
 
-    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "speed": "' + speed + '", "duration": "' + duration + '"}'
+    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "speed": "\' + str(' + speed + ') + \'", "duration": "\' + str(' + duration + ') + \'"}'
     code = code + code_line;
 
     motor_speed_idx = statements_statements.indexOf("control_motor", speed_being_idx);
@@ -2201,8 +2201,7 @@ Blockly.Python['motor_control_block'] = function (block) {
     angle = angle.replace('(', '')
     angle = angle.replace(')', '')
 
-
-    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "angle": "' + angle + '"}'
+    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "angle": "\' + str(' + angle + ') + \'"}'
     code = code + code_line;
 
     motor_rotate_idx = statements_statements.indexOf("rotate_motor", degree_being_idx);
@@ -2229,7 +2228,7 @@ Blockly.Python['motor_control_block'] = function (block) {
     power = power.replace(')', '')
 
 
-    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "power": "' + power + '"}'
+    code_line = '{"hub_name": "' + hub_name + '", "motor_name": "' + motor_name + '", "power": "\' + str(' + power + ') + \'"}'
     code = code + code_line;
 
     motor_power_idx = statements_statements.indexOf("set_motor_power", power_being_idx);
@@ -2279,7 +2278,7 @@ Blockly.JavaScript['update_pid'] = function (block) {
 
 Blockly.Python['update_pid'] = function (block) {
   var number_error = Blockly.Python.valueToCode(block, 'error', Blockly.Python.ORDER_ATOMIC);
-  var code = "cait.essentials.update_pid(" + String(number_error) + ")";
+  var code = "cait.essentials.update_pid(" + String(number_error) + ")['value']";
   return [code, Blockly.Python.ORDER_NONE];
 };
 

@@ -9,6 +9,15 @@ services:
            - ./curt/modules/broker:/data
        command: bash -c "python3 /data/main.py"
 
+    curt_homeassistant:
+        network_mode: host
+        privileged: true
+        image: "homeassistant/raspberrypi4-homeassistant:stable"
+        environment:
+        - TZ=America/Vancouver
+        volumes:
+        - /home/pi/homeassistant/config/:/config
+
     curt_vision:
         network_mode: "host"
         privileged: true

@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "key": "http",
+    "data": {
+        "ip_ban_enabled": true,
+        "login_attempts_threshold": -1,
+        "cors_allowed_origins": [
+            "https://cast.home-assistant.io"
+        ],
+        "ssl_profile": "modern",
+        "server_port": 8123
+    }
+}

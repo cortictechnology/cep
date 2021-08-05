@@ -554,7 +554,7 @@ function run_code() {
         index = end_idx;
       }
       console.log("Async Functions: " + async_function);
-      init_idx = code.indexOf("await init_");
+      init_idx = code.indexOf("await cait_init_");
       runtime_code = code.substring(init_idx, code.length);
       for (f in async_function) {
         runtime_code = replaceAll(runtime_code, async_function[f], "await " + async_function[f]);

@@ -259,7 +259,7 @@ def getvideodev():
     devices = essentials.get_video_devices()
     video_devices = []
     for vid_dev in devices:
-        dev = {"index": vid_dev["index"], "device": vid_dev["device"]}
+        dev = {"name": vid_dev.name}
         video_devices.append(dev)
     return jsonify(video_devices)
 
@@ -269,7 +269,7 @@ def getaudiodev():
     devices = essentials.get_audio_devices()
     audio_devices = []
     for aud_dev in devices:
-        dev = {"index": -1, "device": aud_dev.name, "type": "input"}
+        dev = {"name": aud_dev.name}
         audio_devices.append(dev)
     return jsonify(audio_devices)
 

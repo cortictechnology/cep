@@ -141,7 +141,7 @@ object_labels = [
 
 ft = cv2.freetype.createFreeType2()
 ft.loadFontData(
-    fontFileName="/models/oakd/HelveticaNeue.ttf",
+    fontFileName="/models/fonts/HelveticaNeue.ttf",
     id=0,
 )
 

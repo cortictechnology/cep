@@ -1,0 +1,183 @@
+{
+    "version": 1,
+    "key": "auth",
+    "data": {
+        "users": [
+            {
+                "id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "group_ids": [
+                    "system-admin"
+                ],
+                "is_owner": true,
+                "is_active": true,
+                "name": "AI Learner",
+                "system_generated": false
+            },
+            {
+                "id": "29c5f4b4246c43a29955c0e13a000264",
+                "group_ids": [
+                    "system-admin"
+                ],
+                "is_owner": false,
+                "is_active": true,
+                "name": "Home Assistant Cast",
+                "system_generated": true
+            }
+        ],
+        "groups": [
+            {
+                "id": "system-admin",
+                "name": "Administrators"
+            },
+            {
+                "id": "system-users",
+                "name": "Users"
+            },
+            {
+                "id": "system-read-only",
+                "name": "Read Only"
+            }
+        ],
+        "credentials": [
+            {
+                "id": "1fca20b7f6664e8aa362ff41a3b98542",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "auth_provider_type": "homeassistant",
+                "auth_provider_id": null,
+                "data": {
+                    "username": "ai"
+                }
+            }
+        ],
+        "refresh_tokens": [
+            {
+                "id": "8b21651078e44143a101fef20f1122a5",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://cait01.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2020-02-21T05:24:51.418112+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "239e800b50737e1be0ab1c3d9e1d7b12af66990afe5425b8f063e75a35ea3313436a9c485b81d462453608bf2aeeb4a03000b6dab0bf1f7f73395995b4073024",
+                "jwt_key": "466df41152f24dfa0877f9838f62fc251e211598eb46b3ca90ce0c176e9e9ce586f22c7ca3ea80d412ba4b20cb1ecca5425ee1b5de3438e1e68d7a5c45c7f3e8",
+                "last_used_at": "2020-02-21T05:24:51.418349+00:00",
+                "last_used_ip": "192.168.1.78",
+                "credential_id": null,
+                "version": null
+            },
+            {
+                "id": "02b4a37ce05c4b79904b88465221c210",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://cait01.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2020-02-21T05:25:27.956763+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "6b29de7e4bba325cc13c179781c22e9d5f6f56c6f1e55fcf8196ecaf73cfbaff2db65c164b997656db60b621ee93228f6a38adfbde8ecffda4e2be246ca016d7",
+                "jwt_key": "7b41ba4651e2e5c2fcb030f2dc6d5d122b9dedd2adcb83b63e8f57a830a3a0a91f2cf67ecfb63f331e921838855ec9c737083c44de23782ed37e064199fcda03",
+                "last_used_at": "2020-02-21T05:25:27.956906+00:00",
+                "last_used_ip": "192.168.1.78",
+                "credential_id": null,
+                "version": null
+            },
+            {
+                "id": "6cda3d66b9af46d08187c6a0702e2b81",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://cait01.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2020-02-21T05:26:13.928725+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "e5860c0c1c4a0b0e8b4bd24107b604d05e923e4e74ec4bc0b487b424b737422459c51abd513e9fcdad0994bc6f1e861b7e89374abf29ef9934aed6b5510d8136",
+                "jwt_key": "ecbaf4d2e70f34e2dd465c4461c67e10b274aca66e353f6ea5b473a72c8c4ce1472a0aa610b71aeb378dddbafc31c2b5e5f3e23c5ff647a1fc4034ca63144df5",
+                "last_used_at": "2020-02-21T05:26:13.928864+00:00",
+                "last_used_ip": "192.168.1.78",
+                "credential_id": null,
+                "version": null
+            },
+            {
+                "id": "cdaadf0539d344e0acf6c17961331408",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": null,
+                "client_name": "cait",
+                "client_icon": null,
+                "token_type": "long_lived_access_token",
+                "created_at": "2020-02-21T05:27:07.866852+00:00",
+                "access_token_expiration": 315360000.0,
+                "token": "eacd80a2461d52a0049f3189184a11b4d3c422a263bbc11e3e6af886e5e5138c925180f9fc92d81f3853d02d196595281f4453029e5f4c1efcf106fc7ae31a7f",
+                "jwt_key": "07c05eaf60d5924d4be8bbe4ff7acafae7bb0370dc65c3e4fb5e68d63cc7d4668ca5b46893180b913c791f1b1dc36a478933a59592b92cd3552892267a226d0b",
+                "last_used_at": "2020-02-21T05:27:07.867176+00:00",
+                "last_used_ip": null,
+                "credential_id": null,
+                "version": null
+            },
+            {
+                "id": "8e344fbf1bad4db3a87a3beec4a00417",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://cait01.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2020-03-03T03:18:09.466150+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "cbd44a008ccaccb248af14fe6c9cda36e7c5bfa4309bd75fcf549db1f5de685a3ed014a7e746b5fe663400999d96254a2f592462c754787273df035efca76565",
+                "jwt_key": "549194c097bacd9a8815a0b04b347ca7ccb4179be747de6aa22dd182d66a6394308c31ff8ff5cc79c3df3cfcc94b01896275bbf6a4446de0d8c255277cc7f299",
+                "last_used_at": "2020-03-03T03:18:09.466313+00:00",
+                "last_used_ip": "192.168.1.189",
+                "credential_id": null,
+                "version": null
+            },
+            {
+                "id": "538e3b0e188447819729a4d04adaf80d",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://curtv2.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2021-05-03T17:53:01.618914+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "d4a48da7b2c4aa9363cf99973b9b10e406091c8a5d5ebb6cbab5c7a64373f41150014e2e6515cbcc171f9a2365d042701e1cf1b0e60412be7b459234c880d4aa",
+                "jwt_key": "9633a93f6a176b56900f50cfaaf769f5a2496f8435cb7ab26a345ecdfa2ff90dbc7ab546118a3aedb7ddc5ff24897e91268f7bf4b893228565954e8a24e37555",
+                "last_used_at": "2021-05-03T17:53:01.619241+00:00",
+                "last_used_ip": "192.168.1.26",
+                "credential_id": "1fca20b7f6664e8aa362ff41a3b98542",
+                "version": "2021.4.6"
+            },
+            {
+                "id": "b6973cbbd68a4d0883758302a87efc01",
+                "user_id": "12d8e02fe6f44d34bd20599f2e54756c",
+                "client_id": "http://curtv2.local:8123/",
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "normal",
+                "created_at": "2021-05-04T23:12:04.214985+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "67b2ce684dd4714a243a731438cb5ef93123773ba07ebb36d44b3be407abcade51e57b83ba9be7dc0be6a8e354b0aec1c5b1fc79992c9f0f58efb9bf2363dde9",
+                "jwt_key": "db4d5c07f34320292aa1f82e946f04090a1e1d5d43dc4777cacaad8ed6f62d5373afadbb61102b7c815e13619cda48f65a5264b7cfe62f606dae088237d82dd3",
+                "last_used_at": "2021-05-05T00:45:48.171846+00:00",
+                "last_used_ip": "192.168.1.26",
+                "credential_id": "1fca20b7f6664e8aa362ff41a3b98542",
+                "version": "2021.4.6"
+            },
+            {
+                "id": "d5258673ebf34bb28951bcb6a4415194",
+                "user_id": "29c5f4b4246c43a29955c0e13a000264",
+                "client_id": null,
+                "client_name": null,
+                "client_icon": null,
+                "token_type": "system",
+                "created_at": "2020-02-21T05:25:50.255138+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "04e5e4602c811f5ce5ffc5c99ff4eb5c6d9416ba5b3712bdb464efb129f5a9830251f6a663e125b89a7568d6c5cf23f08677bf9a808e4baf5771a50a1c37c484",
+                "jwt_key": "f69afec2eab52c77cdb9f59802bab5bc167e5100029ee8572346d69768e508b1ae8ea19e44a933c7077f4804a7ca9801aee1c8227e046625d4d289d12252754a",
+                "last_used_at": null,
+                "last_used_ip": null,
+                "credential_id": null,
+                "version": null
+            }
+        ]
+    }
+}
