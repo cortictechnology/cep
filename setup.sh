@@ -9,7 +9,6 @@ sudo systemctl restart docker
 rm get-docker.sh
 
 sudo apt update
-sudo apt -y full-upgrade
 
 sudo docker pull homeassistant/home-assistant:stable
 sudo docker pull cortictech/speech:0.52
@@ -39,7 +38,7 @@ sudo pip3 install jupyterhub
 sudo cp setup_scripts/chkpass.sh /opt
 sudo chmod +x /opt/chkpass.sh
 cp -R setup_scripts/homeassistant /home/pi
-sudo cp setup_scripts/curt_containers.service
+sudo cp setup_scripts/curt_containers.service /etc/systemd/system
 sudo cp setup_scripts/cait_webapp.service /etc/systemd/system
 sudo cp setup_scripts/start_curt_containers.sh /opt
 sudo cp setup_scripts/start_cait.sh /opt
