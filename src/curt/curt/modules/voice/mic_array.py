@@ -1,8 +1,4 @@
-""" 
-Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, May 2021
-
-"""
+## Reference: https://github.com/respeaker/mic_array/blob/master/mic_array.py
 
 import pyaudio
 import queue
@@ -141,53 +137,3 @@ class MicArray(object):
 
         return best_guess
 
-
-def test_4mic():
-    import signal
-    import time
-
-    is_quit = threading.Event()
-
-    def signal_handler(sig, num):
-        is_quit.set()
-        print('Quit')
-
-    signal.signal(signal.SIGINT, signal_handler)
- 
-    with MicArray(16000, 4, 16000 / 4)  as mic:
-        for chunk in mic.read_chunks():
-            direction = mic.get_direction(chunk)
-            print(int(direction))
-
-            if is_quit.is_set():
-                break
-
-
-def test_8mic():
-    import signal
-    import time
-    from pixel_ring import pixel_ring
-
-    is_quit = threading.Event()
-
-    def signal_handler(sig, num):
-        is_quit.set()
-        print('Quit')
-
-    signal.signal(signal.SIGINT, signal_handler)
- 
-    with MicArray(16000, 8, 16000 / 4)  as mic:
-        for chunk in mic.read_chunks():
-            direction = mic.get_direction(chunk)
-            pixel_ring.set_direction(direction)
-            print(int(direction))
-
-            if is_quit.is_set():
-                break
-
-    pixel_ring.off()
-
-
-if __name__ == '__main__':
-    # test_4mic()
-    test_8mic()

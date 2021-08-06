@@ -1,6 +1,6 @@
 """ 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, August 2020
+Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
@@ -24,17 +24,21 @@ logging.getLogger().setLevel(logging.INFO)
 class BaseCommand:
     def __init__(self):
         self.command_client = mqtt.Client()
+        self.command_client.on_disconnect= self.on_disconnect
         self.sync_client = mqtt.Client()
         self.sync_client.on_connect = self.on_connect_sync
         self.sync_client.on_message = self.on_message_sync
+        self.sync_client.on_disconnect= self.on_disconnect
         self.sync_client_stream = mqtt.Client()
         self.sync_client_stream.on_connect = self.on_connect_sync_stream
         self.sync_client_stream.on_message = self.on_message_sync_stream
+        self.sync_client_stream.on_disconnect= self.on_disconnect
         self.selected_service = None
         self.module_list = {}
         self.hearbeat_client = mqtt.Client()
         self.hearbeat_client.on_connect = self.on_connect_hearbeat
         self.hearbeat_client.on_message = self.on_message_heartbeat
+        self.hearbeat_client.on_disconnect= self.on_disconnect
         self.connected_to_cait = False
         self.remote_worker_to_sync = None
         self.remote_guid_to_sync = None
@@ -65,6 +69,27 @@ class BaseCommand:
         except:
             logging.info("Broker: (" + address + ") not up yet, retrying...")
             return False
+
+    def on_disconnect(self, client, userdata, rc):
+        logging.info("disconnecting reason  "  +str(rc))
+        self.connect_client_to_curt(client)
+
+    def connect_client_to_curt(self, client):
+        curt_broker_address = ""
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < 60:
+            data, address = self.sock.recvfrom(4096)
+            data = str(data.decode("UTF-8"))
+            if "curt_broker_available" in data:
+                curt_broker_address = address[0]
+                break
+        if curt_broker_address == "":
+            return False, ""
+        print("Found a curt broker at:", curt_broker_address)
+        ret = self.connect_mqtt(client, curt_broker_address)
+        while ret != True:
+            time.sleep(1)
+            ret = self.connect_mqtt(client, curt_broker_address)
 
     def connect_to_curt(self):
         curt_broker_address = ""
