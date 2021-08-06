@@ -4,8 +4,6 @@ face detector.
 
 """ 
 
-import time
-import numpy as np
 from curt.command import CURTCommands
 
 # Modify these to your own workers
@@ -27,8 +25,8 @@ oakd_pipeline_config = [
 oakd_pipeline_worker = CURTCommands.get_worker(
     OAKD_PIPELINE_WORKER
 )
-CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
-time.sleep(5)
+config_handler = CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
+success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
 
 rgb_camera_worker = CURTCommands.get_worker(
     RGB_CAMERA_WORKER

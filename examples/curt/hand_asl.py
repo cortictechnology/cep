@@ -16,34 +16,48 @@ be advertised and use.
 The code below demostrate the use of it.
 """ 
 
-import time
-import numpy as np
 from curt.command import CURTCommands
+
+# Modify these to your own workers
+# Format is "<host_name>/<module_type>/<service_name>/<worker_name>"
+OAKD_PIPELINE_WORKER = "charlie/vision/oakd_service/oakd_pipeline"
+RGB_CAMERA_WORKER = "charlie/vision/oakd_service/oakd_rgb_camera_input"
+HAND_LADNMARKS_WORKER = "charlie/vision/oakd_service/oakd_hand_landmarks"
+HAND_ASL_WORKER = "charlie/vision/oakd_service/oakd_hand_asl"
+
+preview_width = 640
+preview_heigth = 360
+
+palm_detection_nn_input_size = 128
+hand_landmarks_nn_input_size = 224
+hand_asl_nn_input_size = 224
 
 CURTCommands.initialize()
 
 oakd_pipeline_config = [
-    ["add_rgb_cam_node", 640, 360],
+    ["add_rgb_cam_node", preview_width, preview_heigth],
     ["add_rgb_cam_preview_node"],
-    ["add_nn_node", "palm_detection", "palm_detection_6_shaves.blob", 128, 128],
-    ["add_nn_node", "hand_landmarks", "hand_landmark_6_shaves.blob", 224, 224],
-    ["add_nn_node", "hand_asl", "hand_asl_6_shaves.blob", 224, 224],
+    ["add_nn_node", "palm_detection", "palm_detection_6_shaves.blob", palm_detection_nn_input_size, palm_detection_nn_input_size],
+    ["add_nn_node", "hand_landmarks", "hand_landmark_6_shaves.blob", hand_landmarks_nn_input_size, hand_landmarks_nn_input_size],
+    ["add_nn_node", "hand_asl", "hand_asl_6_shaves.blob", hand_asl_nn_input_size, hand_asl_nn_input_size],
 ]
-CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
+
 
 oakd_pipeline_worker = CURTCommands.get_worker(
-    "charlie/vision/oakd_service/oakd_pipeline"
+    OAKD_PIPELINE_WORKER
 )
+config_handler = CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
+success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
 
 rgb_camera_worker = CURTCommands.get_worker(
-    "charlie/vision/oakd_service/oakd_rgb_camera_input"
+    RGB_CAMERA_WORKER
 )
 
 hand_landmarks_worker = CURTCommands.get_worker(
-    "charlie/vision/oakd_service/oakd_hand_landmarks"
+    HAND_LADNMARKS_WORKER
 )
 
-hand_asl_worker = CURTCommands.get_worker("charlie/vision/oakd_service/oakd_hand_asl")
+hand_asl_worker = CURTCommands.get_worker(HAND_ASL_WORKER)
 
 rgb_frame_handler = CURTCommands.request(rgb_camera_worker, params=["get_rgb_frame"])
 hand_landmarks_handler = CURTCommands.request(

@@ -6,8 +6,6 @@ this person. The person is then deleted after 30 frames of recognition.
 
 """
 
-import time
-import numpy as np
 from curt.command import CURTCommands
 
 # Modify these to your own workers

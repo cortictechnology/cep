@@ -48,12 +48,6 @@ sudo sh -c 'echo "export CAIT_PATH=$PWD/src/cait/" >> /root/.bashrc'
 sudo sh -c 'echo "export CAIT_WEB_PATH=$PWD/src/cait/cortic_webapp/" >> /root/.bashrc'
 sudo sh -c 'echo "export PYTHONPATH=$PWD/src/curt/:$PWD/src/cait/:$PYTHONPATH" >> /root/.bashrc'
 
-git clone https://github.com/respeaker/seeed-voicecard.git
-cd seeed-voicecard
-sudo ./install.sh --compat-kernel
-cd ..
-rm -rf seeed-voicecard
-
 sudo docker pull homeassistant/home-assistant:stable
 sudo docker pull cortictech/speech:0.52
 sudo docker pull cortictech/nlp:0.52
@@ -61,5 +55,3 @@ sudo docker pull cortictech/vision:0.52
 sudo docker pull cortictech/control:0.52
 sudo docker pull cortictech/broker:0.51
 sudo docker pull cortictech/smarthome:0.52
-
-sudo reboot now
