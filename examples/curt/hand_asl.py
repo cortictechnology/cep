@@ -11,7 +11,7 @@ In this example, the new type is "hand_asl"
 In this example, a new worker "oakd_hand_asl" and its class 
 name "OAKDASL" is added.
 4. When curt backend restarts, the newly implemented worker will 
-be advertised and use.
+be advertised and available to use.
 
 The code below demonstrates its use.
 """ 
