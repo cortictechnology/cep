@@ -26,6 +26,9 @@ face_detection_nn_input_size = 300
 face_landmarks_nn_input_size = 48
 face_feature_nn_input_size = 112
 
+face_detection_confidence = 0.6
+detect_largest_face_only = False
+
 CURTCommands.initialize()
 
 oakd_pipeline_config = [
@@ -76,7 +79,7 @@ while True:
     )
 
     face_detection_handler = CURTCommands.request(
-        face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+        face_detection_worker, params=["detect_face_pipeline", face_detection_confidence, detect_largest_face_only]
     )
 
     if not success:
