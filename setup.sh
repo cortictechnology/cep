@@ -5,6 +5,7 @@ sudo gpasswd -a $USER docker
 sudo touch /etc/docker/daemon.json
 sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
 sudo mkdir ~/cait_workspace
+sudo cp examples/cait/*.cait ~/cait_workspace
 sudo systemctl restart docker
 rm get-docker.sh
 
@@ -55,3 +56,5 @@ sudo docker pull cortictech/vision:0.52
 sudo docker pull cortictech/control:0.52
 sudo docker pull cortictech/broker:0.51
 sudo docker pull cortictech/smarthome:0.52
+
+sudo reboot

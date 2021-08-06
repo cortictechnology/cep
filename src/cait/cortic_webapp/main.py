@@ -336,6 +336,7 @@ def testspeaker():
     curt_path = os.getenv("CURT_PATH")
     #out = os.system("sudo -u pi aplay /opt/cortic_modules/voice_module/siri.wav")
     out = os.system("sudo -u pi aplay -f cd -Dhw:0 " + curt_path + "models/modules/voice/siri.wav")
+    out = os.system("sudo -u pi aplay -f cd -Dhw:1 " + curt_path + "models/modules/voice/siri.wav")
 
     result = {"result": out}
     return jsonify(result)
@@ -389,6 +390,7 @@ def testmicrophone():
         wf.close()
 
         os.system("sudo -u pi aplay -f cd -Dhw:0 " + WAVE_OUTPUT_FILENAME)
+        os.system("sudo -u pi aplay -f cd -Dhw:1 " + WAVE_OUTPUT_FILENAME)
 
         out = os.system("rm " + WAVE_OUTPUT_FILENAME)
 

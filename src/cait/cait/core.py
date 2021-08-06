@@ -98,11 +98,10 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         user_mode = "code"
     current_video_device = None
     if processor == "oakd":
-        # available_video_devices = CURTCommands.get_oakd_services("oakd_pipeline")
-        all_usb_devices = get_usb_devices()
-        for udev in all_usb_devices:
-            if udev['tag'] == 'Intel Movidius MyriadX':
-                current_video_device = 'Intel Movidius MyriadX'
+        # all_usb_devices = get_usb_devices()
+        # for udev in all_usb_devices:
+        #     if udev['tag'] == 'Intel Movidius MyriadX':
+        #         current_video_device = 'Intel Movidius MyriadX'
         current_video_worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_pipeline"
         )
@@ -113,12 +112,12 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         current_video_worker = CURTCommands.get_worker(
             full_domain_name + "/vision/vision_input_service/webcam_input"
         )
-    if current_video_device is None:
-        vision_initialized = False
-        return (
-            False,
-            "No video input device is detected, or connected device is not supported",
-        )
+        if current_video_device is None:
+            vision_initialized = False
+            return (
+                False,
+                "No video input device is detected, or connected device is not supported",
+            )
     if processor == "oakd":
         for node in mode:
             if node[0] == "add_rgb_cam_node":

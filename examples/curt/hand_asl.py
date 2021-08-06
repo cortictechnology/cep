@@ -1,5 +1,5 @@
 """ 
-This example demostrate the use of a newly implemented oak-d worker: hand_asl
+This example demonstrates the use of a newly implemented oak-d worker: hand_asl
 To implement a new worker, please refer to the following steps:
 1. Define a new oak-d node type in:
 <cep_root>/src/curt/curt/modules/vision/oakd_node_types.py
@@ -9,11 +9,11 @@ In this example, the new type is "hand_asl"
 3. Add this new woker in: 
 <cep_root>/src/curt/curt/module_configs.json
 In this example, a new worker "oakd_hand_asl" and its class 
-name "OAKDASL" are added.
+name "OAKDASL" is added.
 4. When curt backend restarts, the newly implemented worker will 
 be advertised and use.
 
-The code below demostrate the use of it.
+The code below demonstrates its use.
 """ 
 
 from curt.command import CURTCommands

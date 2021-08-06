@@ -1,5 +1,5 @@
 """ 
-This example demostrate how to use OAK-D to obtain a heart rate
+This example demonstrates how to use OAK-D to obtain a heart rate
 estimation of a person. Face detected by the oakd face detection
 worker is passed to a heart rate estimation worker. The heart rate
 is returned once a stead signal is identified.

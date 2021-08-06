@@ -1,8 +1,8 @@
 """ 
-This example demostrate the use of rgb and stereo camera to obtain the 
-sparial location of a human pose.
-The rgb frame is passed to a pose estimation worker, the otained body 
-landmarks are then passed to a spatial calcultor worker to obtain the 
+This example demonstrates the use of RGB and stereo cameras to obtain the 
+spatial location of a human pose.
+The RGB frame is passed to a pose estimation worker, the obtained body 
+landmarks are then passed to a spatial calculator worker to obtain the 
 spatial locations.
 
 """ 

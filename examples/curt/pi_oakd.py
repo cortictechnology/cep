@@ -1,5 +1,5 @@
 """ 
-This example demostrate the use of OAK-D camera with a Raspberry Pi 
+This example demonstrates the use of OAK-D camera with a Raspberry Pi 
 face detector.
 
 """ 

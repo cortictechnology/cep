@@ -105,8 +105,10 @@ class OAKDPipeline:
         success = False
         retry_count = 0
         while not success:
+            logging.warning("Retry count: " + str(retry_count))
             logging.warning("Trying to start oakd pipeline")
             success = self.start_pipeline()
+            logging.warning("Pipeline success: " + str(success))
             retry_count += 1
             if retry_count > 3:
                 logging.warning("Failed to start oakd pipeline")
@@ -115,10 +117,10 @@ class OAKDPipeline:
             return False
         self.pipeline_started = True
         self.reset = False
-        print("Starting thread")
+        logging.warning("Starting thread")
         self.consume_thread = threading.Thread(target=self.consume_func, daemon=True)
         self.consume_thread.start()
-        print("Thread started")
+        logging.warning("Thread started")
         return True
 
     def config_pipeline_version(self, version):
@@ -461,6 +463,6 @@ class OAKDPipeline:
         self.device = dai.Device(self.pipeline)
         if self.device.isClosed():
             success = False
-        success = self.device.startPipeline()
+        self.device.startPipeline()
         logging.info("Started OAK-D Pipeline")
         return success
