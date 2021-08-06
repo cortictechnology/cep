@@ -153,10 +153,10 @@ class HeartrateMeasure:
         if len(bbox) > 0:
             bbox = bbox[0]
             self.face_rect = [
-                bbox[0],
-                bbox[1],
-                bbox[2] - bbox[0],
-                bbox[3] - bbox[1],
+                int(bbox[0] * img.shape[1]),
+                int(bbox[1] * img.shape[0]),
+                int((bbox[2] - bbox[0]) * img.shape[1]),
+                int((bbox[3] - bbox[1]) * img.shape[0]),
             ]
         if self.face_rect is None:
             # BPM is set to 0 if not face is present
