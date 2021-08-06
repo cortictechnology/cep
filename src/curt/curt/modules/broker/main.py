@@ -53,8 +53,8 @@ def broadcast_fuc():
     try:
         while broadcast:
             print("sending: " + message)
-            for i in range(7):
-                server_address = ("255.255.255.255", 9434 + i)
+            for i in range(9):
+                server_address = ("255.255.255.255", 9433 + i)
                 sent = sock.sendto(message.encode(), server_address)
             time.sleep(3)
     finally:

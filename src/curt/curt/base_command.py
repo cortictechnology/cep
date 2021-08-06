@@ -48,7 +48,11 @@ class BaseCommand:
         self.unclaimed_data = collections.deque(maxlen=50)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_address = ("", 9435)
-        self.sock.bind(server_address)
+        try:
+            self.sock.bind(server_address)
+        except:
+            server_address = ("", 9433)
+            self.sock.bind(server_address)
         self.current_listening_topics = []
 
     def connect_mqtt(self, client, address):
