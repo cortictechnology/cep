@@ -38,6 +38,7 @@ sudo cp setup_scripts/start_cait.sh /opt
 sudo systemctl daemon-reload
 sudo systemctl enable curt_containers.service
 sudo systemctl enable cait_webapp.service
+sudo apt-get -y install raspberrypi-kernel-headers raspberrypi-kernel 
 
 echo "export CURT_PATH=$PWD/src/curt/" >> ~/.bashrc 
 echo "export CAIT_PATH=$PWD/src/cait/" >> ~/.bashrc 
@@ -57,4 +58,4 @@ sudo docker pull cortictech/control:0.52
 sudo docker pull cortictech/broker:0.51
 sudo docker pull cortictech/smarthome:0.52
 
-sudo reboot
+sudo reboot now
