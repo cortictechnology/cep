@@ -16,35 +16,43 @@ OAKD_PIPELINE_WORKER = "charlie/vision/oakd_service/oakd_pipeline"
 RGB_CAMERA_WORKER = "charlie/vision/oakd_service/oakd_rgb_camera_input"
 FACE_DETECTION_WORKER = "charlie/vision/oakd_service/oakd_face_detection"
 FACE_RECOGNITION_WORKER = "charlie/vision/oakd_service/oakd_face_recognition"
+
 person_name_to_add = "Michael"
+
+preview_width = 640
+preview_heigth = 360
+
+face_detection_nn_input_size = 300
+face_landmarks_nn_input_size = 48
+face_feature_nn_input_size = 112
 
 CURTCommands.initialize()
 
 oakd_pipeline_config = [
-    ["add_rgb_cam_node", 640, 360, False],
+    ["add_rgb_cam_node", preview_width, preview_heigth, False],
     ["add_rgb_cam_preview_node"],
     [
         "add_nn_node_pipeline",
         "face_detection",
         "face-detection-retail-0004_openvino_2021.2_6shave.blob",
-        300,
-        300,
+        face_detection_nn_input_size,
+        face_detection_nn_input_size,
     ],
     [
         "add_nn_node",
         "face_landmarks",
         "landmarks-regression-retail-0009_openvino_2021.2_6shave.blob",
-        48,
-        48,
+        face_landmarks_nn_input_size,
+        face_landmarks_nn_input_size,
     ],
-    ["add_nn_node", "face_features", "mobilefacenet.blob", 112, 112],
+    ["add_nn_node", "face_features", "mobilefacenet.blob", face_feature_nn_input_size, face_feature_nn_input_size],
 ]
 
 oakd_pipeline_worker = CURTCommands.get_worker(
     OAKD_PIPELINE_WORKER
 )
-CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
-time.sleep(5)
+config_handler = CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
+success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
 
 rgb_camera_worker = CURTCommands.get_worker(
     RGB_CAMERA_WORKER

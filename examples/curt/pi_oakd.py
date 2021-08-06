@@ -8,25 +8,34 @@ import time
 import numpy as np
 from curt.command import CURTCommands
 
+# Modify these to your own workers
+# Format is "<host_name>/<module_type>/<service_name>/<worker_name>"
+OAKD_PIPELINE_WORKER = "charlie/vision/oakd_service/oakd_pipeline"
+RGB_CAMERA_WORKER = "charlie/vision/oakd_service/oakd_rgb_camera_input"
+FACE_DETECTION_WORKER = "charlie/vision/vision_processor_service/face_detection"
+
+preview_width = 640
+preview_heigth = 360
+
 CURTCommands.initialize()
 
 oakd_pipeline_config = [
-    ["add_rgb_cam_node", 640, 360, False],
+    ["add_rgb_cam_node", preview_width, preview_heigth, False],
     ["add_rgb_cam_preview_node"]
 ]
 
 oakd_pipeline_worker = CURTCommands.get_worker(
-    "charlie/vision/oakd_service/oakd_pipeline"
+    OAKD_PIPELINE_WORKER
 )
 CURTCommands.config_worker(oakd_pipeline_worker, oakd_pipeline_config)
 time.sleep(5)
 
 rgb_camera_worker = CURTCommands.get_worker(
-    "charlie/vision/oakd_service/oakd_rgb_camera_input"
+    RGB_CAMERA_WORKER
 )
 
 face_detection_worker = CURTCommands.get_worker(
-    "charlie/vision/vision_processor_service/face_detection"
+    FACE_DETECTION_WORKER
 )
 
 while True:

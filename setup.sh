@@ -12,7 +12,7 @@ sudo apt update
 
 git clone https://github.com/respeaker/seeed-voicecard.git
 cd seeed-voicecard
-sudo ./install.sh
+sudo ./install.sh --compat-kernel
 cd ..
 rm -rf seeed-voicecard
 
