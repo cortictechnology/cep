@@ -1,7 +1,7 @@
 """ 
 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, December 2019
+Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 import os
@@ -346,6 +346,19 @@ def deactivate_control():
     control_initialized = False
     pid_controller = None
     return True
+
+def initialize_smarthome():
+    global smarthome_initialized
+    ha_worker = CURTCommands.get_worker(
+        full_domain_name + "/smarthome/smarthome_service/ha_provider"
+    )
+    config_handler = CURTCommands.config_worker(ha_worker, {"token": token})
+    success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    if not success:
+        smarthome_initialized = False
+        return False, "Failed to initialize smart home woker, check the connection with home assistant"
+    smarthome_initialized = True
+    return True, "OK"
 
 
 def initialize_pid(kp, ki, kd):
@@ -1289,7 +1302,7 @@ def stop_all_motors():
         logging.info(
             "Please call initialize_control() function before using the vision module"
         )
-        return False, "Not initialized"
+        return False
     control_worker = CURTCommands.get_worker(
         full_domain_name + "/control/control_service/robot_inventor_control"
     )
@@ -1304,6 +1317,7 @@ def stop_all_motors():
             },
         }
         CURTCommands.request(control_worker, params=[control_params])
+    return True
 
 
 def update_pid(error):
@@ -1315,44 +1329,63 @@ def update_pid(error):
 
 
 def get_devices(device_type):
-    url = "http://0.0.0.0:8123/api/states"
-    response = requests.request("GET", url, headers=headers)
-    response_data = response.json()
-
-    device_names = []
-
-    for state in response_data:
-        if state["entity_id"].find(device_type + ".") != -1:
-            detail_url = "http://0.0.0.0:8123/api/states/" + state["entity_id"]
-            detail_response = requests.request(
-                "GET", detail_url, headers=headers
-            ).json()
-            if detail_response["state"] != "unavailable":
-                name = state["entity_id"][state["entity_id"].find(".") + 1 :]
-                device_names.append(name)
-    return device_names
+    ha_worker = CURTCommands.get_worker(
+        full_domain_name + "/smarthome/smarthome_service/ha_provider"
+    )
+    if ha_worker is None:
+        return []
+    config_handler = CURTCommands.config_worker(ha_worker, {"token": token})
+    success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    if not success:
+        return []
+    smarthome_params = {
+        "control_type": "get_devices",
+        "parameter": device_type
+    }
+    smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
+    devices = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]    
+    return devices
 
 
 def control_light(device_name, operation, parameter=None):
-    if operation == "turn_on" or operation == "turn_off" or operation == "toggle":
-        url = "http://0.0.0.0:8123/api/services/light/" + operation
-        data = {"entity_id": device_name}
-    else:
-        if operation == "color_name":
-            url = "http://0.0.0.0:8123/api/services/light/turn_on"
-            data = {"entity_id": device_name, "color_name": parameter}
-        elif operation == "brightness_pct":
-            url = "http://0.0.0.0:8123/api/services/light/turn_on"
-            data = {"entity_id": device_name, "brightness_pct": int(parameter)}
-    response = requests.request("POST", url, headers=headers, data=json.dumps(data))
-    return response.json()
+    global smarthome_initialized
+    if not smarthome_initialized:
+        logging.info(
+            "Please call initialize_smarthome() function before using the smarthome module"
+        )
+        return False
+    ha_worker = CURTCommands.get_worker(
+        full_domain_name + "/smarthome/smarthome_service/ha_provider"
+    )
+    smarthome_params = {
+        "control_type": "light",
+        'device_name': device_name,
+        'operation': operation,
+        "parameter": parameter
+    }
+    smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
+    result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
+    return result
 
 
 def control_media_player(device_name, operation):
-    url = "http://0.0.0.0:8123/api/services/media_player/" + operation
-    data = {"entity_id": device_name}
-    response = requests.request("POST", url, headers=headers, data=json.dumps(data))
-    return response.json()
+    global smarthome_initialized
+    if not smarthome_initialized:
+        logging.info(
+            "Please call initialize_smarthome() function before using the smarthome module"
+        )
+        return False
+    ha_worker = CURTCommands.get_worker(
+        full_domain_name + "/smarthome/smarthome_service/ha_provider"
+    )
+    smarthome_params = {
+        "control_type": "media_player",
+        'device_name': device_name,
+        'operation': operation
+    }
+    smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
+    result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
+    return result
 
 
 def streaming_func():

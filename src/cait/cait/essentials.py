@@ -1,7 +1,7 @@
 """ 
 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, December 2019
+Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
@@ -112,9 +112,8 @@ def initialize_component(
         success, msg = core.initialize_nlp(mode)
     elif component_name == "control":
         success, msg = core.initialize_control(mode)
-    elif component_name == "smart_home":
-        success = True
-        msg = "OK"
+    elif component_name == "smarthome":
+        success, msg = core.initialize_smarthome()
     return success, msg
 
 

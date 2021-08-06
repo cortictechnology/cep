@@ -407,7 +407,7 @@ async function cait_init_control(mode) {
 }
 
 async function cait_init_smarthome() {
-  return;
+  await cait_init("smarthome");
 }
 
 async function cait_init_pid(kp, ki, kd) {

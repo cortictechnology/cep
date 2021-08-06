@@ -1,3 +1,9 @@
+""" 
+This example demostrate the use of OAK-D camera with a Raspberry Pi 
+face detector.
+
+""" 
+
 import time
 import numpy as np
 from curt.command import CURTCommands

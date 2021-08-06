@@ -1,3 +1,12 @@
+""" 
+This example demostrate the use of rgb and stereo camera to obtain the 
+sparial location of a human pose.
+The rgb frame is passed to a pose estimation worker, the otained body 
+landmarks are then passed to a spatial calcultor worker to obtain the 
+spatial locations.
+
+""" 
+
 import time
 import numpy as np
 from curt.command import CURTCommands

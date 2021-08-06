@@ -394,12 +394,12 @@
         <script>document.getElementById('genPyNB').title = localizedStrings.genPyNB[locale];</script>
         <button id="logout" onclick="logout()" style="float: right;"></button>
         <script>document.getElementById('logout').title = localizedStrings.logout[locale];</script>
-        <select name="language" id="languageDropdown" onchange="switch_lang()"
+        <!-- <select name="language" id="languageDropdown" onchange="switch_lang()"
           style="float: right; margin-top: 10px; margin-right: 30px;">
           <option value="English" selected>English</option>
           <option value="french">Française</option>
           <option value="chinese">中文(简体)</option>
-        </select>
+        </select> -->
       </td>
     </tr>
     <tr>
@@ -802,10 +802,6 @@
       <category name="Raspberry Pi" colour="#5D0095" iconclass="blocklyTreeIconCustom vision">
         <block type="vision_detect_face_pi"></block>
         <block type="vision_draw_detected_face"></block>
-        <block type="vision_recognize_face"></block>
-        <block type="vision_add_person"></block>
-        <block type="vision_remove_person"></block>
-        <block type="vision_classify_image"></block>
       </category>
       <category name="OAK-D" colour="#5D0095" iconclass="blocklyTreeIconCustom vision">
         <block type="init_vision"></block>

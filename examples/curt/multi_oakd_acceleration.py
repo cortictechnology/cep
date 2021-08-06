@@ -1,3 +1,13 @@
+""" 
+This example demostrate how to accelerate a facemesh estimation operation
+using multiple oak-d cameras. Frames are grab by one oak-d camera in constant
+time. Then they are send to 3 oak-d camera for inference with a offset from each
+other. The offset is measured and calculated such that after the first 5 frames,
+each result can be retrieved in a constant time. This constant time is shorter
+than the original inference time on one single oak-d camera.
+
+"""
+
 import time
 import numpy as np
 import queue

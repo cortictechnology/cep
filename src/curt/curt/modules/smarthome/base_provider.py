@@ -17,11 +17,11 @@ class BaseProvider:
     def command(self, params):
         data = params["ready_data"][0]
         if data["control_type"] == "get_devices":
-            return self.get_devices(data["operation"])
+            return self.get_devices(data)
         elif data["control_type"] == "light":
-            return self.control_light(data["operation"])
+            return self.control_light(data)
         elif data["control_type"] == "media_player":
-            return self.control_media_player(data["operation"])
+            return self.control_media_player(data)
 
     @abstractmethod
     def get_devices(self, data):

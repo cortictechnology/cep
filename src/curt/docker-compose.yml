@@ -74,3 +74,14 @@ services:
         - ./:/data
         - ./models/modules/nlp:/models
         command: bash -c "python3 /data/curt/modules/nlp/main.py"
+    
+    curt_smarthome:
+        network_mode: "host"
+        privileged: true
+        image: "cortictech/smarthome:0.52"
+        restart: always 
+        environment:
+            - PYTHONPATH=/data
+        volumes:
+        - ./:/data
+        command: bash -c "python3 /data/curt/modules/smarthome/main.py"

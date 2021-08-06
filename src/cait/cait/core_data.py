@@ -1,3 +1,10 @@
+""" 
+
+Copyright (C) Cortic Technology Corp. - All Rights Reserved
+Written by Michael Ng <michaelng@cortic.ca>, 2021
+
+"""
+
 import cv2
 import ast
 import os
@@ -102,11 +109,6 @@ POSE_JOINT_COLOR = [
 
 # We are using the same token for all CURT devices, you can modify into yours for your own Home Assistant setup
 token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJjZGFhZGYwNTM5ZDM0NGUwYWNmNmMxNzk2MTMzMTQwOCIsImlhdCI6MTU4MjI2MjgyNywiZXhwIjoxODk3NjIyODI3fQ.8eixv03gAqgx-Mw3BZQmjuewDfStdDqzdHMzqt2JXbo"
-authorization = "Bearer " + token
-headers = {
-    "Authorization": authorization,
-    "content-type": "application/json",
-}
 
 not_needed_domains = [
     "homeassistant",
