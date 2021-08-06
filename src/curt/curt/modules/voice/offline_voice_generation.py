@@ -17,8 +17,7 @@ class OfflineVoiceGeneration(BaseVoiceGeneration):
     def __init__(self):
         super().__init__()
         self.voice = (
-            os.path.dirname(os.path.realpath(__file__))
-            + "/../../../models/modules/voice/cmu_us_rms.flitevox"
+            "/models/cmu_us_rms.flitevox"
         )
         self.duration_stretch = 1.0
 
@@ -27,11 +26,10 @@ class OfflineVoiceGeneration(BaseVoiceGeneration):
         self.duration_stretch = params["duration_stretch"]
 
     def start_playing(self, input_data):
-        print("Offline voice generation, data:", input_data)
+        logging.warning("Offline voice generation, data: " + input_data)
         if input_data == "notification_tone":
             tone = (
-                os.path.dirname(os.path.realpath(__file__))
-                + "/../../../models/modules/voice/siri.wav"
+                "/models/siri.wav"
             )
             os.system("mplayer " + tone)
         else:

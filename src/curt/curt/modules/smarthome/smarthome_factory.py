@@ -9,4 +9,4 @@ from curt.base_factory import BaseFactory
 class SmartHomeFactory(BaseFactory):
 
     def __init__(self):
-        super().__init__("control")
+        super().__init__("smarthome")

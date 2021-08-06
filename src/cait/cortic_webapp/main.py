@@ -333,7 +333,9 @@ def testspeaker():
         + "' /usr/share/alsa/alsa.conf"
     )
 
-    out = os.system("sudo -u pi aplay /opt/cortic_modules/voice_module/siri.wav")
+    curt_path = os.getenv("CURT_PATH")
+    #out = os.system("sudo -u pi aplay /opt/cortic_modules/voice_module/siri.wav")
+    out = os.system("sudo -u pi aplay -f cd -Dhw:0 " + curt_path + "models/modules/voice/siri.wav")
 
     result = {"result": out}
     return jsonify(result)

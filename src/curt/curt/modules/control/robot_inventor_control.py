@@ -4,10 +4,8 @@ Written by Michael Ng <michaelng@cortic.ca>, October 2020
 
 """
 
-import serial
 import logging
 import time
-import math
 import bluetooth
 from curt.modules.control.base_control import BaseControl
 from curt.utils import PID

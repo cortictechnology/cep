@@ -92,5 +92,15 @@
                 "robot_inventor_control"
             ]
         }
+    },
+    "smarthome": {
+        "ha_provider": "HAProvider",
+        "smarthome_service": {
+            "class": "SmartHomeService",
+            "friendly_name": "Smart Home Service",
+            "worker_list": [
+                "ha_provider"
+            ]
+        }
     }
 }

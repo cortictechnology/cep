@@ -4,12 +4,17 @@ Written by Michael Ng <michaelng@cortic.ca>, August 2020
 
 """
 
+from curt.base_module import BaseModule
+from curt.modules.smarthome.smarthome_factory import SmartHomeFactory
+
+
 class SmartHomeModule(BaseModule):
-    # fake workers for sending command
-    # Different configuration file section
-
     def __init__(self):
+        super().__init__("smarthome")
 
-        self.session = None
-        # connection section for HA communication
+    def create_factory(self):
+        self.worker_factory = SmartHomeFactory()
+
+    def process_remote_data(self, data):
+        return data
 

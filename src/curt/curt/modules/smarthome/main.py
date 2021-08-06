@@ -10,8 +10,7 @@ from curt.modules.module_main import ModuleMain
 
 class SmartHomeMain(ModuleMain):
     def __init__(self):
-        super().__init__(SmartHomeModule())
-        self.port = 9437
+        super().__init__(SmartHomeModule(), port=9440)
 
 
 if __name__ == "__main__":

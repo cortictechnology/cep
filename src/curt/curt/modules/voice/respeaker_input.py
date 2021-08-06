@@ -38,9 +38,6 @@ class RespeakerInput(BaseVoiceInput):
         self.speech_chunks = deque(maxlen=1024)
         self.reset_speech_chunks = False
         self.doa_chunks = int(self.DOA_FRAMES / self.VAD_FRAMES)
-        self.recording_thread = threading.Thread(
-            target=self.recording_thread, daemon=True
-        )
         self.recording_thread_started = False
         self.no_microphone = False
         self.last_speech_chunk_time = time.monotonic()
@@ -52,15 +49,8 @@ class RespeakerInput(BaseVoiceInput):
         if self.no_microphone:
             logging.warning("No microphone attached")
             return False
-        if self.audio_index != -1:
-            logging.warning("Please release the current audio input device first")
-            return False
         else:
             self.audio_index = params["audio_in_index"]
-            if not self.recording_thread_started:
-                self.recording_thread = threading.Thread(
-                    target=self.recording_thread, daemon=True
-                )
             return True
 
     def recording_thread(self):
@@ -69,7 +59,6 @@ class RespeakerInput(BaseVoiceInput):
             with MicArray(
                 self.RATE, self.CHANNELS, self.RATE * self.VAD_FRAMES / 1000
             ) as mic:
-                self.recording_thread_started = True
                 for chunk in mic.read_chunks():
                     if self.started_recording:
                         # Use single channel audio to detect voice activity
@@ -98,10 +87,17 @@ class RespeakerInput(BaseVoiceInput):
         except KeyboardInterrupt:
             logging.warning("recording thread qutting")
             self.no_microphone = True
+            self.audio_index = -1
+            self.started_recording = False
+            self.speech_chunks.clear()
 
     def start_recording(self):
+        logging.warning("Call start recording function")
         if self.audio_index != -1:
             if not self.started_recording:
+                self.recording_thread = threading.Thread(
+                    target=self.recording_thread, daemon=True
+                )
                 self.recording_thread.start()
                 self.started_recording = True
                 return []

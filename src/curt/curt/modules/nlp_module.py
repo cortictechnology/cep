@@ -15,5 +15,5 @@ class NLPModule(BaseModule):
     def create_factory(self):
         self.worker_factory = NLPFactory()
 
-    def processRemoteData(self, data):
+    def process_remote_data(self, data):
         return data

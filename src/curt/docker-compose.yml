@@ -46,7 +46,7 @@ services:
             - /dev/snd:/dev/snd
             - /usr/share/alsa/:/usr/share/alsa/
             - ./:/data
-            - ./models/modules/vision/platforms:/models
+            - ./models/modules/voice:/models
         user: root
         command:  bash -c "python3 /data/curt/modules/voice/main.py"
 

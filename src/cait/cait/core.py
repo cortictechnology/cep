@@ -193,19 +193,13 @@ def initialize_voice(mode="online", account="default", language="english"):
     global voice_initialized
     global voice_mode
     speaker_attached = False
-    microphone_attached = False
     audio_devices = get_audio_devices()
     for device in audio_devices:
         if device['type'] == 'Output':
             speaker_attached = True
-        if device['type'] == 'Input':
-            microphone_attached = True
     if not speaker_attached:
         voice_initialized = False
         return False, "No audio output deveice is detected, or connected device is not supported",
-    if not microphone_attached:
-        voice_initialized = False
-        return False, "No audio input deveice is detected, or connected device is not supported",
 
     if language == "english":
         processing_language = "en-UK"

@@ -39,6 +39,7 @@ class OnlineVoiceProcessing(BaseVoiceProcessing):
             audio_channel_count=channel_count,
         )
         print("Online account config finished")
+        return True
 
     def cloud_request_thread(self, content):
         audio = speech.RecognitionAudio(content=content)
