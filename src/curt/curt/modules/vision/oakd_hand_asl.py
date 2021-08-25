@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, April 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 import numpy as np
@@ -42,7 +42,7 @@ class OAKDASL(OAKDProcessingWorker):
         ]
         self.node_type = "hand_asl"
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         hand_landmarks, img = params
         if img is None:
             return ""
@@ -89,7 +89,7 @@ class OAKDASL(OAKDProcessingWorker):
             raw_asl_results.append(inference)
         return raw_asl_results
 
-    def postprocessing(self, inference_result):
+    def postprocess_result(self, inference_result):
         asl_chars = []
         for result in inference_result:
             asl_result = np.array(result.getFirstLayerFp16())

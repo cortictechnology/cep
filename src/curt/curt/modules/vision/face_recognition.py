@@ -10,16 +10,16 @@ from tvm.contrib import graph_runtime
 import numpy as np
 import time
 import cv2
-# from skimage import transform as trans
+from skimage import transform as trans
 import math
 import os
 import logging
 
-from curt.modules.vision.base_vision_processing import BaseVisionProcessing
+from curt.modules.vision.tvm_processing import TVMProcessing
 from curt.data import M_PI
 
 
-class FaceRecognition(BaseVisionProcessing):
+class FaceRecognition(TVMProcessing):
 
     def __init__(self):
         super().__init__(  "cpu", 
@@ -42,7 +42,7 @@ class FaceRecognition(BaseVisionProcessing):
         self.database_loaded = False
 
 
-    def config_module(self, params):
+    def config_worker(self, params):
         if params["Mode"] == "LoadDatabase":
             self.load_database(params['Data'])
         elif params["Mode"] == "GenDatabase":
@@ -143,14 +143,13 @@ class FaceRecognition(BaseVisionProcessing):
 
     def get_best_match_identity(self, similarity_scores, threshold=0.7):
         sort_idx = np.argsort(-similarity_scores)
-        #print(sort_idx)
         if similarity_scores[sort_idx[0]] >= threshold:
             return self.face_database["Names"][sort_idx[0]]
         else:
             return "Unknown"
 
 
-    def postprocess(self, inference_outputs, index=0):
+    def postprocess_result(self, inference_outputs, index=0):
         face_features = inference_outputs[0]
         similarity = np.dot(self.face_database["Features"], face_features.T).squeeze()
         similarity = 1.0 / (1 + np.exp(-1 * (similarity - 0.38) * 10))

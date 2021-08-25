@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, March 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 from curt.modules.vision.utils import decode_image_byte
@@ -18,7 +18,7 @@ class OAKDFaceMesh(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         img, detected_faces = params
         if img is None:
             return None
@@ -117,7 +117,7 @@ class OAKDFaceMesh(OAKDProcessingWorker):
             raw_facemeshes.append(facemesh)
         return raw_facemeshes, lefts, tops, xmin_crops, ymin_crops, scale_xs, scale_ys
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         (
             raw_facemeshes,
             lefts,

@@ -5,7 +5,7 @@ Written by Michael Ng <michaelng@cortic.ca>, April 2020
 """
 
 from numpy.lib.arraysetops import isin
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 from curt.modules.vision.utils import decode_image_byte
@@ -26,7 +26,7 @@ class OAKDFaceDetection(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         if "face_detection" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: face_detection in the pipeline")
             return []
@@ -91,7 +91,7 @@ class OAKDFaceDetection(OAKDProcessingWorker):
                 )
                 return inference_result, threshold, largest_only
 
-    def postprocessing(self, inference_result):
+    def postprocess_result(self, inference_result):
         bboxes = []
         if not isinstance(inference_result, tuple):
             for detection in inference_result:

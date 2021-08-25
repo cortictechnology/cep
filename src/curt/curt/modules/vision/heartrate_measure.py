@@ -8,14 +8,14 @@ Written by Michael Ng <michaelng@cortic.ca>, June 2021
 from curt.modules.vision.utils import *
 from curt.modules.vision.utils import decode_image_byte
 import numpy as np
-import logging
-import os
 import time
 import collections
 
+from curt.modules.vision.cpu_processing import CPUProcessing
 
-class HeartrateMeasure:
+class HeartrateMeasure(CPUProcessing):
     def __init__(self):
+        super().__init__()
         self.fps = 0
         self.buffer_size = 250
         self.essential_frame_accumulated = 30
@@ -32,14 +32,12 @@ class HeartrateMeasure:
         self.bpm = 0
         self.pixel_threshold = 1.5
 
-        self.face_rect = None
+    def config_worker(self, params):
+        if params[0] == "pixel_threshold":
+            self.pixel = params[1]
 
-    def config_module(self, data):
-        if data[0] == "pixel_threshold":
-            self.pixel = data[1]
-
-    def get_subface_coord(self, fh_x, fh_y, fh_w, fh_h):
-        x, y, w, h = self.face_rect
+    def get_subface_coord(self, face_rect, fh_x, fh_y, fh_w, fh_h):
+        x, y, w, h = face_rect
         return [
             int(x + w * fh_x - (w * fh_w / 2.0)),
             int(y + h * fh_y - (h * fh_h / 2.0)),
@@ -142,34 +140,38 @@ class HeartrateMeasure:
                 bpm = freqs[idx2]
         return bpm
 
-    def run_inference(self, data):
-        img, bbox = data
+
+    def preprocess_input(self, input_data):
+        img, bbox = input_data
         if isinstance(img, str):
             img = decode_image_byte(img)
         forehead_x = 0.5
         y_start = 0.2
         width = 0.3
         height = 0.15
+        face_rect = None
         if len(bbox) > 0:
             bbox = bbox[0]
-            self.face_rect = [
-                bbox[0],
-                bbox[1],
-                bbox[2] - bbox[0],
-                bbox[3] - bbox[1],
+            face_rect = [
+                int(bbox[0] * img.shape[1]),
+                int(bbox[1] * img.shape[0]),
+                int((bbox[2] - bbox[0]) * img.shape[1]),
+                int((bbox[3] - bbox[1]) * img.shape[0]),
             ]
-        if self.face_rect is None:
+        if face_rect is None:
             # BPM is set to 0 if not face is present
             return 0
-
-        forehead1 = self.get_subface_coord(forehead_x, y_start, width, height)
+        forehead1 = self.get_subface_coord(face_rect, forehead_x, y_start, width, height)
         _, v2, v3 = self.get_subface_means(img, forehead1)
+        return v2
 
+    def process_data(self, data):
+        green_intensity = data
         selected_buffer, selected_times = self.select_storing_buffer(
-            v2, self.pixel_threshold
+            green_intensity, self.pixel_threshold
         )
 
-        selected_buffer.append(v2)
+        selected_buffer.append(green_intensity)
         selected_times.append(time.time() - self.t0)
 
         # Update the data buffer with latest measurement
@@ -189,7 +191,6 @@ class HeartrateMeasure:
         total_data_length = other_data_length + len(selected_buffer)
 
         processed = np.array(selected_buffer)
-
         L = len(selected_buffer)
         # Start heartrate estimation only if there are enough measurements stored in the data buffer
         if L > self.essential_frame_accumulated:
@@ -242,3 +243,6 @@ class HeartrateMeasure:
                 return self.bpms.calc_average()
             else:
                 return 0
+
+    def postprocess_result(self, processed_data):
+        return processed_data

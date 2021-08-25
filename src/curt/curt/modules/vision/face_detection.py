@@ -14,9 +14,9 @@ import cv2
 import math
 import os
 
-from curt.modules.vision.base_vision_processing import BaseVisionProcessing
+from curt.modules.vision.tvm_processing import TVMProcessing
 
-class FaceDetection(BaseVisionProcessing):
+class FaceDetection(TVMProcessing):
 
     def __init__(self):
         super().__init__("cpu", 
@@ -33,7 +33,7 @@ class FaceDetection(BaseVisionProcessing):
         self.one_face_mode = False
 
     
-    def config_module(self, params):
+    def config_worker(self, params):
         if params['Mode'] == "OneFace":
             self.one_face_mode = True
         elif params['Mode'] == "MultiFace":
@@ -252,7 +252,7 @@ class FaceDetection(BaseVisionProcessing):
             return output_detections  
 
 
-    def postprocess(self, inference_outputs, index=0):
+    def postprocess_result(self, inference_outputs):
         raw_box_tensor = inference_outputs[0]
         #print(raw_box_tensor)
         raw_score_tensor = inference_outputs[1]

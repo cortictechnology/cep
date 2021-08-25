@@ -12,9 +12,9 @@ import cv2
 import math
 import os
 
-from curt.modules.vision.base_vision_processing import BaseVisionProcessing
+from curt.modules.vision.tvm_processing import TVMProcessing
 
-class PoseEstimation(BaseVisionProcessing):
+class PoseEstimation(TVMProcessing):
 
     def __init__(self):
         super().__init__(  "cpu", 
@@ -30,5 +30,5 @@ class PoseEstimation(BaseVisionProcessing):
     def preprocess_input(self, input_data):
         pass
 
-    def postprocess(self, inference_outputs, index=0):
+    def postprocess_result(self, inference_outputs, index=0):
         pass

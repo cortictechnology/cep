@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, March 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 import numpy as np
@@ -17,7 +17,7 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         img, detected_faces = params
         if img is None:
             return None
@@ -59,7 +59,7 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
             all_emotions.append([emotions, detections[i]])
         return all_emotions
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         return inference_results
 
     def get_face_emotion(self, nn_node_names, aligned_face):

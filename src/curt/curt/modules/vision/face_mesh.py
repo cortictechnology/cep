@@ -13,10 +13,10 @@ import cv2
 import math
 import os
 
-from curt.modules.vision.base_vision_processing import BaseVisionProcessing
+from curt.modules.vision.tvm_processing import TVMProcessing
 from curt.data import M_PI, triangulation 
 
-class FaceMesh(BaseVisionProcessing):
+class FaceMesh(TVMProcessing):
 
     def __init__(self):
         super().__init__(  "cpu", 
@@ -29,11 +29,6 @@ class FaceMesh(BaseVisionProcessing):
         self.input_height = 192
         self.value = [0, 0, 0]
         self.borderType = cv2.BORDER_CONSTANT
-
-
-    def config_module(self, params):
-        return True
-    
 
     def preprocess_input(self, input_data):
         self.scale_xs = []
@@ -106,7 +101,7 @@ class FaceMesh(BaseVisionProcessing):
         return preprocessed_data
 
 
-    def postprocess(self, inference_outputs, index=0):
+    def postprocess_result(self, inference_outputs, index=0):
         scale_x = self.scale_xs[index]
         scale_y = self.scale_ys[index]
         xmin_crop = self.xmin_crops[index]

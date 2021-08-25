@@ -4,33 +4,29 @@ Written by Michael Ng <michaelng@cortic.ca>, March 2021
 
 """
 
-from abc import abstractmethod
+from curt.modules.vision.base_vision_processing import BaseVisionProcessing
 
-
-class OAKDProcessingWorker:
+class OAKDProcessingWorker(BaseVisionProcessing):
     def __init__(self):
         self.oakd_pipeline = None
         self.friendly_name = ""
 
-    def config_pipeline(self, params):
+    def config_worker(self, params):
         pass
 
-    @abstractmethod
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         pass
 
-    @abstractmethod
     def execute_nn_operation(self, preprocessed_data):
         pass
 
-    @abstractmethod
-    def postprocessing(self, inference_result):
+    def postprocess_result(self, inference_result):
         pass
 
     def run_inference(self, params):
-        preprocessed_data = self.preprocessing(params)
+        preprocessed_data = self.preprocess_input(params)
         if preprocessed_data is None:
             return None
         inference_result = self.execute_nn_operation(preprocessed_data)
-        postprocessed_data = self.postprocessing(inference_result)
+        postprocessed_data = self.postprocess_result(inference_result)
         return postprocessed_data
