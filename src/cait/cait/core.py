@@ -46,11 +46,26 @@ broker_address = CURTCommands.initialize()
 
 streaming_channel = "cait/output/" + os.uname()[1].lower() + "/displayFrame"
 streaming_client = mqtt.Client()
+hearbeat_client = mqtt.Client()
 ret = connect_mqtt(streaming_client, broker_address)
 while ret != True:
     time.sleep(1)
     ret = connect_mqtt(streaming_client, broker_address)
+ret = connect_mqtt(hearbeat_client, broker_address)
+while ret != True:
+    time.sleep(1)
+    ret = connect_mqtt(hearbeat_client, broker_address)
 
+def heartbeat_func():
+    global hearbeat_client
+    while True:
+        hearbeat_client.publish("cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1)
+        time.sleep(2)
+
+heartbeat_thread = threading.Thread(
+    target=heartbeat_func, daemon=True
+)
+heartbeat_thread.start()
 
 def get_video_devices():
     return device_manager.get_video_devices()
@@ -76,7 +91,6 @@ def get_control_devices():
 
 def test_camera(index):
     pass
-
 
 def initialize_vision(processor="local", mode=[], from_web=False):
     global oakd_nodes

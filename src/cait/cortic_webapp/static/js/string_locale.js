@@ -61,9 +61,9 @@ var localizedStrings = {
         'chs/CN': "用户名或密码不能为空！"
     },
     initCAIT: {
-        'en/CA': "Starting CAIT System",
-        'fr/CA': "Démarrage du système CAIT",
-        'chs/CN': "正在启动CAIT系统中"
+        'en/CA': "Starting CURT Backend",
+        'fr/CA': "Démarrage du système CURT",
+        'chs/CN': "正在启动CURT系统中"
     },
     createAcc: {
         'en/CA': "Create your Account",
