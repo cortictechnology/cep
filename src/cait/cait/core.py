@@ -1409,56 +1409,61 @@ def streaming_func():
     global drawing_modes
     global camera_img
     global user_mode
-    while True:
-        if vision_initialized:
-            img = None
-            if drawing_modes["Depth Mode"]:
-                img = get_stereo_image(for_streaming=True)
-            else:
-                img = get_camera_image(for_streaming=True)
-            if img is not None:
-                camera_img = decode_image_byte(img)
-                if drawing_modes["Face Detection"] != []:
-                    camera_img = draw_face_detection(
-                        camera_img, drawing_modes["Face Detection"]
-                    )
-                if drawing_modes["Face Recognition"] != []:
-                    camera_img = draw_face_recognition(
-                        camera_img,
-                        drawing_modes["Face Recognition"][0],
-                        drawing_modes["Face Recognition"][1],
-                    )
-                if drawing_modes["Face Emotions"] != []:
-                    camera_img = draw_face_emotions(
-                        camera_img, drawing_modes["Face Emotions"]
-                    )
-                if drawing_modes["Face Mesh"] != []:
-                    camera_img = draw_facemesh(camera_img, drawing_modes["Face Mesh"])
-                if drawing_modes["Object Detection"] != []:
-                    camera_img = draw_object_detection(
-                        camera_img,
-                        drawing_modes["Object Detection"][0],
-                        drawing_modes["Object Detection"][1],
-                    )
-                if drawing_modes["Pose Landmarks"] != []:
-                    camera_img = draw_body_landmarks(
-                        camera_img, drawing_modes["Pose Landmarks"]
-                    )
-                if drawing_modes["Hand Landmarks"] != []:
-                    camera_img = draw_hand_landmarks(
-                        camera_img, drawing_modes["Hand Landmarks"]
-                    )
-                if user_mode == "web":
-                    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
-                    _, buffer = cv2.imencode(".jpg", camera_img, encode_param)
-                    imgByteArr = base64.b64encode(buffer)
-                    streaming_client.publish(streaming_channel, imgByteArr)
+    try:
+        while True:
+            if vision_initialized:
+                img = None
+                if drawing_modes["Depth Mode"]:
+                    img = get_stereo_image(for_streaming=True)
                 else:
-                    cv2.imshow("Camera feed", camera_img)
-                    cv2.waitKey(1)
-        else:
-            print("Stream thread exiting")
-            break
+                    img = get_camera_image(for_streaming=True)
+                if img is not None:
+                    camera_img = decode_image_byte(img)
+                    if drawing_modes["Face Detection"] != []:
+                        camera_img = draw_face_detection(
+                            camera_img, drawing_modes["Face Detection"]
+                        )
+                    if drawing_modes["Face Recognition"] != []:
+                        camera_img = draw_face_recognition(
+                            camera_img,
+                            drawing_modes["Face Recognition"][0],
+                            drawing_modes["Face Recognition"][1],
+                        )
+                    if drawing_modes["Face Emotions"] != []:
+                        camera_img = draw_face_emotions(
+                            camera_img, drawing_modes["Face Emotions"]
+                        )
+                    if drawing_modes["Face Mesh"] != []:
+                        camera_img = draw_facemesh(camera_img, drawing_modes["Face Mesh"])
+                    if drawing_modes["Object Detection"] != []:
+                        camera_img = draw_object_detection(
+                            camera_img,
+                            drawing_modes["Object Detection"][0],
+                            drawing_modes["Object Detection"][1],
+                        )
+                    if drawing_modes["Pose Landmarks"] != []:
+                        camera_img = draw_body_landmarks(
+                            camera_img, drawing_modes["Pose Landmarks"]
+                        )
+                    if drawing_modes["Hand Landmarks"] != []:
+                        camera_img = draw_hand_landmarks(
+                            camera_img, drawing_modes["Hand Landmarks"]
+                        )
+                    if user_mode == "web":
+                        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+                        _, buffer = cv2.imencode(".jpg", camera_img, encode_param)
+                        imgByteArr = base64.b64encode(buffer)
+                        streaming_client.publish(streaming_channel, imgByteArr)
+                    else:
+                        cv2.imshow("Camera feed", camera_img)
+                        cv2.waitKey(1)
+            else:
+                print("Stream thread exiting")
+                break
+    except Exception as e:
+        logging.warning("***************STREAMING THREAD EXCEPTION:*************************")
+        logging.warning(str(e))
+        logging.warning("*******************************************************************")
 
 
 def reset_modules():
