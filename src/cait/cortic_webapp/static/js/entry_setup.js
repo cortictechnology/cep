@@ -1,10 +1,11 @@
 /* 
 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, December 2019
+Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
+var cait_system_up = false;
 var stopStreaming = true;
 var hostname = window.location.hostname
 var clientID = "blockly_" + parseInt(Math.random() * 100);
@@ -12,7 +13,21 @@ var client = new Paho.Client(hostname, 8083, clientID);
 
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
-client.connect({ onSuccess: onConnect });
+
+function MQTTconnect() {
+  client.connect({
+    onSuccess: onConnect,
+    onFailure: onFailure,
+    reconnect: true
+  });
+}
+
+MQTTconnect();
+
+function onFailure(message) {
+  console.log("Failed Connecting, Retrying...");
+  setTimeout(MQTTconnect, 500);
+}
 
 function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
@@ -23,6 +38,8 @@ function onConnect() {
       document.getElementById('loggedUser').innerHTML = localizedStrings.loggedInAs[locale] + data['username'];
       client.subscribe("cait/output/" + hostname.split(".")[0] + "/displayFrame");
       console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/displayFrame");
+      client.subscribe("cait/output/" + hostname.split(".")[0] + "/system_status");
+      console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/system_status");
     });
 }
 
@@ -37,13 +54,20 @@ function onConnectionLost(responseObject) {
 // called when a message arrives
 function onMessageArrived(message) {
   //console.log("onMessageArrived:");
-  if (stopStreaming) {
-    document.getElementById("cameraImage").setAttribute("src", '/static/img/video_placeholder.png');
+  if (message.payloadString == "CAIT UP") {
+    if (!cait_system_up) {
+      cait_system_up = true;
+    }
   }
   else {
-    document.getElementById("cameraImage").setAttribute(
-      'src', "data:image/png;base64," + message.payloadString
-    );
+    if (stopStreaming) {
+      document.getElementById("cameraImage").setAttribute("src", '/static/img/video_placeholder.png');
+    }
+    else {
+      document.getElementById("cameraImage").setAttribute(
+        'src', "data:image/png;base64," + message.payloadString
+      );
+    }
   }
 }
 

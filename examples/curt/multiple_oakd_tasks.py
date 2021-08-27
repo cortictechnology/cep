@@ -1,6 +1,7 @@
 """ 
-This example demonstrates how to use multiple oakds to process different inferences
-on one frame concurrently. A frame is first grabbed from one OAK-D camera. The frame is sent to 3 OAK-D cameras to perform facemesh estimation, pose estimation
+This example demonstrates how to use multiple OAK-D cameras to process different inferences
+on one frame concurrently. A frame is first grabbed from one OAK-D camera. The frame 
+is sent to 3 OAK-D cameras to perform facemesh estimation, pose estimation
 and hand landmarks estimation. The results are rendered in a rendering worker. One
 thing to note is some of the workers are not defined at the start of the program, instead,
 CURT will search for the most suitable worker and assign the task to it automatically.

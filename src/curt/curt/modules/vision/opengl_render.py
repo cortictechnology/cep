@@ -1,6 +1,6 @@
 """ 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Ye Lu <ye.lu@cortic.ca>, September 2020
+Written by Ye Lu <ye.lu@cortic.ca>, 2021
 
 """
 

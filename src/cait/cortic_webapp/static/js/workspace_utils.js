@@ -1,7 +1,7 @@
 /* 
 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, December 2019
+Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
@@ -561,7 +561,7 @@ function run_code() {
       }
       code = code.substring(0, init_idx) + runtime_code;
       code = code + "\n resetStepUi(true);\n"
-      code = "(async () => {" + code + "})().catch(error => alert(error.message));";
+      code = "(async () => {" + code + "})());";
     }
     var ready_to_execute_code = true;
     for (i in vision_func) {

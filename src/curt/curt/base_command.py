@@ -1,6 +1,6 @@
 """ 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, August 2020
+Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
@@ -24,28 +24,31 @@ logging.getLogger().setLevel(logging.INFO)
 class BaseCommand:
     def __init__(self):
         self.command_client = mqtt.Client()
+        self.command_client.on_disconnect= self.on_disconnect
         self.sync_client = mqtt.Client()
         self.sync_client.on_connect = self.on_connect_sync
         self.sync_client.on_message = self.on_message_sync
+        self.sync_client.on_disconnect= self.on_disconnect
         self.sync_client_stream = mqtt.Client()
         self.sync_client_stream.on_connect = self.on_connect_sync_stream
         self.sync_client_stream.on_message = self.on_message_sync_stream
+        self.sync_client_stream.on_disconnect= self.on_disconnect
         self.selected_service = None
         self.module_list = {}
         self.hearbeat_client = mqtt.Client()
         self.hearbeat_client.on_connect = self.on_connect_hearbeat
         self.hearbeat_client.on_message = self.on_message_heartbeat
+        self.hearbeat_client.on_disconnect= self.on_disconnect
         self.connected_to_cait = False
         self.remote_worker_to_sync = None
         self.remote_guid_to_sync = None
-        self.remote_result = None
         self.remote_worker_to_sync_stream = None
         self.remote_guid_to_sync_stream = None
-        self.remote_result_stream = None
         self.current_sync_channel = ""
         self.current_sync_channel_stream = ""
         self.result_channels = {}
         self.unclaimed_data = collections.deque(maxlen=50)
+        self.unclaimed_data_stream = collections.deque(maxlen=50)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_address = ("", 9435)
         try:
@@ -65,6 +68,27 @@ class BaseCommand:
         except:
             logging.info("Broker: (" + address + ") not up yet, retrying...")
             return False
+
+    def on_disconnect(self, client, userdata, rc):
+        logging.info("disconnecting reason  "  +str(rc))
+        self.connect_client_to_curt(client)
+
+    def connect_client_to_curt(self, client):
+        curt_broker_address = ""
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < 60:
+            data, address = self.sock.recvfrom(4096)
+            data = str(data.decode("UTF-8"))
+            if "curt_broker_available" in data:
+                curt_broker_address = address[0]
+                break
+        if curt_broker_address == "":
+            return False, ""
+        print("Found a curt broker at:", curt_broker_address)
+        ret = self.connect_mqtt(client, curt_broker_address)
+        while ret != True:
+            time.sleep(1)
+            ret = self.connect_mqtt(client, curt_broker_address)
 
     def connect_to_curt(self):
         curt_broker_address = ""
@@ -112,10 +136,11 @@ class BaseCommand:
     def on_message_sync_stream(self, client, userdata, msg):
         data = msg.payload.decode()
         data = json.loads(data)
+        self.unclaimed_data_stream.append(data)
         # if self.remote_guid_to_sync is not None:
-        if data["dataValue"]["worker"] == self.remote_worker_to_sync_stream:
-            if data["dataValue"]["self_guid"] == self.remote_guid_to_sync_stream:
-                self.remote_result_stream = data
+        # if data["dataValue"]["worker"] == self.remote_worker_to_sync_stream:
+        #     if data["dataValue"]["self_guid"] == self.remote_guid_to_sync_stream:
+        #         self.remote_result_stream = data
 
     def on_connect_hearbeat(self, client, userdata, flags, rc):
         # heartbeat client should subscribe to heartbeat
@@ -244,7 +269,7 @@ class BaseCommand:
                             self.unclaimed_data.remove(data)
             return remote_result
         else:
-            self.remote_result_stream = None
+            remote_result_stream = None
             self.remote_worker_to_sync_stream = handler.name
             self.remote_guid_to_sync_stream = handler.guid
             if self.current_sync_channel_stream != handler.output_channel:
@@ -252,10 +277,15 @@ class BaseCommand:
                     self.sync_client_stream.unsubscribe(
                         self.current_sync_channel_stream
                     )
+                    logging.warning("Unsubscribed from:" + str(self.current_sync_channel_stream))
             self.sync_client_stream.subscribe(handler.output_channel)
             self.current_sync_channel_stream = handler.output_channel
-            while self.remote_result_stream == None:
-                time.sleep(0.001)
+            while remote_result_stream == None:
+                for data in list(self.unclaimed_data_stream):
+                    if data["dataValue"]["worker"] == handler.name:
+                        if data["dataValue"]["self_guid"] == handler.guid:
+                            remote_result_stream = data
+                            self.unclaimed_data_stream.remove(data)
             self.remote_worker_to_sync_stream = None
             self.remote_guid_to_sync_stream = None
-            return self.remote_result_stream
+            return remote_result_stream

@@ -1,4 +1,4 @@
-# Cortic Edge Computing Platform (CEP) 
+# Cortic Edge-computing Platform (CEP) 
 
 CEP is a software platform designed for users that want to learn or rapidly prototype using standard A.I. components. It runs on the popular [Raspberry Pi 4B and 400](https://www.raspberrypi.org/products/) single-board computer and has native support for the [Luxonis OAK-D](https://shop.luxonis.com/products/1098obcenclosure) camera. It comprises two sub-components: CAIT (the Cortic A.I. Toolkit) and CURT (the Cortic Universal RunTime).
 
@@ -16,7 +16,6 @@ CURT allows the deployment of docker-based container modules. We currently inclu
 5. Smart home (control smart home devices via HomeAssistant)
 
 Each module can advertise a set of services on the network. In addition, each service can host a group of workers that perform various tasks. Please refer to our sample codes on configuring modules, services, and workers on supported devices. They also illustrate the use of the command-based programming interface.
-
 
 ## Hardware Configuration
 
@@ -41,6 +40,16 @@ $ cd cep
 $ bash setup.sh
 ```
 The Raspberry Pi device will reboot at the end of the setup script.
+
+An additional installation step is required to support the ReSpeaker 4-Mic array. Enter the following commands into the terminal.
+
+```
+$ git clone https://github.com/respeaker/seeed-voicecard
+$ cd seeed-voicecard
+$ sudo ./install.sh
+$ sudo reboot
+```
+Your device will reboot again after installing the Re-Speaker device driver.
 
 ## Visual Programming 
 

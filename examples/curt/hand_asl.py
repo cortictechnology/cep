@@ -11,7 +11,7 @@ In this example, the new type is "hand_asl"
 In this example, a new worker "oakd_hand_asl" and its class 
 name "OAKDASL" is added.
 4. When curt backend restarts, the newly implemented worker will 
-be advertised and use.
+be advertised and available to use.
 
 The code below demonstrates its use.
 """ 
@@ -37,8 +37,8 @@ CURTCommands.initialize()
 oakd_pipeline_config = [
     ["add_rgb_cam_node", preview_width, preview_heigth],
     ["add_rgb_cam_preview_node"],
-    ["add_nn_node", "palm_detection", "palm_detection_6_shaves.blob", palm_detection_nn_input_size, palm_detection_nn_input_size],
-    ["add_nn_node", "hand_landmarks", "hand_landmark_6_shaves.blob", hand_landmarks_nn_input_size, hand_landmarks_nn_input_size],
+    ["add_nn_node", "palm_detection", "palm_detection_sh6.blob", palm_detection_nn_input_size, palm_detection_nn_input_size],
+    ["add_nn_node", "hand_landmarks", "hand_landmark_sh6.blob", hand_landmarks_nn_input_size, hand_landmarks_nn_input_size],
     ["add_nn_node", "hand_asl", "hand_asl_6_shaves.blob", hand_asl_nn_input_size, hand_asl_nn_input_size],
 ]
 
@@ -59,11 +59,13 @@ hand_landmarks_worker = CURTCommands.get_worker(
 
 hand_asl_worker = CURTCommands.get_worker(HAND_ASL_WORKER)
 
-rgb_frame_handler = CURTCommands.request(rgb_camera_worker, params=["get_rgb_frame"])
-hand_landmarks_handler = CURTCommands.request(
-    hand_landmarks_worker, params=[rgb_frame_handler]
-)
-hand_asl_handler = CURTCommands.request(
-    hand_asl_worker, params=[hand_landmarks_handler, rgb_frame_handler]
-)
-hand_asl_results = CURTCommands.get_result(hand_asl_handler)
+while True:
+    rgb_frame_handler = CURTCommands.request(rgb_camera_worker, params=["get_rgb_frame"])
+    hand_landmarks_handler = CURTCommands.request(
+        hand_landmarks_worker, params=[rgb_frame_handler]
+    )
+    hand_asl_handler = CURTCommands.request(
+        hand_asl_worker, params=[hand_landmarks_handler, rgb_frame_handler]
+    )
+    hand_asl_results = CURTCommands.get_result(hand_asl_handler)["dataValue"]["data"]
+    print(hand_asl_handler)

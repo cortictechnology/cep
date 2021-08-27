@@ -1,6 +1,6 @@
 """ 
 Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, March 2021
+Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
@@ -33,16 +33,18 @@ class OAKDPipeline:
         self.friendly_name = ""
 
     def consume_func(self):
-        while True:
-            if self.reset:
-                break
-            for node in self.stream_nodes:
+        try:
+            while True:
                 if self.reset:
                     break
-                self.stream_nodes[node] = self.get_output(node)
-                # data = self.get_output(node, just_try=True)
-                # if data is not None:
-                #     self.stream_nodes[node] = data
+                for node in self.stream_nodes:
+                    if self.reset:
+                        break
+                    self.stream_nodes[node] = self.get_output(node)
+        except Exception as e:
+            logging.warning("***************OAKD STREAMING THREAD EXCEPTION:*************************")
+            logging.warning(str(e))
+            logging.warning("************************************************************************")
 
     def config_pipeline(self, config_data):
         if self.pipeline_started and self.device is not None:

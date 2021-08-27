@@ -1,7 +1,7 @@
 """ 
 This example demonstrates how to add and delete a person from the face recognition 
-worker's database. A new person is first addedto the database. Then the face 
-recognition worker can recognizethis person. The person is then deleted after 30 
+worker's database. A new person is first added to the database. Then the face 
+recognition worker can recognize this person. The person is then deleted after 30 
 frames of recognition.
 
 """
