@@ -267,6 +267,7 @@ class BaseCommand:
                         if data["dataValue"]["self_guid"] == handler.guid:
                             remote_result = data
                             self.unclaimed_data.remove(data)
+                time.sleep(0.001)
             return remote_result
         else:
             remote_result_stream = None
@@ -286,6 +287,7 @@ class BaseCommand:
                         if data["dataValue"]["self_guid"] == handler.guid:
                             remote_result_stream = data
                             self.unclaimed_data_stream.remove(data)
+                time.sleep(0.001)
             self.remote_worker_to_sync_stream = None
             self.remote_guid_to_sync_stream = None
             return remote_result_stream

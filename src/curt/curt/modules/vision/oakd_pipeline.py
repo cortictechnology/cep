@@ -46,7 +46,7 @@ class OAKDPipeline:
             logging.warning(str(e))
             logging.warning("************************************************************************")
 
-    def config_pipeline(self, config_data):
+    def config_worker(self, config_data):
         if self.pipeline_started and self.device is not None:
             logging.warning("*********************RESET PIPELINE**********************")
             self.reset = True
