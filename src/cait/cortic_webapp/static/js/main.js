@@ -57,7 +57,6 @@ var hostname = window.location.hostname;
 
 })(jQuery);
 
-var hostname = window.location.hostname;
 var cait_system_up = false
 var clientID = "cait_login_client_" + parseInt(Math.random() * 100);
 var client = new Paho.Client(hostname, 8083, clientID);
@@ -120,13 +119,13 @@ function login() {
                     alert(localizedStrings.wrongPass[locale]);
                 }
                 else {
-                    // if (!cait_system_up) {
-                    //     loader.style.display = "flex";
-                    //     loader.style.zIndex = 1;
-                    // } else {
-                    url = window.location.protocol + "//" + window.location.hostname + "/programming";
-                    window.location.href = url;
-                    // }
+                    if (!cait_system_up) {
+                        loader.style.display = "flex";
+                        loader.style.zIndex = 1;
+                    } else {
+                        url = window.location.protocol + "//" + window.location.hostname + "/programming";
+                        window.location.href = url;
+                    }
                 }
             });
     }

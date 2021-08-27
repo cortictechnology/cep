@@ -28,8 +28,7 @@ async function cait_enable_drawing_mode(mode) {
   try {
     await ajax_post("/enable_drawing_mode", { 'mode': mode });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -37,8 +36,7 @@ async function cait_draw_detected_face(face) {
   try {
     await ajax_post("/draw_detected_face", { 'face': JSON.stringify(face['coordinates']) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -46,8 +44,7 @@ async function cait_draw_recognized_face(people) {
   try {
     await ajax_post("/draw_recognized_face", { "coordinates": JSON.stringify(people['coordinates']), "names": JSON.stringify(people['names']) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -55,8 +52,7 @@ async function cait_draw_detected_objects(objects) {
   try {
     await ajax_post("/draw_detected_objects", { 'names': JSON.stringify(objects['names']), "coordinates": JSON.stringify(objects['coordinates']) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -64,8 +60,7 @@ async function cait_draw_estimated_emotions(emotions) {
   try {
     await ajax_post("/draw_estimated_emotions", { 'emotions': JSON.stringify(emotions['emotions']) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -73,8 +68,7 @@ async function cait_draw_estimated_facemesh(facemesh) {
   try {
     await ajax_post("/draw_estimated_facemesh", { 'facemesh': JSON.stringify(facemesh["facemesh"]) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -82,8 +76,7 @@ async function cait_draw_estimated_body_landmarks(pose) {
   try {
     await ajax_post("/draw_estimated_body_landmarks", { 'body_landmarks_coordinates': JSON.stringify(pose["body_landmarks_coordinates"]) });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -95,8 +88,7 @@ async function cait_draw_estimated_hand_landmarks(hands) {
       "handnesses": JSON.stringify(hands["handnesses"])
     });
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -110,8 +102,7 @@ async function cait_detect_face(processor) {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -124,8 +115,7 @@ async function cait_recognize_face() {
     }
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -137,8 +127,7 @@ async function cait_add_person(name) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -150,8 +139,7 @@ async function cait_delete_person(name) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -165,8 +153,7 @@ async function cait_detect_objects() {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -179,8 +166,7 @@ async function cait_classify_image() {
     }
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -193,8 +179,7 @@ async function cait_facemesh_estimation() {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -207,8 +192,7 @@ async function cait_face_emotions_estimation() {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -221,8 +205,7 @@ async function cait_get_hand_landmarks() {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -235,8 +218,7 @@ async function cait_get_body_landmarks() {
     // console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -249,8 +231,7 @@ async function cait_listen() {
     }
     return res['text'];
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -260,8 +241,7 @@ async function cait_say(text) {
     const res = await ajax_post("/say", { 'text': text });
     console.log(res);
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -271,8 +251,7 @@ async function cait_analyze(text) {
     console.log(res);
     return res;
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -284,8 +263,7 @@ async function cait_set_motor_position(hub_name, motor_name, position) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -311,8 +289,7 @@ async function cait_rotate_motor(hub_name, motor_name, angle) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -324,8 +301,7 @@ async function cait_control_motor(hub_name, motor_name, speed, duration) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -339,12 +315,33 @@ async function cait_control_motor_group(operation_list) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
+var loader_displayed = false;
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 async function cait_init(component_name, mode = "online", processor = "local", account = "default", language = "english") {
+  var retry_count = 0;
+  while (!cait_system_up) {
+    console.log("curt not started");
+    if (!loader_displayed) {
+      console.log("Display loder");
+      loader.style.display = "flex";
+      loader.style.zIndex = 1;
+      document.getElementById("loading_text").innerHTML = "Waiting for CAIT to start completely...";
+      loader_displayed = true;
+    }
+    retry_count = retry_count + 1;
+    if (retry_count > 25) {
+      loader.style.display = "none";
+      loader_displayed = false;
+      throw new Error("Failed to start the Python backend of CAIT, please reboot and try again.")
+    }
+    await delay(3000);
+  }
+  loader_displayed = false;
   try {
     loader.style.display = "flex";
     document.getElementById("loading_text").innerHTML = "Initializing " + component_name + " component...";
@@ -361,8 +358,7 @@ async function cait_init(component_name, mode = "online", processor = "local", a
       throw new Error("Initialization of " + component_name + " failed.  " + res["error"] + ". Please fix the problem and click Run again.");
     }
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -374,8 +370,7 @@ async function cait_set_module_parameters(parameter_name, value) {
     console.log(res);
     loader.style.display = "none";
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -384,8 +379,7 @@ async function cait_sleep(time) {
     const res = await ajax_post("/sleep", { "time": time });
     console.log(res);
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -415,8 +409,7 @@ async function cait_init_pid(kp, ki, kd) {
     const res = await ajax_post("/init_pid", { "kp": kp, "ki": ki, "kd": kd });
     console.log(res);
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -426,8 +419,7 @@ async function cait_update_pid(error) {
     console.log(res);
     return res['value'];
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -437,8 +429,7 @@ async function cait_control_light(device_name, operation, parameter) {
     const res = await ajax_post("/control_light", { 'device_name': device_name, 'operation': operation, 'parameter': parameter });
     console.log(res);
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
 
@@ -456,7 +447,6 @@ async function cait_control_media_player(device_name, operation) {
     const res = await ajax_post("/control_media_player", { 'device_name': device_name, 'operation': operation });
     console.log(res);
   } catch (err) {
-    console.log(err);
-    return err;
+    throw new Error(err.statusText);
   }
 }
