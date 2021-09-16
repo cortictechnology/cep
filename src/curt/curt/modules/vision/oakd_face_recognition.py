@@ -131,13 +131,13 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
             _, img, detected_faces = params
             self.modify_face_db__mode = False
             if img is None:
-                return {}
+                return None
             if "face_landmarks" not in self.oakd_pipeline.xlink_nodes:
                 logging.warning("No such node: face_landmarks in the pipeline")
-                return {}
+                return None
             if "face_features" not in self.oakd_pipeline.xlink_nodes:
                 logging.warning("No such node: face_features in the pipeline")
-                return {}
+                return None
 
             self.fl_nn_node_names = self.oakd_pipeline.xlink_nodes["face_landmarks"]
             self.ff_nn_node_names = self.oakd_pipeline.xlink_nodes["face_features"]

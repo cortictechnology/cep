@@ -37,7 +37,7 @@ class OAKDHandLandmarks(OAKDProcessingWorker):
         self.no_hand_count = 0
         self.hand_from_landmarks = {"left": None, "right": None}
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         if "palm_detection" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: palm_detection in the pipeline")
             return None
@@ -107,7 +107,7 @@ class OAKDHandLandmarks(OAKDProcessingWorker):
             raw_inference_results.append(inference)
         return hands, raw_inference_results
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         hands, raw_inference_results = inference_results
         hand_landmarks = []
         for i, h in enumerate(hands):

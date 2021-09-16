@@ -5,6 +5,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 
 from curt.modules.vision.base_vision_processing import BaseVisionProcessing
+import logging
 
 class OAKDProcessingWorker(BaseVisionProcessing):
     def __init__(self):
