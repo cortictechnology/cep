@@ -5,7 +5,8 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 
 from abc import abstractmethod
-
+import time
+import logging
 
 class OAKDProcessingWorker:
     def __init__(self):
@@ -30,6 +31,7 @@ class OAKDProcessingWorker:
     def run_inference(self, params):
         preprocessed_data = self.preprocessing(params)
         if preprocessed_data is None:
+            logging.warning("Processing returns None")
             return None
         inference_result = self.execute_nn_operation(preprocessed_data)
         postprocessed_data = self.postprocessing(inference_result)

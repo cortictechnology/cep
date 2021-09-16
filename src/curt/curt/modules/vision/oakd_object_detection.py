@@ -44,11 +44,11 @@ class OAKDObjectDetection(OAKDProcessingWorker):
             if self.od_nn_node_names[1] in self.oakd_pipeline.stream_nodes:
                 detections = self.oakd_pipeline.stream_nodes[
                     self.od_nn_node_names[1]
-                ].detections
+                ]
             else:
                 detections = self.oakd_pipeline.get_output(
                     self.od_nn_node_names[1]
-                ).detections
+                )
         else:
             frame_fd = dai.ImgFrame()
             frame_fd.setWidth(
@@ -69,7 +69,11 @@ class OAKDObjectDetection(OAKDProcessingWorker):
             self.oakd_pipeline.set_input(self.od_nn_node_names[0], frame_fd)
             detections = self.oakd_pipeline.get_output(
                 self.od_nn_node_names[1]
-            ).detections
+            )
+        if detections is None:
+            detections = []
+        else:
+            detections = detections.detections
         return detections
 
     def postprocessing(self, inference_result):

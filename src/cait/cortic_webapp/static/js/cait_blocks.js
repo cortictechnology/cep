@@ -1435,7 +1435,7 @@ Blockly.Python['add_pipeline_node'] = function (block) {
     var code = '(["add_nn_node", "body_detection", "pose_detection_sh6.blob", 224, 224], ["add_nn_node", "body_landmarks", "pose_landmark_lite_sh6.blob", 256, 256])';
   }
   else if (dropdown_node == "hand_landmarks") {
-    var code = '(["add_nn_node", "palm_detection", "palm_detection_sh6.blob", 128, 128], ["add_nn_node", "hand_landmarks", "hand_landmark_sh6.blob", 224, 224])';
+    var code = '(["add_nn_node", "palm_detection", "palm_detection_sh4.blob", 128, 128], ["add_nn_node", "hand_landmarks", "hand_landmark_sh4.blob", 224, 224])';
   }
 
   return code;

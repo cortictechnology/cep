@@ -9,37 +9,34 @@ https://github.com/geaxgx/depthai_hand_tracker
 """
 
 from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.utils import decode_image_byte
 import depthai as dai
 from curt.modules.vision.utils import *
 import curt.modules.vision.mediapipe_utils as mpu
 import numpy as np
 import logging
+import time
 
+def to_planar_local(arr: np.ndarray, shape: tuple) -> np.ndarray:
+    return cv2.resize(arr, shape).transpose(2,0,1)
 
 class OAKDHandLandmarks(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
-        self.pd_score_thresh = 0.46
+        self.pd_score_thresh = 0.5
         self.pd_nms_thresh = 0.3
-        self.lm_score_threshold = 0.5
+        self.lm_score_thresh = 0.5
+        self.pad_h = 0
+        self.pad_w = 0
 
-        anchor_options = mpu.SSDAnchorOptions(
-            num_layers=4,
-            min_scale=0.1484375,
-            max_scale=0.75,
-            input_size_height=128,
-            input_size_width=128,
-            anchor_offset_x=0.5,
-            anchor_offset_y=0.5,
-            strides=[8, 16, 16, 16],
-            aspect_ratios=[1.0],
-            reduce_boxes_in_lowest_layer=False,
-            interpolated_scale_aspect_ratio=1.0,
-            fixed_anchor_size=True,
-        )
-
-        self.anchors = mpu.generate_anchors(anchor_options)
+        self.anchors = mpu.generate_handtracker_anchors()
         self.nb_anchors = self.anchors.shape[0]
+
+        self.use_previous_landmarks = False
+        self.single_hand_count = 0
+        self.single_handed = False
+        self.no_hand_count = 0
+        self.hand_from_landmarks = {"left": None, "right": None}
 
     def preprocessing(self, params):
         if "palm_detection" not in self.oakd_pipeline.xlink_nodes:
@@ -51,34 +48,38 @@ class OAKDHandLandmarks(OAKDProcessingWorker):
         self.pd_nn_node_names = self.oakd_pipeline.xlink_nodes["palm_detection"]
         self.pm_nn_node_names = self.oakd_pipeline.xlink_nodes["hand_landmarks"]
         img = params[0]
-
-        # self.pd_nn_node_name = pd_nn_node_name
-        # self.pm_nn_node_name = pm_nn_node_name
+        if isinstance(img, str):
+            img = decode_image_byte(img)
         self.lm_input_length = self.oakd_pipeline.nn_node_input_sizes["hand_landmarks"][
             0
         ]
         if img is None:
             return None
         self.img = img
+        image = img
         self.h, self.w = img.shape[:2]
         self.frame_size = max(self.h, self.w)
-        self.pad_h = int((self.frame_size - self.h) / 2)
-        self.pad_w = int((self.frame_size - self.w) / 2)
-        image = cv2.copyMakeBorder(
-            img,
-            self.pad_h,
-            self.pad_h,
-            self.pad_w,
-            self.pad_w,
-            cv2.BORDER_CONSTANT,
-        )
-        palm_regions = self.get_palms(self.pd_nn_node_names, image)
-        return palm_regions, image
+        if self.h != self.w:
+            self.pad_h = int((self.frame_size - self.h) / 2)
+            self.pad_w = int((self.frame_size - self.w) / 2)
+            image = cv2.copyMakeBorder(
+                img,
+                self.pad_h,
+                self.pad_h,
+                self.pad_w,
+                self.pad_w,
+                cv2.BORDER_CONSTANT,
+            )
+        if not self.use_previous_landmarks:
+            hands = self.get_palms(self.pd_nn_node_names, image)
+        else:
+            hands = [self.hand_from_landmarks["right"], self.hand_from_landmarks["left"]]
+        return hands, image
 
     def execute_nn_operation(self, preprocessed_data):
-        palm_regions, image = preprocessed_data
+        hands, image = preprocessed_data
         raw_inference_results = []
-        for i, r in enumerate(palm_regions):
+        for i, r in enumerate(hands):
             img_hand = mpu.warp_rect_img(
                 r.rect_points,
                 image,
@@ -93,7 +94,7 @@ class OAKDHandLandmarks(OAKDProcessingWorker):
                 self.oakd_pipeline.nn_node_input_sizes["hand_landmarks"][1]
             )
             frame_nn.setData(
-                to_planar(
+                to_planar_local(
                     img_hand,
                     (
                         self.oakd_pipeline.nn_node_input_sizes["hand_landmarks"][0],
@@ -102,106 +103,122 @@ class OAKDHandLandmarks(OAKDProcessingWorker):
                 )
             )
             self.oakd_pipeline.set_input(self.pm_nn_node_names[0], frame_nn)
-        for i, r in enumerate(palm_regions):
+        for i, r in enumerate(hands):
             inference = self.oakd_pipeline.get_output(self.pm_nn_node_names[1])
             raw_inference_results.append(inference)
-        return palm_regions, raw_inference_results
+        return hands, raw_inference_results
 
     def postprocessing(self, inference_results):
-        palm_regions, raw_inference_results = inference_results
+        hands, raw_inference_results = inference_results
         hand_landmarks = []
-        for i, r in enumerate(palm_regions):
+        for i, h in enumerate(hands):
             inference = raw_inference_results[i]
-            region = self.lm_postprocess(r, inference)
-            if region.lm_score > self.lm_score_threshold:
-                src = np.array([(0, 0), (1, 0), (1, 1)], dtype=np.float32)
-                dst = np.array(
-                    [(x, y) for x, y in region.rect_points[1:]], dtype=np.float32
-                )  # region.rect_points[0] is left bottom point !
-                mat = cv2.getAffineTransform(src, dst)
-                lm_xy = np.expand_dims(
-                    np.array([(l[0], l[1]) for l in region.landmarks]), axis=0
-                )
-                lm_xy = np.squeeze(cv2.transform(lm_xy, mat))
-                for lm in lm_xy:
-                    lm[0] = lm[0] - self.pad_w
-                    lm[1] = lm[1] - self.pad_h
-                max_x = 0
-                max_y = 0
-                min_x = self.img.shape[1]
-                min_y = self.img.shape[0]
-                for x, y in lm_xy:
-                    if x < min_x:
-                        min_x = x
-                    if x > max_x:
-                        max_x = x
-                    if y < min_y:
-                        min_y = y
-                    if y > max_y:
-                        max_y = y
+            self.lm_postprocess(h, inference)
 
-                for lm in lm_xy:
-                    lm[0] = float(lm[0] / self.img.shape[1])
-                    lm[1] = float(lm[1] / self.img.shape[0])
+        hands = [ h for h in hands if h.lm_score > self.lm_score_thresh]
 
-                box_width = max_x - min_x
-                box_height = max_y - min_y
-                x_center = min_x + box_width / 2
-                y_center = min_y + box_height / 2
+        if len(hands) == 2:
+            if hands[0].handedness > 0.5:
+                self.hand_from_landmarks['right'] = mpu.hand_landmarks_to_rect(hands[0])
+                self.hand_from_landmarks['left'] = mpu.hand_landmarks_to_rect(hands[1])
+            else:
+                self.hand_from_landmarks['right'] = mpu.hand_landmarks_to_rect(hands[1])
+                self.hand_from_landmarks['left'] = mpu.hand_landmarks_to_rect(hands[0])
+            self.use_previous_landmarks = True
+        else:
+            self.hand_from_landmarks = {"left": None, "right": None}
+            self.use_previous_landmarks = False
 
-                new_width = box_width / 2 * 1.5
-                new_height = box_height / 2 * 1.5
-                new_size = max(new_width, new_height)
+        for hand in hands:
+            # If we added padding to make the image square, we need to remove this padding from landmark coordinates and from rect_points
+            if self.pad_h > 0:
+                hand.landmarks[:,1] -= self.pad_h
+                for i in range(len(hand.rect_points)):
+                    hand.rect_points[i][1] -= self.pad_h
+            if self.pad_w > 0:
+                hand.landmarks[:,0] -= self.pad_w
+                for i in range(len(hand.rect_points)):
+                    hand.rect_points[i][0] -= self.pad_w
 
-                min_x = x_center - new_size
-                min_y = y_center - new_size
-                max_x = x_center + new_size
-                max_y = y_center + new_size
+            #logging.warning("Landmark shape" + str(hand.landmarks.shape))
+     
+            
+            max_x = 0
+            max_y = 0
+            min_x = self.img.shape[1]
+            min_y = self.img.shape[0]
+            for x, y, _ in hand.landmarks:
+                if x < min_x:
+                    min_x = x
+                if x > max_x:
+                    max_x = x
+                if y < min_y:
+                    min_y = y
+                if y > max_y:
+                    max_y = y
 
-                if min_x < 0:
-                    min_x = 0
-                if min_y < 0:
-                    min_y = 0
-                if max_x > self.img.shape[1]:
-                    max_x = self.img.shape[1] - 1
-                if max_y > self.img.shape[0]:
-                    max_y = self.img.shape[0] - 1
-                hand_bbox = [
-                    float(min_x / self.img.shape[1]),
-                    float(min_y / self.img.shape[0]),
-                    float(max_x / self.img.shape[1]),
-                    float(max_y / self.img.shape[0]),
-                ]
-                hand_landmarks.append([lm_xy.tolist(), hand_bbox, region.handedness])
+            hand.landmarks = hand.landmarks.astype(np.float32)
+            for lm in hand.landmarks:
+                lm[0] = float(lm[0]) / self.img.shape[1]
+                lm[1] = float(lm[1]) / self.img.shape[0]
+
+            box_width = max_x - min_x
+            box_height = max_y - min_y
+            x_center = min_x + box_width / 2
+            y_center = min_y + box_height / 2
+
+            new_width = box_width / 2 * 1.5
+            new_height = box_height / 2 * 1.5
+            new_size = max(new_width, new_height)
+
+            min_x = x_center - new_size
+            min_y = y_center - new_size
+            max_x = x_center + new_size
+            max_y = y_center + new_size
+
+            if min_x < 0:
+                min_x = 0
+            if min_y < 0:
+                min_y = 0
+            if max_x > self.img.shape[1]:
+                max_x = self.img.shape[1] - 1
+            if max_y > self.img.shape[0]:
+                max_y = self.img.shape[0] - 1
+            hand_bbox = [
+                float(min_x / self.img.shape[1]),
+                float(min_y / self.img.shape[0]),
+                float(max_x / self.img.shape[1]),
+                float(max_y / self.img.shape[0]),
+            ]
+            hand_landmarks.append([hand.landmarks.tolist(), hand_bbox, hand.handedness])
+        
         return hand_landmarks
 
     def pd_postprocess(self, inference):
-        scores = np.array(
-            inference.getLayerFp16("classificators"), dtype=np.float16
-        )  # 896
-        bboxes = np.array(
-            inference.getLayerFp16("regressors"), dtype=np.float16
-        ).reshape(
-            (self.nb_anchors, 18)
-        )  # 896x18
+        scores = np.array(inference.getLayerFp16("classificators"), dtype=np.float16) # 896
+        bboxes = np.array(inference.getLayerFp16("regressors"), dtype=np.float16).reshape((self.nb_anchors,18)) # 896x18
         # Decode bboxes
-        regions = mpu.decode_bboxes(self.pd_score_thresh, scores, bboxes, self.anchors)
-        # Non maximum suppression
-        regions = mpu.non_max_suppression(regions, self.pd_nms_thresh)
-        mpu.detections_to_rect(regions)
-        mpu.rect_transformation(regions, self.frame_size, self.frame_size)
-        return regions
+        hands = mpu.decode_bboxes(self.pd_score_thresh, scores, bboxes, self.anchors, best_only=False)
+        # Non maximum suppression 
+        hands = mpu.non_max_suppression(hands, self.pd_nms_thresh)
+        mpu.detections_to_rect(hands)
+        mpu.rect_transformation(hands, self.frame_size, self.frame_size)
+        return hands
 
-    def lm_postprocess(self, region, inference):
-        region.lm_score = inference.getLayerFp16("Identity_1")[0]
-        region.handedness = inference.getLayerFp16("Identity_2")[0]
-        lm_raw = np.array(inference.getLayerFp16("Identity_dense/BiasAdd/Add"))
-        lm = []
-        for i in range(int(len(lm_raw) / 3)):
-            # x,y,z -> x/w,y/h,z/w (here h=w)
-            lm.append(lm_raw[3 * i : 3 * (i + 1)] / self.lm_input_length)
-        region.landmarks = lm
-        return region
+    def lm_postprocess(self, hand, inference):
+        hand.lm_score = inference.getLayerFp16("Identity_1")[0]
+        if hand.lm_score > self.lm_score_thresh:
+            hand.handedness = inference.getLayerFp16("Identity_2")[0]
+            lm_raw = np.array(inference.getLayerFp16("Identity_dense/BiasAdd/Add")).reshape(-1,3)
+            hand.norm_landmarks = lm_raw / self.lm_input_length
+            src = np.array([(0, 0), (1, 0), (1, 1)], dtype=np.float32)
+            dst = np.array([ (x, y) for x,y in hand.rect_points[1:]], dtype=np.float32)
+            mat = cv2.getAffineTransform(src, dst)
+            lm_xy = np.expand_dims(hand.norm_landmarks[:,:2], axis=0)
+            lm_z = hand.norm_landmarks[:,2:3] * hand.rect_w_a  / 0.4
+            landmarks_xy = np.squeeze(cv2.transform(lm_xy, mat)).astype(np.int)
+            hand.landmarks = np.concatenate((landmarks_xy, lm_z), axis=1)
+            return hand
 
     def get_palms(self, nn_node_names, image):
         frame_nn = dai.ImgFrame()
