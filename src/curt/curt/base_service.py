@@ -116,8 +116,8 @@ class BaseService:
                     task_data = task[4]
                 if all_data_ready:
                     # if task[4][0] is not None:
-                    # t1 = time.monotonic()
-                    # logging.warning("executing: " + str(task[0]))
+                    #logging.warning("executing: " + str(task[0]))
+                    #t1 = time.time()
                     worker = self.workers[task[0]]
                     result = self.execute_function(worker, task_data)
                     if task in self.task_list:
@@ -126,7 +126,8 @@ class BaseService:
                     self.on_finishing_handler(
                         task[0], task[1], task[2], task[3], result, self.service_type
                     )
-                    # logging.warning("Finished task")
+                    #logging.warning("Finished task")
+                    #logging.warning("Task time: " + str(time.time() - t1))
                     # if worker in self.average_execution_time:
                     #     self.average_execution_time[worker].append(
                     #         time.monotonic() - t1

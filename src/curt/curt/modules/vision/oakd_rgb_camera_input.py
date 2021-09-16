@@ -73,4 +73,5 @@ class OAKDRgbCamera:
             else:
                 return frame.getFirstLayerFp16()
         else:
+            logging.warning("OAKD RGB frame worker: Image is none.")
             return None

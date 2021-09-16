@@ -5,12 +5,54 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
-var vision_func = ["cait_detect_face", "cait_recognize_face", "cait_add_person", "cait_delete_person", "cait_detect_objects", "cait_classify_image"];
-var speech_func = ["cait_listen", "cait_say"];
+var vision_func = ["cait_enable_drawing_mode", 
+                   "cait_detect_face", 
+                   "cait_draw_detected_face",
+                   "cait_recognize_face", 
+                   "cait_draw_recognized_face",
+                   "cait_add_person", 
+                   "cait_delete_person", 
+                   "cait_detect_objects", 
+                   "cait_draw_detected_object",
+                   "cait_classify_image",
+                   "cait_face_emotions_estimation",
+                   "cait_draw_estimated_emotions",
+                   "cait_facemesh_estimation",
+                   "cait_draw_estimated_facemesh",
+                   "cait_get_body_landmarks",
+                   "cait_draw_estimated_body_landmarks",
+                   "cait_get_hand_landmarks",
+                   "cait_draw_estimated_hand_landmarks"
+                  ];
+
+var vision_func_dependent_blocks = {"cait_enable_drawing_mode": ["add_stereo_cam_node"],
+                                    "cait_detect_face" : [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"],
+                                    "cait_recognize_face": ["add_rgb_cam_node", "face_detection", "face_features"],
+                                    "cait_add_person": ["add_rgb_cam_node", "face_detection", "face_features"],
+                                    "cait_delete_person": ["add_rgb_cam_node", "face_detection", "face_features"],
+                                    "cait_detect_objects": [["add_rgb_cam_node", "add_stereo_cam_node"], "object_detection"],
+                                    "cait_face_emotions_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "face_emotions"'],
+                                    "cait_facemesh_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "facemesh"'],
+                                    "cait_get_body_landmarks": ["add_rgb_cam_node", '"add_nn_node", "body_landmarks'],
+                                    "cait_get_hand_landmarks": ["add_rgb_cam_node", '"add_nn_node", "hand_landmarks"']
+                                   }
+
+var speech_func = ["cait_listen", 
+                   "cait_say"];
+
 var nlp_func = ["cait_analyze"];
-var control_func = ["cait_rotate_motor", "cait_control_motor", "cait_control_motor_speed_group", "cait_control_motor_degree_group", "cait_move", "cait_rotate"];
-var smart_home_func = ["cait_control_light", "cait_control_media_player"]
+
+var control_func = ["cait_rotate_motor", 
+                    "cait_control_motor", 
+                    "cait_control_motor_speed_group", 
+                    "cait_control_motor_degree_group", 
+                    "cait_move", "cait_rotate"];
+
+var smart_home_func = ["cait_control_light", 
+                       "cait_control_media_player"]
+
 var spatial_face_detection = false;
+var spatial_object_detection = false;
 
 Blockly.defineBlocksWithJsonArray([
   {
@@ -1435,7 +1477,7 @@ Blockly.Python['add_pipeline_node'] = function (block) {
     var code = '(["add_nn_node", "body_detection", "pose_detection_sh6.blob", 224, 224], ["add_nn_node", "body_landmarks", "pose_landmark_lite_sh6.blob", 256, 256])';
   }
   else if (dropdown_node == "hand_landmarks") {
-    var code = '(["add_nn_node", "palm_detection", "palm_detection_sh6.blob", 128, 128], ["add_nn_node", "hand_landmarks", "hand_landmark_sh6.blob", 224, 224])';
+    var code = '(["add_nn_node", "palm_detection", "palm_detection_sh4.blob", 128, 128], ["add_nn_node", "hand_landmarks", "hand_landmark_sh4.blob", 224, 224])';
   }
 
   return code;

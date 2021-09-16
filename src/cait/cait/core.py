@@ -727,26 +727,27 @@ def detect_objects(spatial=False, for_streaming=False):
         objects = CURTCommands.get_result(object_detection_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        logging.warning("Objects: " + str(objects))
         if not isinstance(objects, list):
             objects = []
-    for object in objects:
-        if len(object) > 4:
+    for obj in objects:
+        if len(obj) > 5:
             coordinates.append(
                 [
-                    object[0] * 640,
-                    object[1] * 360,
-                    object[2] * 640,
-                    object[3] * 360,
-                    object[4],
-                    object[5],
-                    object[6],
+                    obj[0] * 640,
+                    obj[1] * 360,
+                    obj[2] * 640,
+                    obj[3] * 360,
+                    obj[4],
+                    obj[5],
+                    obj[6],
                 ]
             )
         else:
             coordinates.append(
-                [object[0] * 640, object[1] * 360, object[2] * 640, object[3] * 360]
+                [obj[0] * 640, obj[1] * 360, obj[2] * 640, obj[3] * 360]
             )
-        names.append(object_labels[object[-1]])
+        names.append(object_labels[obj[-1]])
     return names, coordinates
 
 
@@ -791,6 +792,8 @@ def face_emotions_estimation(for_streaming=False):
         emotions = CURTCommands.get_result(face_emotions_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        if emotions is None:
+            return []
         for emotion in emotions:
             raw_emtotions = emotion[0]
             emo = {}
@@ -848,6 +851,8 @@ def facemesh_estimation(for_streaming=False):
         facemeshes = CURTCommands.get_result(facemesh_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        if facemeshes is None:
+            return []
         for facemesh in facemeshes:
             for pt in facemesh:
                 pt[0] = pt[0] * 640
@@ -884,10 +889,12 @@ def get_hand_landmarks(for_streaming=False):
             hand_landmarks_worker,
             params=[rgb_frame_handler],
         )
-        hand_ladmarks = CURTCommands.get_result(hand_landmarks_handler, for_streaming)[
+        hand_landmarks = CURTCommands.get_result(hand_landmarks_handler, for_streaming)[
             "dataValue"
         ]["data"]
-        for landmarks in hand_ladmarks:
+        if hand_landmarks is None:
+            return [], [], []
+        for landmarks in hand_landmarks:
             for lm_xy in landmarks[0]:
                 lm_xy[0] = lm_xy[0] * 640
                 lm_xy[1] = lm_xy[1] * 360
@@ -931,6 +938,8 @@ def get_body_landmarks(for_streaming=False):
         body_ladmarks = CURTCommands.get_result(body_landmarks_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        if body_ladmarks is None:
+            return []
         for landmarks in body_ladmarks:
             landmarks[0] = landmarks[0] * 640
             landmarks[1] = landmarks[1] * 360

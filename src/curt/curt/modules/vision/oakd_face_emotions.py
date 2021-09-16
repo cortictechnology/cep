@@ -27,6 +27,7 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
         self.fe_nn_node_names = self.oakd_pipeline.xlink_nodes["face_emotions"]
         face_frames = []
         detections = []
+        #logging.warning("Preprocessing: " + str(img.shape) + ", " + str(detected_faces))
         for detection in np.array(detected_faces):
             detections.append([detection[0], detection[1], detection[2], detection[3]])
             detection[0] = int(detection[0] * img.shape[1])
@@ -57,9 +58,11 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
             face_frame = face_frames[i]
             emotions = self.get_face_emotion(self.fe_nn_node_names, face_frame)
             all_emotions.append([emotions, detections[i]])
+        #logging.warning("Emotions: " + str(all_emotions))
         return all_emotions
 
     def postprocessing(self, inference_results):
+        #logging.warning("Results: " + str(inference_results))
         return inference_results
 
     def get_face_emotion(self, nn_node_names, aligned_face):

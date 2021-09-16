@@ -18,4 +18,6 @@ OAKDNodeTypes = [
     "palm_detection",
     "hand_landmarks",
     "hand_asl",
+    "headpose",
+    "gaze_estimation"
 ]
