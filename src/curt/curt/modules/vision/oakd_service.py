@@ -9,7 +9,6 @@ import logging
 
 from curt.base_service import BaseService
 
-
 class OAKDPipelineService(BaseService):
     def __init__(self):
         super().__init__("OAKDPipeline")

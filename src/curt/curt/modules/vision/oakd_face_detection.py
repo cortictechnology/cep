@@ -29,7 +29,7 @@ class OAKDFaceDetection(OAKDProcessingWorker):
     def preprocess_input(self, params):
         if "face_detection" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: face_detection in the pipeline")
-            return []
+            return None
         self.fd_nn_node_names = self.oakd_pipeline.xlink_nodes["face_detection"]
         operation = params[0]
         if operation == "get_spatial_face_detections":
@@ -105,6 +105,8 @@ class OAKDFaceDetection(OAKDProcessingWorker):
                 bboxes.append(bbox)
         else:
             detections, threshold, largest_only = inference_result
+            if detections is None:
+                return []
             bboxes = np.array(detections.getFirstLayerFp16())
             if bboxes.size > 0:
                 # bboxes = bboxes[: np.where(bboxes == -1)[0][0]]

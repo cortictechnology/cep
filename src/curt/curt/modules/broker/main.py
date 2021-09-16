@@ -52,7 +52,7 @@ def broadcast_fuc():
     message = "curt_broker_available at " + self_ip
     try:
         while broadcast:
-            print("sending: " + message)
+            #print("sending: " + message)
             for i in range(9):
                 server_address = ("255.255.255.255", 9433 + i)
                 sent = sock.sendto(message.encode(), server_address)

@@ -72,13 +72,13 @@ class OAKDPoseEstimation(OAKDProcessingWorker):
         self.pd_nn_node_names = self.oakd_pipeline.xlink_nodes["body_detection"]
         self.pm_nn_node_names = self.oakd_pipeline.xlink_nodes["body_landmarks"]
         img = params[0]
-
         # self.pd_nn_node_name = pd_nn_node_name
         # self.pm_nn_node_name = pm_nn_node_name
         self.lm_input_length = self.oakd_pipeline.nn_node_input_sizes["body_landmarks"][
             0
         ]
         if img is None:
+            logging.warning("Image is none, returning")
             return None
         self.img = img
         self.h, self.w = img.shape[:2]
@@ -109,6 +109,7 @@ class OAKDPoseEstimation(OAKDProcessingWorker):
                 self.filter_landmarks_aux.reset()
                 self.filter_landmarks_world.reset()
             return None
+        #logging.warning(str(body.rect_points) + str(image.shape))
         return body, image
 
     def execute_nn_operation(self, preprocessed_data):

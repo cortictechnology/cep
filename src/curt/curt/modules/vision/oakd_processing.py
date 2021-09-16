@@ -26,6 +26,7 @@ class OAKDProcessingWorker(BaseVisionProcessing):
     def run_inference(self, params):
         preprocessed_data = self.preprocess_input(params)
         if preprocessed_data is None:
+            logging.warning("Processing returns None")
             return None
         inference_result = self.execute_nn_operation(preprocessed_data)
         postprocessed_data = self.postprocess_result(inference_result)

@@ -553,7 +553,7 @@ function run_code() {
         }
         index = end_idx;
       }
-      console.log("Async Functions: " + async_function);
+      //console.log("Async Functions: " + async_function);
       init_idx = code.indexOf("await cait_init_");
       runtime_code = code.substring(init_idx, code.length);
       for (f in async_function) {
@@ -561,7 +561,7 @@ function run_code() {
       }
       code = code.substring(0, init_idx) + runtime_code;
       code = code + "\n resetStepUi(true);\n"
-      code = "(async () => {" + code + "})());";
+      code = "(async () => {" + code + "})();";
     }
     var ready_to_execute_code = true;
     for (i in vision_func) {
@@ -572,6 +572,45 @@ function run_code() {
           break;
         }
       }
+    }
+    var missing_oakd_nodes = [];
+    for (i in vision_func_dependent_blocks) {
+      if (code.indexOf(i) != -1) {
+        var dependent_blocks = vision_func_dependent_blocks[i];
+        for (d in dependent_blocks) {
+          var blk = dependent_blocks[d];
+          if (typeof(blk) == "object" ){
+            var node_present = false;
+            var missing_node = "";
+            for (j in blk) {
+              if (code.indexOf(blk[j]) != -1) {
+                node_present = true;
+              }
+              else {
+                if (missing_node == "") {
+                  missing_node = blk[j];
+                }
+                else {
+                  missing_node = missing_node + " or " + blk[j];
+                }
+              }
+            }
+            if (!node_present) {
+              missing_oakd_nodes.push(missing_node);
+            }
+          }
+          else {
+            console.log(blk);
+            if (code.indexOf(blk) == -1) {
+              missing_oakd_nodes.push(blk);
+            }
+          }
+        }
+      }
+    }
+    if (missing_oakd_nodes.length > 0) {
+      alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
+      ready_to_execute_code = false;
     }
     for (i in speech_func) {
       if (code.indexOf(speech_func[i]) != -1) {
