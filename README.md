@@ -1,6 +1,6 @@
 ![cep-banner](./resources/cep_banner_narrow.jpg)
 
-CEP is a software platform designed for users that want to learn or rapidly prototype using standard A.I. components. It runs on the popular [Raspberry Pi 4B and 400](https://www.raspberrypi.org/products/) single-board computer and has native support for the [Luxonis OAK-D](https://shop.luxonis.com/products/1098obcenclosure) camera. It comprises two sub-components: CAIT (the Cortic A.I. Toolkit) and CURT (the Cortic Universal RunTime).
+CEP is a software platform designed for users that want to learn or rapidly prototype using standard A.I. components. It runs on the popular [Raspberry Pi 4B and 400](https://www.raspberrypi.org/products/) single-board computer and has native support for the Luxonis [OAK-D](https://shop.luxonis.com/products/1098obcenclosure) and [OAK-D-Lite](https://www.kickstarter.com/projects/opencv/opencv-ai-kit-oak-depth-camera-4k-cv-edge-object-detection) stereo cameras. It comprises two sub-components: CAIT (the Cortic A.I. Toolkit) and CURT (the Cortic Universal RunTime).
 
 ![visual-programming](./resources/Visual-Programming.gif)
 
