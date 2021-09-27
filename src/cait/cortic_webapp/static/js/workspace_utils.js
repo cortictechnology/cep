@@ -579,7 +579,7 @@ function run_code() {
         var dependent_blocks = vision_func_dependent_blocks[i];
         for (d in dependent_blocks) {
           var blk = dependent_blocks[d];
-          if (typeof(blk) == "object" ){
+          if (typeof (blk) == "object") {
             var node_present = false;
             var missing_node = "";
             for (j in blk) {
@@ -737,7 +737,10 @@ async function save_workspace(autosave = false) {
       data: {
         "filename": filename,
         "xml_text": xml_text,
-        "save_type": save_type
+        "save_type": save_type,
+        "scale": workspace.scale,
+        "scroll_x": workspace.getMetrics()['viewLeft'] * -1,
+        "scroll_y": workspace.getMetrics()['viewTop'] * -1
       }
     });
   }
@@ -775,9 +778,14 @@ async function load_workspace(from_autosave = false) {
     data: { "filename": filename, "save_type": save_type }
   });
   // console.log(res);
-  xml_text = res['xml_text'];
+  var xml_text = res['xml_text'];
+  var scale = res['scale'];
+  var scroll_x = res['scroll_x'];
+  var scroll_y = res['scroll_y'];
   if (xml_text != '') {
     var xml = Blockly.Xml.textToDom(xml_text);
     Blockly.Xml.domToWorkspace(xml, workspace);
   }
+  workspace.setScale(scale);
+  workspace.scroll(scroll_x, scroll_y);
 }

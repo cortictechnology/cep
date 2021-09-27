@@ -1,9 +1,3 @@
-""" 
-Copyright (C) Cortic Technology Corp. - All Rights Reserved
-Written by Michael Ng <michaelng@cortic.ca>, 2021
-
-"""
-
 import numpy as np
 from curt.data import triangulation
 from curt.modules.vision.utils import *
@@ -14,11 +8,34 @@ import base64
 import time
 import os
 import threading
-
+import logging
 
 class OpenCVRender(BaseRender):
     def __init__(self):
         super().__init__()
+        self.img = None
+        self.drawing_data = {
+            "Depth Mode": False,
+            "Face Detection": [],
+            "Face Recognition": [],
+            "Face Emotions": [],
+            "Face Mesh": [],
+            "Object Detection": [],
+            "Hand Landmarks": [],
+            "Pose Landmarks": [],
+        }
+        self.drawed = {
+            "Face Detection": False, 
+            "Face Mesh": False,
+            "Face Recognition": False,
+            "Face Emotions": False,
+            "Object Detection": False,
+            "Hand Landmarks": False,
+            "Pose Landmarks": False
+        }
+        self.display_thread = threading.Thread(target=self.display_func, daemon=True)
+        self.display_thread.start()
+
 
     def config_module(self, data):
         result = super().config_module(data)
@@ -85,13 +102,14 @@ class OpenCVRender(BaseRender):
         return img
 
     def draw_face_recognition(self, img, people):
+        image = img.copy()
         if people != "None":
             for name in people:
                 detection = people[name]
-                x1 = int(detection[0])
-                y1 = int(detection[1])
-                x2 = int(detection[2])
-                y2 = int(detection[3])
+                x1 = int(detection[0] * image.shape[1])
+                y1 = int(detection[1] * image.shape[0])
+                x2 = int(detection[2] * image.shape[1])
+                y2 = int(detection[3] * image.shape[0])
                 x_center = int(x1 + (x2 - x1) / 2)
                 color = COLOR[2]
                 if name != "Unknown":
@@ -103,7 +121,7 @@ class OpenCVRender(BaseRender):
                     z_text = f"Distance: {int(face_distance)} mm"
                     textSize = ft.getTextSize(z_text, fontHeight=15, thickness=-1)[0]
                     cv2.rectangle(
-                        img,
+                        image,
                         (x_center - textSize[0] // 2 - 5, y1 - 5),
                         (
                             x_center - textSize[0] // 2 + textSize[0] + 10,
@@ -113,7 +131,7 @@ class OpenCVRender(BaseRender):
                         -1,
                     )
                     ft.putText(
-                        img=img,
+                        img=image,
                         text=z_text,
                         org=(x_center - textSize[0] // 2, y1 - 8),
                         fontHeight=14,
@@ -123,9 +141,9 @@ class OpenCVRender(BaseRender):
                         bottomLeftOrigin=True,
                     )
                 if name != "Unknown":
-                    self.draw_disconnected_rect(img, (x1, y1), (x2, y2), color, 2)
+                    self.draw_disconnected_rect(image, (x1, y1), (x2, y2), color, 2)
                     cv2.rectangle(
-                        img,
+                        image,
                         (x_center - textSize[0] // 2 - 5, y1 - 22),
                         (
                             x_center - textSize[0] // 2 + textSize[0] + 10,
@@ -135,7 +153,7 @@ class OpenCVRender(BaseRender):
                         -1,
                     )
                     ft.putText(
-                        img=img,
+                        img=image,
                         text=name_text,
                         org=(x_center - textSize[0] // 2, y1 - 25),
                         fontHeight=15,
@@ -146,9 +164,9 @@ class OpenCVRender(BaseRender):
                     )
                 else:
                     cv2.rectangle(
-                        img, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX
+                        image, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX
                     )
-        return img
+        return image
 
     def draw_object_detection(self, img, names, coordinates):
         for i in range(len(coordinates)):
@@ -283,15 +301,15 @@ class OpenCVRender(BaseRender):
             [13, 14, 15, 16],
             [17, 18, 19, 20],
         ]
-        h, w = img.shape[:2]
-        frame_size = max(h, w)
-        pad_h = int((frame_size - h) / 2)
-        pad_w = int((frame_size - w) / 2)
-        img = cv2.copyMakeBorder(img, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT)
+        # h, w = img.shape[:2]
+        # frame_size = max(h, w)
+        # pad_h = int((frame_size - h) / 2)
+        # pad_w = int((frame_size - w) / 2)
+        # img = cv2.copyMakeBorder(img, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT)
         for lm_xy in landmark_coordinates:
-            for landmark in lm_xy:
-                landmark[0] = landmark[0] + pad_w
-                landmark[1] = landmark[1] + pad_h
+            # for landmark in lm_xy:
+            #    landmark[0] = landmark[0] + pad_w
+            #    landmark[1] = landmark[1] + pad_h
 
             palm_line = [np.array([lm_xy[point] for point in [0, 5, 9, 13, 17, 0]])]
             cv2.polylines(img, palm_line, False, (255, 255, 255), 2, cv2.LINE_AA)
@@ -302,86 +320,63 @@ class OpenCVRender(BaseRender):
                 for point in finger:
                     pt = lm_xy[point]
                     cv2.circle(img, (pt[0], pt[1]), 3, JOINT_COLOR[i], -1)
-        return img[pad_h : pad_h + h, pad_w : pad_w + w]
+        # return img[pad_h : pad_h + h, pad_w : pad_w + w]
+        return img
 
     def render_results(self, data, window_id):
-        img = None
-        if isinstance(data["mirror_oakd_rgb_camera"], str):
-            data["mirror_oakd_rgb_camera"] = decode_image_byte(
-                data["mirror_oakd_rgb_camera"]
-            )
-        if data["mirror_oakd_rgb_camera"] is not None:
-            img = data["mirror_oakd_rgb_camera"].copy()
-            face_data = data["oakd_face_detection"]
-            # face_landmarks = data["oakd_face_landmarks"]
-            heartrate = data["heartrate_measure"]
-            no_face = True
-            for detection in face_data:
-                no_face = False
-                x1 = int(detection[0] * img.shape[1])
-                y1 = int(detection[1] * img.shape[0])
-                x2 = int(detection[2] * img.shape[1])
-                y2 = int(detection[3] * img.shape[0])
-                cv2.rectangle(img, (x1, y1), (x2, y2), COLOR[0], 1)
+        if "oakd_rgb_camera_input" in data:
+            if isinstance(data["oakd_rgb_camera_input"], str):
+                data["oakd_rgb_camera_input"] = decode_image_byte(
+                    data["oakd_rgb_camera_input"]
+                )
+            if data["oakd_rgb_camera_input"] is not None:
+                self.img = data["oakd_rgb_camera_input"]
+                self.drawed = {
+                    "Face Detection": False, 
+                    "Face Mesh": False,
+                    "Face Recognition": False,
+                    "Face Emotions": False,
+                    "Object Detection": False,
+                    "Hand Landmarks": False,
+                    "Pose Landmarks": False
+                }
+        if "oakd_face_detection" in data:
+            if data["oakd_face_detection"] is not None:
+                self.drawing_data["Face Detection"] = data
+        if "oakd_facemesh" in data:
+            if data["oakd_facemesh"] is not None:
+                self.drawing_data["Face Mesh"] = data["oakd_facemesh"]
+        if "oakd_face_recognition" in data:
+            if data["oakd_face_recognition"] is not None:
+                self.drawing_data["Face Recognition"] = data["oakd_face_recognition"]
+        if "oakd_pose_estimation" in data:
+            if data["oakd_pose_estimation"] is not None:
+                self.drawing_data["Pose Landmarks"] = data["oakd_pose_estimation"]
+        if "oakd_hand_landmarks" in data:
+            if data["oakd_hand_landmarks"] is not None:
+                hand_landmarks_coordinates = []
+                for landmarks in data["oakd_hand_landmarks"]:
+                    hand_landmarks_coordinates.append(landmarks[0])
+                self.drawing_data["Hand Landmarks"] = hand_landmarks_coordinates     
 
-            # for landmarks in face_landmarks:
-            #     for pt in landmarks:
-            #         cv2.circle(img, (int(pt[0]), int(pt[1])), 2, COLOR[1], -1)
+        return True
 
-            if not no_face:
-                if heartrate == -1:
-                    self.draw_object_imgs(
-                        img,
-                        self.circle_images[self.circle_count],
-                        x1,
-                        y1 - 35,
-                        x1 + 30,
-                        y1 + 30,
-                    )
-                    self.circle_count = self.circle_count + 1
-                    if self.circle_count > 39:
-                        self.circle_count = 0
-                else:
-                    self.draw_object_imgs(
-                        img,
-                        self.heart_images[self.heart_count],
-                        x1,
-                        y1 - 35,
-                        x1 + 30,
-                        y1 + 30,
-                    )
-                    self.heart_count = self.heart_count + 1
-                    if self.heart_count > 8:
-                        self.heart_count = 0
-                    bpm_text = str(int(heartrate)) + " bpm"
-                    self.ft.putText(
-                        img=img,
-                        text=bpm_text,
-                        org=(x1 + 35 + 1, y1 - 15 + 1),
-                        fontHeight=19,
-                        color=(0, 0, 0),
-                        thickness=-1,
-                        line_type=cv2.LINE_AA,
-                        bottomLeftOrigin=True,
-                    )
-                    self.ft.putText(
-                        img=img,
-                        text=bpm_text,
-                        org=(x1 + 35, y1 - 15),
-                        fontHeight=19,
-                        color=(255, 255, 255),
-                        thickness=-1,
-                        line_type=cv2.LINE_AA,
-                        bottomLeftOrigin=True,
-                    )
-
-        if img is not None:
-            # cv2.imshow("img", img)
-            # cv2.waitKey(1)
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 40]
-            _, buffer = cv2.imencode(".jpg", img, encode_param)
-            imgByteArr = base64.b64encode(buffer)
-            imgByte = imgByteArr.decode("ascii")
-            return (img, imgByte)
-
-        return (None, None)
+    def display_func(self):
+        while True:
+            if self.img is not None:
+                if self.drawing_data["Hand Landmarks"] != [] and not self.drawed["Hand Landmarks"]:
+                    self.img = self.draw_hand_landmarks(self.img, self.drawing_data["Hand Landmarks"])
+                    self.drawed["Hand Landmarks"] = True
+                if self.drawing_data["Face Mesh"] != [] and not self.drawed["Face Mesh"]:
+                    self.img = self.draw_facemesh(self.img, self.drawing_data["Face Mesh"])
+                    self.drawed["Face Mesh"] = True
+                if self.drawing_data["Face Recognition"] != [] and not self.drawed["Face Recognition"]:
+                    self.img = self.draw_face_recognition(self.img, self.drawing_data["Face Recognition"])
+                    self.drawed["Face Recognition"] = True
+                if self.drawing_data["Pose Landmarks"] != [] and not self.drawed["Pose Landmarks"]:
+                    self.img = self.draw_body_landmarks(self.img, self.drawing_data["Pose Landmarks"])
+                    self.drawed["Pose Landmarks"] = True
+                cv2.imshow("Visualization", self.img)
+                cv2.waitKey(1)
+            else:
+                time.sleep(0.001)

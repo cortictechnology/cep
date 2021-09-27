@@ -58,7 +58,7 @@ class BaseRender:
         #             drawing_func = getattr(self, mode)
         #             print("Drawing", mode, " on", window_name)
         #             success = drawing_func(data[window_name], window_name)
-
+        #logging.warning(str(data))
         for i in range(len(self.drawing_modes)):
             mode = self.drawing_modes[i]
             drawing_func = getattr(self, mode)

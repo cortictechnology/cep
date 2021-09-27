@@ -18,6 +18,7 @@ class RobotInventorControl(BaseControl):
         super().__init__("robot_inventor")
         self.current_emotion = ""
         self.current_hub_address = ""
+        self.face_showed = False
 
     def connect_to_robot_inventor(self, hub_address):
         try:
@@ -32,6 +33,10 @@ class RobotInventorControl(BaseControl):
             self.connection.settimeout(5)
             self.connection.send(b"\x03")
             self.connection.send(b"import hub\x0D")
+            if not self.face_showed:
+                self.connection.send(b"hub.display.show(hub.Image.HAPPY)\x0D")
+                self.connection.send(b"hub.display.rotation(-90)\x0D")
+                self.face_showed = True
             time.sleep(0.5)
             dump = self.connection.recv(102400)
             time.sleep(0.5)
