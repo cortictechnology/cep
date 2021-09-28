@@ -225,7 +225,7 @@ async function cait_get_body_landmarks() {
 async function cait_listen() {
   try {
     const res = await ajax_post("/listen", {});
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["text"] + ". Please fix the problem and click Run again.");
     }
@@ -239,7 +239,26 @@ async function cait_say(text) {
   try {
     console.log("Saying: " + text)
     const res = await ajax_post("/say", { 'text': text });
-    console.log(res);
+    //console.log(res);
+  } catch (err) {
+    throw new Error(err.statusText);
+  }
+}
+
+async function cait_create_file_list(directory_path) {
+  try {
+    const res = await ajax_post("/create_file_list", { 'directory_path': directory_path });
+    return res['file_list'];
+  } catch (err) {
+    throw new Error(err.statusText);
+  }
+}
+
+async function cait_play_audio(file_path) {
+  try {
+    //console.log("Playing: " + file_path);
+    const res = await ajax_post("/play_audio", { 'file_path': file_path });
+    //console.log(res);
   } catch (err) {
     throw new Error(err.statusText);
   }
@@ -248,7 +267,7 @@ async function cait_say(text) {
 async function cait_analyze(text) {
   try {
     const res = await ajax_post("/analyze", { 'text': text });
-    console.log(res);
+    //console.log(res);
     return res;
   } catch (err) {
     throw new Error(err.statusText);
@@ -258,7 +277,7 @@ async function cait_analyze(text) {
 async function cait_set_motor_position(hub_name, motor_name, position) {
   try {
     const res = await ajax_post("/set_motor_position", { 'hub_name': hub_name, 'motor_name': motor_name, 'position': position });
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
@@ -271,7 +290,7 @@ async function cait_set_motor_position(hub_name, motor_name, position) {
 async function cait_set_motor_power(hub_name, motor_name, power) {
   try {
     const res = await ajax_post("/set_motor_power", { 'hub_name': hub_name, 'motor_name': motor_name, 'power': power });
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
@@ -284,7 +303,7 @@ async function cait_set_motor_power(hub_name, motor_name, power) {
 async function cait_rotate_motor(hub_name, motor_name, angle) {
   try {
     const res = await ajax_post("/rotate_motor", { 'hub_name': hub_name, 'motor_name': motor_name, 'angle': angle });
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
@@ -296,7 +315,7 @@ async function cait_rotate_motor(hub_name, motor_name, angle) {
 async function cait_control_motor(hub_name, motor_name, speed, duration) {
   try {
     const res = await ajax_post("/control_motor", { 'hub_name': hub_name, 'motor_name': motor_name, "speed": speed, "duration": duration });
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
@@ -310,7 +329,7 @@ async function cait_control_motor_group(operation_list) {
   try {
     dataToSend = JSON.stringify({ 'operation_list': operation_list });
     const res = await ajax_post("/control_motor_group", { 'data': dataToSend });
-    console.log(res);
+    //console.log(res);
     if (res['success'] == false) {
       alert(res["error"] + ". Please fix the problem and click Run again.");
     }
@@ -407,7 +426,7 @@ async function cait_init_smarthome() {
 async function cait_init_pid(kp, ki, kd) {
   try {
     const res = await ajax_post("/init_pid", { "kp": kp, "ki": ki, "kd": kd });
-    console.log(res);
+    //console.log(res);
   } catch (err) {
     throw new Error(err.statusText);
   }
@@ -416,7 +435,7 @@ async function cait_init_pid(kp, ki, kd) {
 async function cait_update_pid(error) {
   try {
     const res = await ajax_post("/update_pid", { "error": error });
-    console.log(res);
+    //console.log(res);
     return res['value'];
   } catch (err) {
     throw new Error(err.statusText);
@@ -427,7 +446,7 @@ async function cait_control_light(device_name, operation, parameter) {
   try {
     //console.log("device name: " + device_name + ", operation: " + operation);
     const res = await ajax_post("/control_light", { 'device_name': device_name, 'operation': operation, 'parameter': parameter });
-    console.log(res);
+    //console.log(res);
   } catch (err) {
     throw new Error(err.statusText);
   }
@@ -445,7 +464,7 @@ async function cait_control_media_player(device_name, operation) {
   try {
     //console.log("device name: " + device_name + ", operation: " + operation);
     const res = await ajax_post("/control_media_player", { 'device_name': device_name, 'operation': operation });
-    console.log(res);
+    //console.log(res);
   } catch (err) {
     throw new Error(err.statusText);
   }

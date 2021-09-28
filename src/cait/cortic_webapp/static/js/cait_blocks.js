@@ -5,54 +5,57 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
-var vision_func = ["cait_enable_drawing_mode", 
-                   "cait_detect_face", 
-                   "cait_draw_detected_face",
-                   "cait_recognize_face", 
-                   "cait_draw_recognized_face",
-                   "cait_add_person", 
-                   "cait_delete_person", 
-                   "cait_detect_objects", 
-                   "cait_draw_detected_object",
-                   "cait_classify_image",
-                   "cait_face_emotions_estimation",
-                   "cait_draw_estimated_emotions",
-                   "cait_facemesh_estimation",
-                   "cait_draw_estimated_facemesh",
-                   "cait_get_body_landmarks",
-                   "cait_draw_estimated_body_landmarks",
-                   "cait_get_hand_landmarks",
-                   "cait_draw_estimated_hand_landmarks"
-                  ];
+var vision_func = ["cait_enable_drawing_mode",
+  "cait_detect_face",
+  "cait_draw_detected_face",
+  "cait_recognize_face",
+  "cait_draw_recognized_face",
+  "cait_add_person",
+  "cait_delete_person",
+  "cait_detect_objects",
+  "cait_draw_detected_object",
+  "cait_classify_image",
+  "cait_face_emotions_estimation",
+  "cait_draw_estimated_emotions",
+  "cait_facemesh_estimation",
+  "cait_draw_estimated_facemesh",
+  "cait_get_body_landmarks",
+  "cait_draw_estimated_body_landmarks",
+  "cait_get_hand_landmarks",
+  "cait_draw_estimated_hand_landmarks"
+];
 
-var vision_func_dependent_blocks = {"cait_enable_drawing_mode": ["add_stereo_cam_node"],
-                                    "cait_detect_face" : [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"],
-                                    "cait_recognize_face": ["add_rgb_cam_node", "face_detection", "face_features"],
-                                    "cait_add_person": ["add_rgb_cam_node", "face_detection", "face_features"],
-                                    "cait_delete_person": ["add_rgb_cam_node", "face_detection", "face_features"],
-                                    "cait_detect_objects": [["add_rgb_cam_node", "add_stereo_cam_node"], "object_detection"],
-                                    "cait_face_emotions_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "face_emotions"'],
-                                    "cait_facemesh_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "facemesh"'],
-                                    "cait_get_body_landmarks": ["add_rgb_cam_node", '"add_nn_node", "body_landmarks'],
-                                    "cait_get_hand_landmarks": ["add_rgb_cam_node", '"add_nn_node", "hand_landmarks"']
-                                   }
+var vision_func_dependent_blocks = {
+  "cait_enable_drawing_mode": ["add_stereo_cam_node"],
+  "cait_detect_face": [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"],
+  "cait_recognize_face": ["add_rgb_cam_node", "face_detection", "face_features"],
+  "cait_add_person": ["add_rgb_cam_node", "face_detection", "face_features"],
+  "cait_delete_person": ["add_rgb_cam_node", "face_detection", "face_features"],
+  "cait_detect_objects": [["add_rgb_cam_node", "add_stereo_cam_node"], "object_detection"],
+  "cait_face_emotions_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "face_emotions"'],
+  "cait_facemesh_estimation": ["add_rgb_cam_node", "face_detection", '"add_nn_node", "facemesh"'],
+  "cait_get_body_landmarks": ["add_rgb_cam_node", '"add_nn_node", "body_landmarks'],
+  "cait_get_hand_landmarks": ["add_rgb_cam_node", '"add_nn_node", "hand_landmarks"']
+}
 
-var speech_func = ["cait_listen", 
-                   "cait_say"];
+var speech_func = ["cait_listen",
+  "cait_say"];
 
 var nlp_func = ["cait_analyze"];
 
-var control_func = ["cait_rotate_motor", 
-                    "cait_control_motor", 
-                    "cait_control_motor_speed_group", 
-                    "cait_control_motor_degree_group", 
-                    "cait_move", "cait_rotate"];
+var control_func = ["cait_rotate_motor",
+  "cait_control_motor",
+  "cait_control_motor_speed_group",
+  "cait_control_motor_degree_group",
+  "cait_move", "cait_rotate"];
 
-var smart_home_func = ["cait_control_light", 
-                       "cait_control_media_player"]
+var smart_home_func = ["cait_control_light",
+  "cait_control_media_player"]
 
 var spatial_face_detection = false;
 var spatial_object_detection = false;
+
+var current_file_list_root = "";
 
 Blockly.defineBlocksWithJsonArray([
   {
@@ -645,6 +648,39 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#019191",
     "tooltip": "%{BKY_SAY_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "play",
+    "lastDummyAlign0": "CENTRE",
+    "message0": "%{BKY_PLAY}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "audio_clip",
+        "align": "CENTRE"
+      },
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#019191",
+    "tooltip": "%{BKY_PLAY_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "create_file_list",
+    "lastDummyAlign0": "CENTRE",
+    "message0": "%{BKY_FILE_LIST}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "directory_path",
+      }
+    ],
+    "output": "Array",
+    "outputShape": Blockly.OUTPUT_SHAPE_ROUND,
+    "style": "list_blocks",
+    "tooltip": "%{BKY_FILE_LIST_TOOLTIP}",
     "helpUrl": ""
   },
   {
@@ -1913,6 +1949,32 @@ Blockly.JavaScript['say'] = function (block) {
 Blockly.Python['say'] = function (block) {
   var value_text = Blockly.Python.valueToCode(block, 'text', Blockly.Python.ORDER_ATOMIC);
   var code = "cait.essentials.say(" + value_text + ")\n";
+  return code;
+};
+
+Blockly.JavaScript['create_file_list'] = function (block) {
+  var value_text = Blockly.JavaScript.valueToCode(block, 'directory_path', Blockly.JavaScript.ORDER_ATOMIC);
+  current_file_list_root = value_text.substring(1, value_text.length - 1);
+  var code = "await cait_create_file_list(" + value_text + ")";
+  return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.Python['create_file_list'] = function (block) {
+  var value_text = Blockly.Python.valueToCode(block, 'directory_path', Blockly.Python.ORDER_ATOMIC);
+  current_file_list_root = value_text.substring(1, value_text.length - 1);
+  var code = "cait.essentials.create_file_list(" + value_text + ")['file_list']";
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.JavaScript['play'] = function (block) {
+  var value_text = Blockly.JavaScript.valueToCode(block, 'audio_clip', Blockly.JavaScript.ORDER_ATOMIC);
+  var code = "await cait_play_audio('" + current_file_list_root + "/' + String(" + value_text + "));\n";
+  return code;
+};
+
+Blockly.Python['play'] = function (block) {
+  var value_text = Blockly.Python.valueToCode(block, 'audio_clip', Blockly.Python.ORDER_ATOMIC);
+  var code = "cait.essentials.play_audio('" + current_file_list_root + "/' + str(" + value_text + "))\n";
   return code;
 };
 

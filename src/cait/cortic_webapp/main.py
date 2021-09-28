@@ -943,12 +943,28 @@ def listen():
         result = {"success": success, "text": text}
     return jsonify(result)
 
-
 @application.route("/say", methods=["POST"])
 @login_required
 def say():
     text = request.form.get("text")
     success = essentials.say(text)
+    result = {"success": success}
+    return jsonify(result)
+
+@application.route("/create_file_list", methods=["POST"])
+@login_required
+def create_file_list():
+    directory_path = request.form.get("directory_path")
+    file_list = essentials.create_file_list(directory_path)
+    result = {"file_list": file_list}
+    return jsonify(result)
+
+
+@application.route("/play_audio", methods=["POST"])
+@login_required
+def play_audio():
+    file_path = request.form.get("file_path")
+    success = essentials.play_audio(file_path)
     result = {"success": success}
     return jsonify(result)
 

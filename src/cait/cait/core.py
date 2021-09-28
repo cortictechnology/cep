@@ -91,7 +91,7 @@ def get_control_devices():
 
 def test_camera(index):
     pass
-
+    
 def initialize_vision(processor="local", mode=[], from_web=False):
     global oakd_nodes
     global vision_initialized
@@ -979,6 +979,36 @@ def say(message_topic, entities=[]):
     CURTCommands.request(voice_input_worker, params=["resume"])
     return True
 
+def create_file_list(directory_path):
+    file_list = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]    
+    return file_list
+
+audio_playing = False
+current_audio_file = ""
+
+def play_audio_func():
+    global audio_playing
+    global current_audio_file
+    previous_audio_file = ""
+    while True:
+        if previous_audio_file != current_audio_file:
+            if not audio_playing:
+                audio_playing = True
+                previous_audio_file = current_audio_file
+                out = os.system("aplay " + current_audio_file)
+                audio_playing = False
+        else:
+            time.sleep(0.001)
+
+play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
+play_audio_thread.start()
+
+def play_audio(file_path):
+    global audio_playing
+    global current_audio_file
+    if not audio_playing:
+        current_audio_file = file_path
+    return True
 
 def listen():
     global voice_mode
@@ -1147,7 +1177,7 @@ def set_motor_power(hub_name, motor_name, power):
         },
     }
     control_handler = CURTCommands.request(control_worker, params=[control_params])
-    time.sleep(0.1)
+    time.sleep(0.05)
     return True, "OK"
 
 
@@ -1345,7 +1375,8 @@ def stop_all_motors():
 def update_pid(error):
     global pid_controller
     if pid_controller is not None:
-        return int(pid_controller.update(error))
+        value = int(pid_controller.update(error))
+        return value
     else:
         return 0
 
