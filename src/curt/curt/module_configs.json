@@ -15,6 +15,7 @@
         "oakd_hand_asl": "OAKDASL",
         "heartrate_measure": "HeartrateMeasure",
         "face_detection": "FaceDetection",
+        "opencv_render": "OpenCVRender",
         "oakd_service": {
             "class": "OAKDPipelineService",
             "friendly_name": "OAK-D Pipeline Service",
@@ -40,6 +41,13 @@
             "worker_list": [
                 "face_detection",
                 "heartrate_measure"
+            ]
+        },
+        "vision_render_service": {
+            "class": "VisionRenderService",
+            "friendly_name": "Vision Render Service",
+            "worker_list": [
+                "opencv_render"
             ]
         }
     },

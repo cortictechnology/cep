@@ -8,7 +8,7 @@ https://github.com/geaxgx/depthai_blazepose/blob/main/BlazeposeDepthai.py
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 import curt.modules.vision.mediapipe_utils_pose as mpu
@@ -62,7 +62,7 @@ class OAKDPoseEstimation(OAKDProcessingWorker):
             disable_value_scaling=True,
         )
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         if "body_detection" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: body_detection in the pipeline")
             return None
@@ -128,7 +128,7 @@ class OAKDPoseEstimation(OAKDProcessingWorker):
 
         return body, raw_inference_results
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         body, raw_inference_results = inference_results
         body = self.lm_postprocess(body, raw_inference_results)
         if body.lm_score < self.lm_score_thresh:

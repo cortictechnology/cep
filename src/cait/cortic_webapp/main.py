@@ -943,12 +943,28 @@ def listen():
         result = {"success": success, "text": text}
     return jsonify(result)
 
-
 @application.route("/say", methods=["POST"])
 @login_required
 def say():
     text = request.form.get("text")
     success = essentials.say(text)
+    result = {"success": success}
+    return jsonify(result)
+
+@application.route("/create_file_list", methods=["POST"])
+@login_required
+def create_file_list():
+    directory_path = request.form.get("directory_path")
+    file_list = essentials.create_file_list(directory_path)
+    result = {"file_list": file_list}
+    return jsonify(result)
+
+
+@application.route("/play_audio", methods=["POST"])
+@login_required
+def play_audio():
+    file_path = request.form.get("file_path")
+    success = essentials.play_audio(file_path)
     result = {"success": success}
     return jsonify(result)
 
@@ -966,6 +982,9 @@ def analyze():
 def saveworkspace():
     xml_text = request.form.get("xml_text")
     filename = request.form.get("filename")
+    scale = request.form.get("scale")
+    scroll_x = request.form.get("scroll_x")
+    scroll_y = request.form.get("scroll_y")
     if filename != "":
         save_type = request.form.get("save_type")
         if save_type == "autosave":
@@ -983,6 +1002,9 @@ def saveworkspace():
                 if exc.errno != errno.EEXIST:
                     raise
         f = open(savename, "w")
+        f.write("scale: " + str(scale) + "\n")
+        f.write("scroll_x: " + str(scroll_x) + "\n")
+        f.write("scroll_y: " + str(scroll_y) + "\n")
         f.write(xml_text)
         f.close()
         result = {"success": 1}
@@ -1173,6 +1195,10 @@ def clearcache():
 @application.route("/loadworkspace", methods=["POST"])
 @login_required
 def loadworkspace():
+    xml_text = ""
+    scale = 1.0
+    scroll_x = 0.0
+    scroll_y = 0.0
     filename = request.form.get("filename")
     if filename != "":
         save_type = request.form.get("save_type")
@@ -1183,6 +1209,15 @@ def loadworkspace():
         savename = location + filename
         if os.path.exists(savename):
             f = open(savename, "r")
+            scale = f.readline()
+            scale = scale.split("\n")[0]
+            scale = float(scale[scale.find(":")+2:])
+            scroll_x = f.readline()
+            scroll_x = scroll_x.split("\n")[0]
+            scroll_x = float(scroll_x[scroll_x.find(":")+2:])
+            scroll_y = f.readline()
+            scroll_y = scroll_y.split("\n")[0]
+            scroll_y = float(scroll_y[scroll_y.find(":")+2:])
             xml_text = f.read()
             f.close()
             # if filename == "workspace_autosave.xml":
@@ -1190,11 +1225,10 @@ def loadworkspace():
             #         os.remove(savename)
             #     except:
             #         pass
-        else:
-            xml_text = ""
-        result = {"xml_text": xml_text}
-    else:
-        result = {"xml_text": ""}
+    result = {"xml_text": xml_text, 
+              "scale": scale,
+              "scroll_x": scroll_x,
+              "scroll_y": scroll_y}
     return jsonify(result)
 
 

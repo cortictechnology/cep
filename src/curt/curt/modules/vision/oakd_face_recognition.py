@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 from curt.modules.vision.utils import decode_image_byte
@@ -96,7 +96,7 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
                 aligned_faces.append(aligned_face)
             return aligned_faces, detections
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         # if params[0] == "generate_database":
         #     return self.generate_database(params[1], params[2], params[3], params[4])
         if params[0] == "load_database":
@@ -131,13 +131,13 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
             _, img, detected_faces = params
             self.modify_face_db__mode = False
             if img is None:
-                return {}
+                return None
             if "face_landmarks" not in self.oakd_pipeline.xlink_nodes:
                 logging.warning("No such node: face_landmarks in the pipeline")
-                return {}
+                return None
             if "face_features" not in self.oakd_pipeline.xlink_nodes:
                 logging.warning("No such node: face_features in the pipeline")
-                return {}
+                return None
 
             self.fl_nn_node_names = self.oakd_pipeline.xlink_nodes["face_landmarks"]
             self.ff_nn_node_names = self.oakd_pipeline.xlink_nodes["face_features"]
@@ -167,7 +167,7 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
                 person_name = preprocessed_data
                 return person_name
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         if not self.modify_face_db__mode:
             all_face_features, detections = inference_results
             identities = {}

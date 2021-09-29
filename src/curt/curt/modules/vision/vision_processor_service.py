@@ -16,10 +16,10 @@ class VisionProcessorService(BaseService):
         super().__init__("VisionProcessor")
 
     def execute_function(self, worker, data):
-        config_module = data[-1]
+        config_worker = data[-1]
         try:
-            if config_module:
-                return worker.config_module(data[0])
+            if config_worker:
+                return worker.config_worker(data[0])
             else:
                 if isinstance(data[0], list):
                     return worker.run_inference(data[0])

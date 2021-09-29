@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 import numpy as np
@@ -17,7 +17,7 @@ class OAKDFaceLandmarks(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         img, detected_faces = params
         if img is None:
             return None
@@ -61,7 +61,7 @@ class OAKDFaceLandmarks(OAKDProcessingWorker):
             all_landmarks.append(face_landmarks)
         return all_landmarks, detections
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         all_landmarks, detections = inference_results
         all_face_landmarks = []
         for i in range(len(all_landmarks)):

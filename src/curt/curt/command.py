@@ -49,6 +49,17 @@ class CURTCommands:
         selected_worker = worker
         if isinstance(worker, str):
             selected_worker = CURTCommands.base_command.select_worker(worker)
+        if isinstance(params, dict):
+            sync_handler = params['sync_handler']
+            return_handler = None
+            for window in params:
+                if window != "sync_handler":
+                    for handler in params[window]:
+                        config = {window: [handler]}
+                        rendering_handler = CURTCommands.render(selected_worker, config=config)
+                        if handler.guid == sync_handler.guid:
+                            return_handler = rendering_handler
+            return return_handler
         source_channel = []
         source_guid = []
         data = []
@@ -97,9 +108,9 @@ class CURTCommands:
         for window in config:
             guids = []
             for handler in config[window]:
-                if handler[0] not in source_channel:
-                    source_channel.append(handler[0])
-                guids.append(handler[1])
+                if handler.output_channel not in source_channel:
+                    source_channel.append(handler.output_channel)
+                guids.append(handler.guid)
             config[window] = guids
         return CURTCommands.base_command.execute(
             worker, source_channel=source_channel, source_guid=config, data=data

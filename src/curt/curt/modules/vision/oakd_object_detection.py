@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 from curt.modules.vision.utils import decode_image_byte
@@ -19,7 +19,7 @@ class OAKDObjectDetection(OAKDProcessingWorker):
         super().__init__()
         self.spatial_detection = False
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         if "object_detection" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: object_detection in the pipeline")
             return []
@@ -76,7 +76,7 @@ class OAKDObjectDetection(OAKDProcessingWorker):
             detections = detections.detections
         return detections
 
-    def postprocessing(self, inference_result):
+    def postprocess_result(self, inference_result):
         bboxes = []
         for detection in inference_result:
             if self.spatial_detection:

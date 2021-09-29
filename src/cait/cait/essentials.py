@@ -491,6 +491,39 @@ def say(text):
 
     return success
 
+def create_file_list(directory_path):
+    """Read all the files in a directory and return a list
+
+    Parameters:
+        directory_path (string): Path to the directory.
+
+    Returns:
+        (bool): True if successfully spoken. False otherwise.
+    """
+    if directory_path == None:
+        return -1
+
+    file_list = core.create_file_list(directory_path)
+
+    return file_list
+
+
+def play_audio(file_path):
+    """Play an audio file 
+
+    Parameters:
+        file_path (string): Path to the audio file.
+
+    Returns:
+        (bool): True if successfully spoken. False otherwise.
+    """
+    if file_path == None:
+        return -1
+
+    success = core.play_audio(file_path)
+
+    return success
+
 
 def analyse_text(text):
     """Analyse the user speech generated from the listen() function.

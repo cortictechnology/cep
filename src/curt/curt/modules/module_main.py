@@ -59,6 +59,7 @@ class ModuleMain:
                     msg["load"] = load
                     msg = json.dumps(msg)
                     self.module.publish_client.publish("cait/heartbeats", msg)
+                    
             except:
                 continue
             time.sleep(2)

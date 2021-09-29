@@ -14,10 +14,10 @@ class OAKDPipelineService(BaseService):
         super().__init__("OAKDPipeline")
 
     def execute_function(self, worker, data):
-        config_pipeline = data[-1]
+        config_worker = data[-1]
         try:
-            if config_pipeline:
-                return worker.config_pipeline(data[0])
+            if config_worker:
+                return worker.config_worker(data[0])
             else:
                 if isinstance(data[0], list):
                     return worker.run_inference(data[0])

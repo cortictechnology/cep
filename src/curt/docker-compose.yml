@@ -24,8 +24,10 @@ services:
         image: "cortictech/vision:0.52"
         restart: always 
         environment:
+            - DISPLAY=${DISPLAY}
             - PYTHONPATH=/data:/root/tvm/python
         volumes:
+            - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /lib/modules:/lib/modules
             - /dev:/dev
             - ./:/data

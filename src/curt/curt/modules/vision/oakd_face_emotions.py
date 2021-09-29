@@ -4,7 +4,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 """
 
-from curt.modules.vision.oakd_processing_worker import OAKDProcessingWorker
+from curt.modules.vision.oakd_processing import OAKDProcessingWorker
 import depthai as dai
 from curt.modules.vision.utils import *
 import numpy as np
@@ -17,13 +17,14 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
     def __init__(self):
         super().__init__()
 
-    def preprocessing(self, params):
+    def preprocess_input(self, params):
         img, detected_faces = params
         if img is None:
+            logging.warning("Face emotion: " + "imgae is None")
             return None
         if "face_emotions" not in self.oakd_pipeline.xlink_nodes:
             logging.warning("No such node: face_emotions in the pipeline")
-            return []
+            return None
         self.fe_nn_node_names = self.oakd_pipeline.xlink_nodes["face_emotions"]
         face_frames = []
         detections = []
@@ -61,7 +62,7 @@ class OAKDFaceEmotions(OAKDProcessingWorker):
         #logging.warning("Emotions: " + str(all_emotions))
         return all_emotions
 
-    def postprocessing(self, inference_results):
+    def postprocess_result(self, inference_results):
         #logging.warning("Results: " + str(inference_results))
         return inference_results
 

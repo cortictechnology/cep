@@ -147,6 +147,26 @@ def draw_face_recognition(img, names, coordinates):
                 bottomLeftOrigin=True,
             )
         else:
+            cv2.rectangle(
+                img,
+                (x1, y1),
+                (
+                    x2,
+                    y1 - 18,
+                ),
+                color,
+                -1,
+            )
+            ft.putText(
+                img=img,
+                text="Unknown",
+                org=(x1 + 3, y1 - 3),
+                fontHeight=15,
+                color=(255, 255, 255),
+                thickness=-1,
+                line_type=cv2.LINE_AA,
+                bottomLeftOrigin=True,
+            )
             cv2.rectangle(img, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
     return img
 

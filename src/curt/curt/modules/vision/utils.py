@@ -273,7 +273,7 @@ def estimate_norm(lmk, ref_landmarks):
 
 
 def norm_crop(img, landmark, ref_landmarks):
-    M, pose_index = estimate_norm(landmark, ref_landmarks)
+    M, _ = estimate_norm(landmark, ref_landmarks)
     warped = cv2.warpAffine(
         img, M, (112, 112), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT
     )
