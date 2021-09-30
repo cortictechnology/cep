@@ -563,6 +563,20 @@ function run_code() {
       code = code + "\n resetStepUi(true);\n"
       code = "(async () => {" + code + "})();";
     }
+
+    dispatch_index = code.indexOf("dispatch_to");
+    var start_index = code.indexOf(', "', dispatch_index);
+    var stop_index = code.indexOf('\\n"', start_index);
+    var dispatch_code = code.substring(start_index + 2, stop_index + 3);
+
+    dispatch_index = code.indexOf("dispatch_to", stop_index);
+    while (dispatch_index != -1) {
+      start_index = code.indexOf(', "', stop_index);
+      stop_index = code.indexOf('\\n"', start_index);
+      dispatch_code = code.substring(start_index + 2, stop_index + 3);
+      dispatch_index = code.indexOf("dispatch_to", stop_index);
+    }
+
     var ready_to_execute_code = true;
     for (i in vision_func) {
       if (code.indexOf(vision_func[i]) != -1) {

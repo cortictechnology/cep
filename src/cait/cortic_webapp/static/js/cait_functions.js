@@ -5,6 +5,11 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
+task_queue_1 = []
+task_queue_2 = []
+task_queue_3 = []
+task_queue_4 = []
+
 async function ajax_post(url, data) {
   return $.ajax({
     url: url,
@@ -12,6 +17,58 @@ async function ajax_post(url, data) {
     data: data
   });
 }
+
+main_var_dict = {}
+
+function DispatchTo(interpreter, scope) {
+  var wrapper = function (operations, callback) {
+    code = "function set_main_var(main_var, local_var) { main_var_dict[main_var] = local_var; } \n"
+      + " (async () => {" + operations + "})();";
+    eval(code);
+    callback("Success");
+  };
+  interpreter.setProperty(scope, 'execute_operations',
+    interpreter.createAsyncFunction(wrapper));
+}
+
+const alphanumeric = /^[\p{sc=Latn}\p{Nd}]+$/u;
+
+function dispatch_to(dispatch_queue, operations, var_list = {}) {
+  operation_statement = operations.replace(/\n/g, "\\n");
+  var replaced_statement = operation_statement;
+  console.log(var_list);
+  for (var key in var_list) {
+    var loc = operation_statement.indexOf(key);
+    while (loc != -1) {
+      var start_index = loc;
+      var stop_index = loc + key.length;
+      if (operation_statement[stop_index].match(alphanumeric) == null) {
+        if (operation_statement.substring(start_index - 14, start_index) != "set_main_var('") {
+          var val = var_list[key]
+          if (typeof (var_list[key]) == "string") {
+            val = "'" + val + "'";
+          } else {
+            val = String(val);
+          }
+          replaced_statement = replaced_statement.substring(0, start_index) + val + replaced_statement.substring(stop_index, replaced_statement.length);
+        }
+      }
+      loc = operation_statement.indexOf(key, stop_index);
+    }
+  }
+
+  var dispatch_code = 'execute_operations("' + replaced_statement + '");';
+  // if (dispatch_queue == "queue_1") {
+  //   if (task_queue_1.length == 0) {
+
+  //   }
+  // }
+  var dispatch_interpreter = new Interpreter(dispatch_code, DispatchTo);
+  console.log(dispatch_interpreter.run());
+}
+
+
+
 
 function cait_switch_lang() {
   var language = document.getElementById("languageDropdown").value;

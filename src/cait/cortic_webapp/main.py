@@ -96,6 +96,7 @@ def is_internet_connected(host="8.8.8.8", port=53, timeout=3):
 def import_cait_modules():
     global essentials
     from cait import essentials
+    logging.warning("Import essentials success")
 
 
 import_thread = threading.Thread(target=import_cait_modules, daemon=True)

@@ -17,6 +17,7 @@ import socket
 import requests
 import base64
 import threading
+import queue
 import numpy as np
 import cv2
 from .managers.device_manager import DeviceManager
@@ -42,6 +43,7 @@ device_manager = DeviceManager()
 
 logging.getLogger().setLevel(logging.WARNING)
 
+logging.warning("*********Initializing CURT Command Interface*********")
 broker_address = CURTCommands.initialize()
 
 streaming_channel = "cait/output/" + os.uname()[1].lower() + "/displayFrame"
@@ -67,6 +69,21 @@ heartbeat_thread = threading.Thread(
 )
 heartbeat_thread.start()
 
+logging.warning("*********Core heartbeat thread started*********")
+
+vision_dispatch_queue = queue.Queue()
+speech_dispatch_queue = queue.Queue()
+nlp_dispatch_queue = queue.Queue()
+control_dispatch_queue = queue.Queue()
+smart_home_dispatch_queue = queue.Queue()
+
+def dispatch_func(dispatch_queue):
+    while True:
+        task_data = dispatch_queue.get()
+        task_func = task_data['function']
+        task_args = task_data['args']
+        task_func(task_args)
+
 def get_video_devices():
     return device_manager.get_video_devices()
 
@@ -75,7 +92,6 @@ def get_usb_devices():
 
 def get_audio_devices():
     return device_manager.get_audio_devices()
-
 
 def get_control_devices():
     control_devices = device_manager.get_control_devices()
@@ -1000,14 +1016,17 @@ def play_audio_func():
         else:
             time.sleep(0.001)
 
-play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
-play_audio_thread.start()
+#play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
+#play_audio_thread.start()
 
 def play_audio(file_path):
     global audio_playing
     global current_audio_file
     if not audio_playing:
-        current_audio_file = file_path
+        audio_playing = True
+        out = os.system("aplay " + file_path)
+        audio_playing = False
+        #current_audio_file = file_path
     return True
 
 def listen():
@@ -1543,6 +1562,8 @@ def reset_modules():
     }
     return True
 
+
+logging.warning("*********Core imported*********")
 
 if __name__ == "__main__":
     pass
