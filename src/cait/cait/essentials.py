@@ -505,7 +505,7 @@ def create_file_list(directory_path):
 
     file_list = core.create_file_list(directory_path)
 
-    return file_list
+    return {'file_list': file_list}
 
 
 def play_audio(file_path):

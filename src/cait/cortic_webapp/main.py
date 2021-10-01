@@ -96,7 +96,6 @@ def is_internet_connected(host="8.8.8.8", port=53, timeout=3):
 def import_cait_modules():
     global essentials
     from cait import essentials
-    logging.warning("Import essentials success")
 
 
 import_thread = threading.Thread(target=import_cait_modules, daemon=True)
@@ -957,7 +956,7 @@ def say():
 def create_file_list():
     directory_path = request.form.get("directory_path")
     file_list = essentials.create_file_list(directory_path)
-    result = {"file_list": file_list}
+    result = file_list
     return jsonify(result)
 
 
@@ -1080,11 +1079,54 @@ def format_python_code(code_string):
         if global_line != "    globa":
             formatted_code.insert(main_line_location + 1, global_line)
 
-    formatted_code.append('\nif __name__ == "__main__":')
-    formatted_code.append("    setup()")
-    formatted_code.append("    main()")
+    dispatch_func_code_idx = []
+    for i in range(len(formatted_code)):
+        line = formatted_code[i]
+        if line.find("# Audo generated dispatch function code") != -1:
+            dispatch_func_code_idx.append([i])
+        if line.find("# End of audo generated dispatch function") != -1:
+            dispatch_func_code_idx[-1].append(i)
+    
+    dispatch_func_code = []
+    for idx in dispatch_func_code_idx:
+        dispatch_func_code.append(formatted_code[idx[0] : idx[1]+1])
 
-    code = "\n".join(formatted_code)
+    remaining_code = []
+
+    for i in range(len(formatted_code)):
+        in_range = False
+        for r in dispatch_func_code_idx:
+            if i >= r[0] and i <= r[1]:
+                in_range = True
+        if not in_range:
+            remaining_code.append(formatted_code[i])
+    
+    insert_location = formatted_code.index("def setup():")
+    for c in dispatch_func_code:
+        num_space_to_remove = 0
+        for j in range(len(c)):
+            code_line = c[j]
+            if j == 0:
+                code_line = code_line.strip()
+            elif j == 1:
+                code_line = code_line.strip()
+                num_space_to_remove = len(c[j]) - len(code_line)
+            elif j != len(c) - 1:
+                spaces = " " * num_space_to_remove
+                code_line = code_line.replace(spaces , "")
+            else:
+                code_line = code_line.strip()
+            remaining_code.insert(insert_location, code_line)
+            insert_location = insert_location + 1
+        remaining_code.insert(insert_location, "\n")
+        insert_location = insert_location + 1
+
+    remaining_code.append('\nif __name__ == "__main__":')
+    remaining_code.append("    setup()")
+    remaining_code.append("    main()")
+    
+
+    code = "\n".join(remaining_code)
 
     return code
 

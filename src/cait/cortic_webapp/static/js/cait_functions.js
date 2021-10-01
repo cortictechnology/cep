@@ -47,7 +47,20 @@ function dispatch_to(dispatch_queue, operations, var_list = {}) {
           var val = var_list[key]
           if (typeof (var_list[key]) == "string") {
             val = "'" + val + "'";
-          } else {
+          }
+          else if (typeof (var_list[key]) == "object") {
+            if (Array.isArray(var_list[key])) {
+              for (var i in val) {
+                if (typeof (val[i]) == "string") {
+                  if (val[i][0] != "'") {
+                    val[i] = "'" + val[i] + "'";
+                  }
+                }
+              }
+              val = "[" + val + "]";
+            }
+          }
+          else {
             val = String(val);
           }
           replaced_statement = replaced_statement.substring(0, start_index) + val + replaced_statement.substring(stop_index, replaced_statement.length);
@@ -56,6 +69,7 @@ function dispatch_to(dispatch_queue, operations, var_list = {}) {
       loc = operation_statement.indexOf(key, stop_index);
     }
   }
+  console.log(replaced_statement)
 
   var dispatch_code = 'execute_operations("' + replaced_statement + '");';
   // if (dispatch_queue == "queue_1") {

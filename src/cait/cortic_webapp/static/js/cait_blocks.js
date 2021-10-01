@@ -1418,7 +1418,7 @@ Blockly.Python['setup_block'] = function (block) {
     statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
     index = statements_main.indexOf("\n", index + 1);
   }
-  var code = "import cait.essentials\n" + "def setup():\n" + statements_main;
+  var code = "import cait.essentials\nimport threading\n" + "def setup():\n" + statements_main;
   return code;
 };
 
@@ -1508,37 +1508,80 @@ Blockly.JavaScript['dispatch_block'] = function (block) {
   return code;
 };
 
+dispatch_count = 0;
+
 Blockly.Python['dispatch_block'] = function (block) {
   var value_queue = Blockly.Python.valueToCode(block, 'dispatch_queue', Blockly.Python.ORDER_ATOMIC);
   var statements_operation = Blockly.Python.statementToCode(block, 'dispatch_blocks');
-  // statements_main = statements_main.substring(2, statements_main.length)
-  // index = statements_main.indexOf("\n");
-  // while (index != -1) {
-  //   statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
-  //   index = statements_main.indexOf("\n", index + 1);
-  // }
-  // var code = "def main():\n" + statements_main;
-  // return code;
+  all_statements = [];
+  stop_index = statements_operation.indexOf("\n");
+  all_statements.push(statements_operation.substring(2, stop_index))
+  var start_index = stop_index;
+  stop_index = statements_operation.indexOf("\n", start_index + 1);
+  while (stop_index != -1) {
+    all_statements.push(statements_operation.substring(start_index + 3, stop_index))
+    start_index = stop_index
+    //statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
+    stop_index = statements_operation.indexOf("\n", start_index + 1);
+  }
+  all_used_vars = []
+  var this_block = block;
+  while (this_block.getParent() != null) {
+    if (this_block.getParent().type != "main_block" & this_block.getParent().type != "dispatch_block") {
+      var parent_block = this_block.getParent();
+      if (parent_block.type == "variables_set") {
+        all_used_vars.push(Blockly.Python.variableDB_.getName(parent_block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE));
+      }
+    }
+    this_block = this_block.getParent();
+  }
+
+  code = "# Audo generated dispatch function code\n"
+    + "def dispatch_func_" + String(dispatch_count) + "():\n"
+  if (all_used_vars.length > 0) {
+    code = code + "  global "
+    for (var v in all_used_vars) {
+      code = code + all_used_vars[v]
+      if (v == all_used_vars.length - 1) {
+        code = code + "\n"
+      }
+      else {
+        code = code + ", "
+      }
+    }
+  }
+  for (var i in all_statements) {
+    code = code + "  " + all_statements[i] + "\n";
+  }
+  code = code + "# End of audo generated dispatch function\n"
+  code = code
+    + "dispatch_thread_" + String(dispatch_count)
+    + " = threading.Thread(target=dispatch_func_" + String(dispatch_count)
+    + ", daemon=True)\n"
+    + "dispatch_thread_" + String(dispatch_count) + ".start()\n"
+
+  dispatch_count = dispatch_count + 1;
+  return code;
 };
 
 Blockly.JavaScript['main_variables_set'] = function (block) {
   var main_var = Blockly.JavaScript.valueToCode(block, 'main_var', Blockly.JavaScript.ORDER_ATOMIC);
   var local_var = Blockly.JavaScript.valueToCode(block, 'local_var', Blockly.JavaScript.ORDER_ATOMIC);
   var code = "set_main_var('" + main_var + "', " + local_var + ");\n";
+
   return code;
 };
 
-
 Blockly.Python['main_variables_set'] = function (block) {
-  var main_var = Blockly.JavaScript.valueToCode(block, 'main_var', Blockly.Python.ORDER_ATOMIC);
-  var local_var = Blockly.JavaScript.valueToCode(block, 'local_var', Blockly.Python.ORDER_ATOMIC);
-  var code = "set_main_var('" + main_var + ", " + local_var + ");\n";
+  var main_var = Blockly.Python.valueToCode(block, 'main_var', Blockly.Python.ORDER_ATOMIC);
+  var local_var = Blockly.Python.valueToCode(block, 'local_var', Blockly.Python.ORDER_ATOMIC);
+  var code = main_var + " = " + local_var + "\n"
   return code;
 };
 
 Blockly.JavaScript['processing_block'] = function (block) {
   var statements = Blockly.JavaScript.statementToCode(block, 'execution_blocks');
-  code = ""
+  var code = ""
     + "while (true) {\n"
     + statements
     + "  if (Object.keys(main_var_dict).length > 0) {\n"
@@ -1554,6 +1597,9 @@ Blockly.JavaScript['processing_block'] = function (block) {
 
 Blockly.Python['processing_block'] = function (block) {
   var statements = Blockly.Python.statementToCode(block, 'execution_blocks');
+  var code = ""
+    + "while True:\n"
+    + statements
   return code;
 };
 
