@@ -1603,6 +1603,12 @@ Blockly.Python['processing_block'] = function (block) {
   return code;
 };
 
+Blockly.JavaScript['sleep'] = function (block) {
+  var time_value = Blockly.JavaScript.valueToCode(block, 'time', Blockly.JavaScript.ORDER_ATOMIC);
+  var code = "await cait_sleep(" + time_value + ");\n";
+  return code;
+};
+
 Blockly.Python['sleep'] = function (block) {
   var time_value = Blockly.Python.valueToCode(block, 'time', Blockly.Python.ORDER_ATOMIC);
   var code = "cait.essentials.sleep(" + time_value + ")\n";
