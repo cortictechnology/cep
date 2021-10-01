@@ -121,7 +121,7 @@
 
     .blocklyTreeIconCustom.lists::before {
       content: "\f0ca";
-      color: #D5133A;
+      color: #ff8484;
     }
 
     .blocklyTreeIconCustom.colour::before {
@@ -137,6 +137,11 @@
     .blocklyTreeIconCustom.functions::before {
       content: "\f141";
       color: #3252D4;
+    }
+
+    .blocklyTreeIconCustom.concurrency::before {
+      content: "\f542";
+      color: #d0c43f;
     }
 
     .blocklyTreeIconCustom.vision::before {
@@ -439,6 +444,7 @@
     </category>
     <sep></sep>
     <category name="Loops" colour="#00A500" iconclass="blocklyTreeIconCustom loops">
+      <block type="processing_block"></block>
       <block type="controls_repeat_ext">
         <value name="TIMES">
           <shadow type="math_number">
@@ -681,7 +687,7 @@
       <block type="dictionary_remove"></block>
     </category>
     <sep></sep>
-    <category name="Lists" colour="#D5133A" iconclass="blocklyTreeIconCustom lists">
+    <category name="Lists" colour="#ff8484" iconclass="blocklyTreeIconCustom lists">
       <block type="lists_create_with">
         <mutation items="0"></mutation>
       </block>
@@ -796,6 +802,11 @@
     </category>
     <sep></sep>
     <category name="Functions" colour="#3252D4" custom="PROCEDURE" iconclass="blocklyTreeIconCustom functions">
+    </category>
+    <sep></sep>
+    <category name="Concurrency" colour="#d0c43f" iconclass="blocklyTreeIconCustom concurrency">
+      <block type="dispatch_block"></block>
+      <block type="main_variables_set"></block>
     </category>
     <sep></sep>
     <sep></sep>
