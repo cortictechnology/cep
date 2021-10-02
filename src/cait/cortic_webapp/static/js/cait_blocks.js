@@ -1536,7 +1536,7 @@ Blockly.Python['dispatch_block'] = function (block) {
     this_block = this_block.getParent();
   }
 
-  code = "# Audo generated dispatch function code\n"
+  code = "# Auto generated dispatch function code\n"
     + "def dispatch_func_" + String(dispatch_count) + "():\n"
   if (all_used_vars.length > 0) {
     code = code + "  global "
@@ -1553,7 +1553,7 @@ Blockly.Python['dispatch_block'] = function (block) {
   for (var i in all_statements) {
     code = code + "  " + all_statements[i] + "\n";
   }
-  code = code + "# End of audo generated dispatch function\n"
+  code = code + "# End of auto generated dispatch function\n"
   code = code
     + "dispatch_thread_" + String(dispatch_count)
     + " = threading.Thread(target=dispatch_func_" + String(dispatch_count)

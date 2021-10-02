@@ -31,13 +31,13 @@ def follow_face(face_coordinate):
     return rotate_power
     
     
-# Audo generated dispatch function code
+# Auto generated dispatch function code
 def dispatch_func_0():
     global selected_index, power, face, coordinates, person, audio_list, playing_audio
     cait.essentials.play_audio('/home/pi/Documents/halloween_musics/' + str((audio_list[int(selected_index - 1)])))
     cait.essentials.sleep(2)
     playing_audio = False
-# End of audo generated dispatch function
+# End of auto generated dispatch function
 
 
 def setup():
