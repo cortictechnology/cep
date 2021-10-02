@@ -1,8 +1,9 @@
 ## Example programs of CAIT
 
-### example_halloween_pumpkin_head
+### example_jack_o_lantern
 
-This program is used to control the Lego-based jack-o'lantern shown in [here](https://twitter.com/CorticTechnolo1/status/1444078577520037889). You can follow the [instructions](../../resources/jack-o’-lantern_build.pdf) to build and customize your own pumpkin head.
+This program is used to control the Lego-based jack-o'-lantern shown in [here](https://twitter.com/CorticTechnolo1/status/1444078577520037889). You can follow the [instructions](../../resources/jack-o’-lantern_build.pdf) to build and customize your own jack-o'-lantern.
+
 
 For the program to work correctly, you need to follow the steps below:
 
