@@ -516,14 +516,14 @@ var stopCode = false;
 function highlightBlock(id) {
   //workspace.highlightBlock(id);
   var blk = workspace.getBlockById(id);
-  if (blk.type != "main_block") {
+  if (blk.type != "main_block" & blk.type != "processing_block") {
     workspace.getBlockById(id).addSelect();
   }
 }
 
 function de_highlightBlock(id) {
   var blk = workspace.getBlockById(id);
-  if (blk.type != "main_block") {
+  if (blk.type != "main_block" & blk.type != "processing_block") {
     workspace.getBlockById(id).removeSelect();
   }
 }
@@ -594,20 +594,23 @@ function run_code() {
       code = "(async () => {" + code + "})();";
     }
 
+
     dispatch_index = code.indexOf("dispatch_to");
-    var start_index = code.indexOf(', "', dispatch_index);
-    var stop_index = code.indexOf('\\n"', start_index);
-    var dispatch_code = code.substring(start_index + 3, stop_index);
+    if (dispatch_index != -1) {
+      var start_index = code.indexOf(', "', dispatch_index);
+      var stop_index = code.indexOf('\\n"', start_index);
+      var dispatch_code = code.substring(start_index + 3, stop_index);
 
-    code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
-
-    dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
-    while (dispatch_index != -1) {
-      start_index = code.indexOf(', "', stop_index);
-      stop_index = code.indexOf('\\n"', start_index);
-      dispatch_code = code.substring(start_index + 2, stop_index);
       code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
+
       dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
+      while (dispatch_index != -1) {
+        start_index = code.indexOf(', "', stop_index);
+        stop_index = code.indexOf('\\n"', start_index);
+        dispatch_code = code.substring(start_index + 2, stop_index);
+        code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
+        dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
+      }
     }
 
     var ready_to_execute_code = true;
