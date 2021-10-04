@@ -35,43 +35,45 @@ const alphanumeric = /^[\p{sc=Latn}\p{Nd}]+$/u;
 
 function dispatch_to(dispatch_queue, operations, var_list = {}) {
   operation_statement = operations.replace(/\n/g, "\\n");
-  var replaced_statement = operation_statement;
-  console.log(var_list);
+  var init_index = operation_statement.indexOf("// Start of runtime code");
   for (var key in var_list) {
-    var loc = operation_statement.indexOf(key);
+    var loc = operation_statement.indexOf(key, init_index);
     while (loc != -1) {
       var start_index = loc;
       var stop_index = loc + key.length;
       if (operation_statement[stop_index].match(alphanumeric) == null) {
-        if (operation_statement.substring(start_index - 14, start_index) != "set_main_var('") {
-          var val = var_list[key]
-          if (typeof (var_list[key]) == "string") {
-            val = "'" + val + "'";
-          }
-          else if (typeof (var_list[key]) == "object") {
-            if (Array.isArray(var_list[key])) {
-              for (var i in val) {
-                if (typeof (val[i]) == "string") {
-                  if (val[i][0] != "'") {
-                    val[i] = "'" + val[i] + "'";
+        if (operation_statement[start_index - 1] != "_" & operation_statement[stop_index] != "_") {
+          //console.log(key + ", " + operation_statement[stop_index])
+          if (operation_statement.substring(start_index - 14, start_index) != "set_main_var('") {
+            var val = var_list[key]
+            if (typeof (var_list[key]) == "string") {
+              val = "'" + val + "'";
+            }
+            else if (typeof (var_list[key]) == "object") {
+              if (Array.isArray(var_list[key])) {
+                for (var i in val) {
+                  if (typeof (val[i]) == "string") {
+                    if (val[i][0] != "'") {
+                      val[i] = "'" + val[i] + "'";
+                    }
                   }
                 }
+                val = "[" + val + "]";
               }
-              val = "[" + val + "]";
             }
+            else {
+              val = String(val);
+            }
+            operation_statement = operation_statement.substring(0, start_index) + val + operation_statement.substring(stop_index, operation_statement.length);
           }
-          else {
-            val = String(val);
-          }
-          replaced_statement = replaced_statement.substring(0, start_index) + val + replaced_statement.substring(stop_index, replaced_statement.length);
         }
       }
       loc = operation_statement.indexOf(key, stop_index);
     }
   }
-  console.log(replaced_statement)
+  //console.log(operation_statement)
 
-  var dispatch_code = 'execute_operations("' + replaced_statement + '");';
+  var dispatch_code = 'execute_operations("' + operation_statement + '");';
   // if (dispatch_queue == "queue_1") {
   //   if (task_queue_1.length == 0) {
 

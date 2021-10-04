@@ -1460,26 +1460,30 @@ Blockly.Python['set_parameter'] = function (block) {
   return code;
 };
 
+
 Blockly.JavaScript['dispatch_block'] = function (block) {
   var statements_operation = Blockly.JavaScript.statementToCode(block, 'dispatch_blocks');
-  all_statements = [];
+  all_statements = ["// Start of runtime code"];
   stop_index = statements_operation.indexOf("\n");
-  all_statements.push(statements_operation.substring(2, stop_index))
+  all_statements.push(statements_operation.substring(2, stop_index));
   var start_index = stop_index;
   stop_index = statements_operation.indexOf("\n", start_index + 1);
   while (stop_index != -1) {
-    all_statements.push(statements_operation.substring(start_index + 3, stop_index))
-    start_index = stop_index
+    all_statements.push(statements_operation.substring(start_index + 3, stop_index));
+    start_index = stop_index;
     //statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
     stop_index = statements_operation.indexOf("\n", start_index + 1);
   }
+
   var statements_operation = '';
   for (var i in all_statements) {
     this_statement = all_statements[i];
-    if (this_statement.indexOf("highlightBlock") == -1) {
-      statements_operation = statements_operation + this_statement + '\\n';
-
-    }
+    // if (this_statement.indexOf("highlightBlock") != -1) {
+    //   //statements_operation = statements_operation + this_statement + '\\n';
+    //   this_statement = this_statement.substring(0, this_statement.length - 2) + ', false);';
+    //   //console.log(this_statement.substring(0, this_statement.length - 2) + ', true);');
+    // }
+    statements_operation = statements_operation + this_statement + '\\n';
   }
   all_used_vars = []
   var this_block = block;

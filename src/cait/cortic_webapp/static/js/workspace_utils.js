@@ -514,7 +514,18 @@ function updateFunction(event) {
 var stopCode = false;
 
 function highlightBlock(id) {
-  workspace.highlightBlock(id);
+  //workspace.highlightBlock(id);
+  var blk = workspace.getBlockById(id);
+  if (blk.type != "main_block" & blk.type != "processing_block") {
+    workspace.getBlockById(id).addSelect();
+  }
+}
+
+function de_highlightBlock(id) {
+  var blk = workspace.getBlockById(id);
+  if (blk.type != "main_block" & blk.type != "processing_block") {
+    workspace.getBlockById(id).removeSelect();
+  }
 }
 
 function resetStepUi(clearOutput) {
@@ -529,6 +540,8 @@ function run_code() {
   Blockly.JavaScript.addReservedWords('code');
   Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
   Blockly.JavaScript.addReservedWords('highlightBlock');
+  Blockly.JavaScript.STATEMENT_SUFFIX = 'de_highlightBlock(%1);\n';
+  Blockly.JavaScript.addReservedWords('de_highlightBlock');
   resetStepUi(true);
   try {
     var code = Blockly.JavaScript.workspaceToCode(workspace);
@@ -560,21 +573,44 @@ function run_code() {
         runtime_code = replaceAll(runtime_code, async_function[f], "await " + async_function[f]);
       }
       code = code.substring(0, init_idx) + runtime_code;
+      var func_code = code.substring(0, code.indexOf("// Initialize and setup different components"));
+      var func_statements = [];
+      var stop_index = func_code.indexOf("\n");
+      func_statements.push(func_code.substring(0, stop_index));
+      var start_index = stop_index;
+      stop_index = func_code.indexOf("\n", start_index + 1);
+      while (stop_index != -1) {
+        func_statements.push(func_code.substring(start_index + 1, stop_index));
+        start_index = stop_index;
+        //statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
+        stop_index = func_code.indexOf("\n", start_index + 1);
+      }
+      func_code = '';
+      for (var i in func_statements) {
+        this_statement = func_statements[i];
+        func_code = func_code + this_statement + '\\n';
+      }
       code = code + "\n resetStepUi(true);\n"
       code = "(async () => {" + code + "})();";
     }
 
-    dispatch_index = code.indexOf("dispatch_to");
-    var start_index = code.indexOf(', "', dispatch_index);
-    var stop_index = code.indexOf('\\n"', start_index);
-    var dispatch_code = code.substring(start_index + 2, stop_index + 3);
 
-    dispatch_index = code.indexOf("dispatch_to", stop_index);
-    while (dispatch_index != -1) {
-      start_index = code.indexOf(', "', stop_index);
-      stop_index = code.indexOf('\\n"', start_index);
-      dispatch_code = code.substring(start_index + 2, stop_index + 3);
-      dispatch_index = code.indexOf("dispatch_to", stop_index);
+    dispatch_index = code.indexOf("dispatch_to");
+    if (dispatch_index != -1) {
+      var start_index = code.indexOf(', "', dispatch_index);
+      var stop_index = code.indexOf('\\n"', start_index);
+      var dispatch_code = code.substring(start_index + 3, stop_index);
+
+      code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
+
+      dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
+      while (dispatch_index != -1) {
+        start_index = code.indexOf(', "', stop_index);
+        stop_index = code.indexOf('\\n"', start_index);
+        dispatch_code = code.substring(start_index + 2, stop_index);
+        code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
+        dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
+      }
     }
 
     var ready_to_execute_code = true;
