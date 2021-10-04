@@ -1082,9 +1082,9 @@ def format_python_code(code_string):
     dispatch_func_code_idx = []
     for i in range(len(formatted_code)):
         line = formatted_code[i]
-        if line.find("# Audo generated dispatch function code") != -1:
+        if line.find("# Auto generated dispatch function code") != -1:
             dispatch_func_code_idx.append([i])
-        if line.find("# End of audo generated dispatch function") != -1:
+        if line.find("# End of auto generated dispatch function") != -1:
             dispatch_func_code_idx[-1].append(i)
     
     dispatch_func_code = []
