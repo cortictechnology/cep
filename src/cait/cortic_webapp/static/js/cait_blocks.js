@@ -1462,24 +1462,68 @@ Blockly.Python['set_parameter'] = function (block) {
 
 Blockly.JavaScript['dispatch_block'] = function (block) {
   var statements_operation = Blockly.JavaScript.statementToCode(block, 'dispatch_blocks');
-  all_statements = [];
+  // var func_list = [];
+
+  // var all_functions = Blockly.Procedures.allProcedures(workspace);
+  // for (var f in all_functions) {
+  //   for (var p in all_functions[f]) {
+  //     func_list.push(all_functions[f][p][0]);
+  //   }
+  // }
+  // func_code = "";
+
+  // for (var i in func_list) {
+  //   var headless = new Blockly.Workspace();
+  //   var xml = Blockly.Xml.workspaceToDom(headless);
+    //var func_xml = Blockly.Xml.blockToDom(Blockly.Procedures.getDefinition(func_list[i], workspace)).cloneNode(true);
+    //xml.appendChild(func_xml);
+    //Blockly.Xml.domToWorkspace(xml, headless);
+
+    //this_code = Blockly.JavaScript.workspaceToCode(headless);
+    // this_code = replaceAll(this_code, 'function', 'async function');
+    // for (var j in func_list) {
+    //   if (func_list[j] != func_list[i]) {
+    //     if (this_code.indexOf(func_list[j]) != -1) {
+    //       this_code = replaceAll(this_code, func_list[j], "await " + func_list[j]);
+    //     }
+    //   }
+    // }
+    // func_code = func_code + this_code;
+  // }
+
+  // func_statments = []
+  // var stop_index = func_code.indexOf("\n");
+  // func_statments.push(func_code.substring(0, stop_index));
+  // var start_index = stop_index;
+  // stop_index = func_code.indexOf("\n", start_index + 1);
+  // while (stop_index != -1) {
+  //   func_statments.push(func_code.substring(start_index + 1, stop_index));
+  //   start_index = stop_index;
+  //   stop_index = func_code.indexOf("\n", start_index + 1);
+  // }
+  all_statements = ["// Start of runtime code"];
   stop_index = statements_operation.indexOf("\n");
-  all_statements.push(statements_operation.substring(2, stop_index))
+  all_statements.push(statements_operation.substring(2, stop_index));
   var start_index = stop_index;
   stop_index = statements_operation.indexOf("\n", start_index + 1);
   while (stop_index != -1) {
-    all_statements.push(statements_operation.substring(start_index + 3, stop_index))
-    start_index = stop_index
+    all_statements.push(statements_operation.substring(start_index + 3, stop_index));
+    start_index = stop_index;
     //statements_main = statements_main.substring(0, index + 1) + statements_main.substring(index + 3, statements_main.length);
     stop_index = statements_operation.indexOf("\n", start_index + 1);
   }
+
+  // all_statements = func_statments.concat(all_statements);
+
   var statements_operation = '';
   for (var i in all_statements) {
     this_statement = all_statements[i];
-    if (this_statement.indexOf("highlightBlock") == -1) {
-      statements_operation = statements_operation + this_statement + '\\n';
-
-    }
+    // if (this_statement.indexOf("highlightBlock") != -1) {
+    //   //statements_operation = statements_operation + this_statement + '\\n';
+    //   this_statement = this_statement.substring(0, this_statement.length - 2) + ', false);';
+    //   //console.log(this_statement.substring(0, this_statement.length - 2) + ', true);');
+    // }
+    statements_operation = statements_operation + this_statement + '\\n';
   }
   all_used_vars = []
   var this_block = block;
