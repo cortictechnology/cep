@@ -43,7 +43,7 @@ function dispatch_to(dispatch_queue, operations, var_list = {}) {
       var stop_index = loc + key.length;
       if (operation_statement[stop_index].match(alphanumeric) == null) {
         if (operation_statement[start_index - 1] != "_" & operation_statement[stop_index] != "_") {
-          console.log(key + ", " + operation_statement[stop_index])
+          //console.log(key + ", " + operation_statement[stop_index])
           if (operation_statement.substring(start_index - 14, start_index) != "set_main_var('") {
             var val = var_list[key]
             if (typeof (var_list[key]) == "string") {
@@ -71,7 +71,7 @@ function dispatch_to(dispatch_queue, operations, var_list = {}) {
       loc = operation_statement.indexOf(key, stop_index);
     }
   }
-  console.log(operation_statement)
+  //console.log(operation_statement)
 
   var dispatch_code = 'execute_operations("' + operation_statement + '");';
   // if (dispatch_queue == "queue_1") {

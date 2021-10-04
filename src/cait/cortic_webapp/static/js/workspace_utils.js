@@ -514,7 +514,18 @@ function updateFunction(event) {
 var stopCode = false;
 
 function highlightBlock(id) {
-  workspace.highlightBlock(id);
+  //workspace.highlightBlock(id);
+  var blk = workspace.getBlockById(id);
+  if (blk.type != "main_block") {
+    workspace.getBlockById(id).addSelect();
+  }
+}
+
+function de_highlightBlock(id) {
+  var blk = workspace.getBlockById(id);
+  if (blk.type != "main_block") {
+    workspace.getBlockById(id).removeSelect();
+  }
 }
 
 function resetStepUi(clearOutput) {
@@ -529,6 +540,8 @@ function run_code() {
   Blockly.JavaScript.addReservedWords('code');
   Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
   Blockly.JavaScript.addReservedWords('highlightBlock');
+  Blockly.JavaScript.STATEMENT_SUFFIX = 'de_highlightBlock(%1);\n';
+  Blockly.JavaScript.addReservedWords('de_highlightBlock');
   resetStepUi(true);
   try {
     var code = Blockly.JavaScript.workspaceToCode(workspace);
