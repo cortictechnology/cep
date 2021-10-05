@@ -607,7 +607,7 @@ function run_code() {
       while (dispatch_index != -1) {
         start_index = code.indexOf(', "', stop_index);
         stop_index = code.indexOf('\\n"', start_index);
-        dispatch_code = code.substring(start_index + 2, stop_index);
+        dispatch_code = code.substring(start_index + 3, stop_index);
         code = code.substring(0, start_index + 3) + func_code + dispatch_code + code.substring(stop_index, code.length);
         dispatch_index = code.indexOf("dispatch_to", stop_index + func_code.length);
       }

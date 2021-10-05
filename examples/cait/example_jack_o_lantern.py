@@ -33,7 +33,14 @@ def follow_face(face_coordinate):
     
 # Auto generated dispatch function code
 def dispatch_func_0():
-    global selected_index, power, face, coordinates, person, audio_list, playing_audio
+    global face, coordinates, person, audio_list, playing_audio
+    power = follow_face(face)
+# End of auto generated dispatch function
+
+
+# Auto generated dispatch function code
+def dispatch_func_1():
+    global selected_index, face, coordinates, person, audio_list, playing_audio
     cait.essentials.play_audio('/home/pi/Documents/halloween_musics/' + str((audio_list[int(selected_index - 1)])))
     cait.essentials.sleep(2)
     playing_audio = False
@@ -56,11 +63,12 @@ def main():
         coordinates = person['coordinates']
         if len(coordinates) > 0:
             face = coordinates[0]
-            power = follow_face(face)
+            dispatch_thread_0 = threading.Thread(target=dispatch_func_0, daemon=True)
+            dispatch_thread_0.start()
             if not playing_audio:
                 selected_index = random.randint(1, len(audio_list))
-                dispatch_thread_0 = threading.Thread(target=dispatch_func_0, daemon=True)
-                dispatch_thread_0.start()
+                dispatch_thread_1 = threading.Thread(target=dispatch_func_1, daemon=True)
+                dispatch_thread_1.start()
                 playing_audio = True
 
 if __name__ == "__main__":
