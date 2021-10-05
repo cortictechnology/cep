@@ -41,6 +41,8 @@ $ bash setup.sh
 ```
 The Raspberry Pi device will reboot at the end of the setup script.
 
+## Installing the ReSpeaker Driver
+
 An additional installation step is required to support the ReSpeaker 4-Mic array. Enter the following commands into the terminal.
 
 ```
@@ -50,6 +52,15 @@ $ sudo ./install.sh
 $ sudo reboot
 ```
 Your device will reboot again after installing the Re-Speaker device driver.
+
+
+The ReSpeaker installation script above will update your Raspberry Pi OS to the latest version.  However, this update sometimes brings in a kernel update as well.  In this case, the installation script will **NOT** install the driver and output the following warning message:
+```
+Not matching the updated version <version number>
+Kernel was updated, but new kernel was not loaded yet
+Please reboot your machine AND THEN run this script again
+```
+If you see this message, you’ll need to run the installation script again after your system reboots to ensure the driver is properly installed.
 
 ## Visual Programming 
 
