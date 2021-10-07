@@ -113,6 +113,7 @@ def test_camera(index):
     pass
     
 def initialize_vision(processor="local", mode=[], from_web=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     global stream_thread
@@ -122,6 +123,16 @@ def initialize_vision(processor="local", mode=[], from_web=False):
     global spatial_face_detection
     global spatial_object_detection
     global user_mode
+    drawing_modes = {
+        "Depth Mode": False,
+        "Face Detection": [],
+        "Face Recognition": [],
+        "Face Emotions": [],
+        "Face Mesh": [],
+        "Object Detection": [],
+        "Hand Landmarks": [],
+        "Pose Landmarks": [],
+    }
     if vision_initialized:
         vision_initialized = False
         if stream_thread is not None:
@@ -132,31 +143,20 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         user_mode = "code"
     current_video_device = None
     if processor == "oakd":
-        # all_usb_devices = get_usb_devices()
-        # for udev in all_usb_devices:
-        #     if udev['tag'] == 'Intel Movidius MyriadX':
-        #         current_video_device = 'Intel Movidius MyriadX'
         current_video_worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_pipeline"
         )
-    else:
-        all_video_devices = get_video_devices()
-        if len(all_video_devices) > 0:
-            current_video_device = all_video_devices[0]
-        current_video_worker = CURTCommands.get_worker(
-            full_domain_name + "/vision/vision_input_service/webcam_input"
-        )
-        if current_video_device is None:
+        if current_video_worker is None:
             vision_initialized = False
             return (
                 False,
-                "No video input device is detected, or connected device is not supported",
+                "No OAK device is detected, or connected device is not supported",
             )
-    if processor == "oakd":
         for node in mode:
             if node[0] == "add_rgb_cam_node":
                 preview_width = node[1]
                 preview_height = node[2]
+                current_camera = "oakd"
             if node[0] == "add_spatial_mobilenetSSD_node":
                 if node[1] == "face_detection":
                     spatial_face_detection = True
@@ -173,31 +173,46 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         if not success:
             vision_initialized = False
             return False, "Failed to initialzie oakd pipeline, please check if the device is connected."
-    else:
-        # Selecting a VGA resolution, future work should provide a list of selected resolution
-        config_handler = CURTCommands.config_worker(
-            current_video_worker,
-            {"camera_index": 0, "capture_width": 640, "capture_height": 480},
-        )
-        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    elif processor == "cpu":
+        success = False
+        if mode['index'] != -1 and mode['index'] != 99:
+            current_video_worker = CURTCommands.get_worker(
+                full_domain_name + "/vision/vision_input_service/webcam_input"
+            )
+            if current_video_worker is None:
+                vision_initialized = False
+                return (
+                    False,
+                    "No USB webcam is detected, or connected webcam is not supported",
+                )
+            current_camera = "webcam"
+            config_handler = CURTCommands.config_worker(
+                current_video_worker,
+                {"camera_index": mode['index'], "capture_width": 640, "capture_height": 480, "reset": False},
+            )
+            success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        elif mode['index'] == 99:
+            current_video_worker = CURTCommands.get_worker(
+                full_domain_name + "/vision/vision_input_service/picam_input"
+            )
+            if current_video_worker is None:
+                vision_initialized = False
+                return (
+                    False,
+                    "No CSI-Camera is detected, or connected device is not supported",
+                )
+            current_camera = "picam"
+            config_handler = CURTCommands.config_worker(
+                current_video_worker,
+                {"capture_width": 640, "capture_height": 480, "reset": False},
+            )
+            success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
-            return False, "Failed to initialize local camera, please check if the device is connected."
-    
-    drawing_modes = {
-        "Depth Mode": False,
-        "Face Detection": [],
-        "Face Recognition": [],
-        "Face Emotions": [],
-        "Face Mesh": [],
-        "Object Detection": [],
-        "Hand Landmarks": [],
-        "Pose Landmarks": [],
-    }
+            return False, "Failed to initialize local camera, please check if the webcam or csi-camera is connected."
     vision_initialized = True
     stream_thread = threading.Thread(target=streaming_func, daemon=True)
     stream_thread.start()
-    logging.info("***********Streaming preview thread started***********")
     return True, "OK"
 
 
@@ -407,6 +422,7 @@ def change_module_parameters(parameter_name, value):
 
 
 def get_camera_image(for_streaming=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -414,15 +430,25 @@ def get_camera_image(for_streaming=False):
             "Please call initialize_vision() function before using the vision module"
         )
         return False, "Vision module is not initialized"
-    worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    worker = None
+    if current_camera == "oakd":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    if worker is None:
+        logging.warning("No rgb camera worker found.")
+        return None
     rgb_frame_handler = None
     frame = None
-    if worker is not None:
-        rgb_frame_handler = CURTCommands.request(worker, params=["get_rgb_frame"])
-    else:
-        logging.warning("No rgb camera worker found.")
+    rgb_frame_handler = CURTCommands.request(worker, params=["get_rgb_frame"])
     if rgb_frame_handler is not None:
         frame = CURTCommands.get_result(rgb_frame_handler, for_streaming)["dataValue"][
             "data"
@@ -1564,6 +1590,22 @@ def reset_modules():
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/webcam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/picam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
     return True
 
 

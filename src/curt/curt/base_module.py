@@ -249,8 +249,8 @@ class BaseModule:
         # Publish and store result data to service queue
         # t1 = time.time()
         worker_name = worker
-        if worker == "webcam_input" or worker == "picam_input":
-            worker_name = "camera_input"
+        #if worker == "webcam_input" or worker == "picam_input":
+        #    worker_name = "camera_input"
         if isinstance(result, tuple):
             msg = {
                 "dataType": "Data",
