@@ -226,10 +226,18 @@ Blockly.defineBlocksWithJsonArray([
   {
     "type": "init_vision_pi",
     "message0": "%{BKY_INIT_VISION_PI}",
+    "args0": [
+      {
+        "type": "input_dummy",
+        "name": "camera_list",
+        "align": "CENTRE"
+      },
+    ],
+    "extensions": ["dynamic_camera_list_extension"],
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5D0095",
-    "tooltip": "%{BKY_INIT_VISION_TOOLTIP}",
+    "tooltip": "%{BKY_INIT_VISION_PI_TOOLTIP}",
     "helpUrl": ""
   },
   {
@@ -1262,7 +1270,23 @@ Blockly.defineBlocksWithJsonArray([
   }
 ]);
 
-// var required_modules = [];
+Blockly.Extensions.register('dynamic_camera_list_extension',
+  function () {
+    this.getInput('camera_list')
+      .appendField(new Blockly.FieldDropdown(
+        function () {
+          var options = [];
+          if (cameras.length > 0) {
+            for (i in cameras) {
+              options.push([cameras[i]['device'], cameras[i][['device']]])
+            }
+          }
+          else {
+            options.push(['none', 'none']);
+          }
+          return options;
+        }), 'cameras');
+  });
 
 Blockly.Extensions.register('dynamic_lights_extension',
   function () {
@@ -1620,15 +1644,29 @@ Blockly.Python['sleep'] = function (block) {
 };
 
 Blockly.JavaScript['init_vision_pi'] = function (block) {
-  var code = "await cait_init_vision();\n";
+  code = "";
+  var dropdown_camera = block.getFieldValue('cameras');
+  var camera_index = -1;
+  for (var i in cameras) {
+    if (cameras[i]['device'] == dropdown_camera) {
+      camera_index = cameras[i]['index']
+    }
+  }
+  var code = "await cait_init_vision({'index': " + String(camera_index) + "}, 'cpu');\n";
   return code;
 };
 
 Blockly.Python['init_vision_pi'] = function (block) {
-  var code = "cait.essentials.initialize_component('vision', processor='local')\n";
+  var dropdown_camera = block.getFieldValue('cameras');
+  var camera_index = -1;
+  for (var i in cameras) {
+    if (cameras[i]['device'] == dropdown_camera) {
+      camera_index = cameras[i]['index']
+    }
+  }
+  var code = "cait.essentials.initialize_component('vision', mode={'index': " + String(camera_index) + "}, processor='cpu')\n";
   return code;
 };
-
 
 Blockly.JavaScript['init_vision'] = function (block) {
   var statements_statements = Blockly.JavaScript.statementToCode(block, 'oakd_statements');

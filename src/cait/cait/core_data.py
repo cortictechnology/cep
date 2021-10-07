@@ -139,6 +139,8 @@ for line in acc_list:
     except:
         pass
 
+current_camera = ""
+
 startedListen = False
 startedTimer = False
 startTime = None

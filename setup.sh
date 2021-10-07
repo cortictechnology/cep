@@ -8,6 +8,9 @@ sudo mkdir ~/cait_workspace
 sudo cp examples/cait/*.cait ~/cait_workspace
 sudo systemctl restart docker
 rm get-docker.sh
+sudo touch /etc/cron.daily/docker-prune
+sudo bash -c 'printf "#!/bin/bash\ndocker system prune -af  --filter \"until=$((30*24))h\"" > /etc/cron.daily/docker-prune'
+sudo chmod +x /etc/cron.daily/docker-prune
 
 sudo apt update
 sudo sh -c "echo 'dtparam=spi=on' >> /boot/config.txt"

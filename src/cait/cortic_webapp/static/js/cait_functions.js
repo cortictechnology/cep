@@ -438,7 +438,7 @@ async function cait_init(component_name, mode = "online", processor = "local", a
     loader.style.display = "flex";
     document.getElementById("loading_text").innerHTML = "Initializing " + component_name + " component...";
     var res;
-    if (Array.isArray(mode)) {
+    if (typeof (mode) == "object") {
       res = await ajax_post("/initialize_component", { 'component_name': component_name, 'mode': JSON.stringify(mode), 'processor': processor, 'account': account, 'language': language });
     }
     else {

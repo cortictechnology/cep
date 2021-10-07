@@ -16,21 +16,27 @@ class WebcamInput(BaseVisionInput):
         super().__init__("webcam_input")
 
     def config_input_handler(self, params):
-        if self.input_handler is not None:
-            logging.warning("Please release the current camera device first")
-            return False
-        else:
-            camera_index = params["camera_index"]
-            capture_width = params["capture_width"]
-            capture_height = params["capture_height"]
-            self.input_width = capture_width
-            self.input_height = capture_height
-            self.input_handler = cv2.VideoCapture(camera_index)
-            self.input_handler.set(3, capture_width)
-            self.input_handler.set(4, capture_height)
+        if params["reset"]:
+            if self.input_handler is not None:
+                self.release_input_handler()
             return True
+        else:
+            if self.input_handler is not None:
+                logging.warning("Please release the current camera device first")
+                return False
+            else:
+                camera_index = params["camera_index"]
+                capture_width = params["capture_width"]
+                capture_height = params["capture_height"]
+                self.input_width = capture_width
+                self.input_height = capture_height
+                self.input_handler = cv2.VideoCapture(camera_index)
+                self.input_handler.set(3, capture_width)
+                self.input_handler.set(4, capture_height)
+                logging.warning("Configured webcam")
+                return True
 
-    def capture_image(self, gray=False):
+    def capture_image(self, data):
         img = None
         imgByteArr = None
         if self.input_handler is not None:
@@ -40,7 +46,7 @@ class WebcamInput(BaseVisionInput):
                 logging.warning("Camera Device is not Openeded")
         else:
             logging.warning("Please configure a camera device first")
-        if gray:
+        if data[0] != "get_rgb_frame":
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         if img is not None:
             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]

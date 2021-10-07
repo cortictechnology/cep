@@ -1,5 +1,7 @@
 {
     "vision": {
+        "webcam_input": "WebcamInput",
+        "picam_input": "PicamInput",
         "oakd_pipeline": "OAKDPipeline",
         "oakd_rgb_camera_input": "OAKDRgbCamera",
         "oakd_stereo_camera_input": "OAKDStereoCamera",
@@ -33,6 +35,14 @@
                 "oakd_pose_estimation",
                 "oakd_hand_landmarks",
                 "oakd_hand_asl"
+            ]
+        },
+        "vision_input_service": {
+            "class": "VisionInputService",
+            "friendly_name": "Vision Input Service",
+            "worker_list": [
+                "webcam_input",
+                "picam_input"
             ]
         },
         "vision_processor_service": {
