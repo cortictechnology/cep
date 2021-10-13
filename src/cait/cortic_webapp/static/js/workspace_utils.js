@@ -625,6 +625,7 @@ function run_code() {
         }
       }
     }
+    //if (current_camera != "camera") {
     var missing_oakd_nodes = [];
     for (i in vision_func_dependent_blocks) {
       if (code.indexOf(i) != -1) {
@@ -664,6 +665,8 @@ function run_code() {
       alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
       ready_to_execute_code = false;
     }
+    //}
+
     for (i in speech_func) {
       if (code.indexOf(speech_func[i]) != -1) {
         if (code.indexOf('init_voice') == -1) {

@@ -557,7 +557,8 @@ def draw_estimated_hand_landmarks(hand_landmarks, from_web=False):
     drawing_modes["Hand Landmarks"] = hand_landmarks
 
 
-def detect_face(processor="oakd", spatial=False, for_streaming=False):
+def detect_face(processor, spatial=False, for_streaming=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -566,51 +567,73 @@ def detect_face(processor="oakd", spatial=False, for_streaming=False):
         )
         return None
     change_vision_mode("face_detection")
+    camera_worker = None
+    worker = None
+    logging.warning("Processor:" + str(processor))
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     if processor == "oakd":
         worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_face_detection"
         )
     else:
-        camera_worker = CURTCommands.get_worker(
-            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-        )
         worker = CURTCommands.get_worker(
             full_domain_name + "/vision/vision_processor_service/face_detection"
         )
     faces = []
-    if worker is not None:
+    if camera_worker is not None and worker is not None:
+        rgb_frame_handler = CURTCommands.request(
+            camera_worker, params=["get_rgb_frame"]
+        )
         if processor == "oakd":
             if spatial:
                 face_detection_handler = CURTCommands.request(
                     worker, params=["get_spatial_face_detections"]
                 )
             else:
-                face_detection_handler = CURTCommands.request(
-                    worker, params=["detect_face_pipeline", 0.6, False]
-                )
+                if current_camera != "oakd":
+                    face_detection_handler = CURTCommands.request(
+                        worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                    )
+                else:
+                    face_detection_handler = CURTCommands.request(
+                        worker, params=["detect_face_pipeline", 0.6, False]
+                    )
         else:
-            rgb_frame_handler = CURTCommands.request(
-                camera_worker, params=["get_rgb_frame"]
-            )
             face_detection_handler = CURTCommands.request(
                 worker, params=[rgb_frame_handler]
             )
         faces = CURTCommands.get_result(face_detection_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        width = 640
+        height = 360
+        if current_camera != "oakd":
+            width = 640
+            height = 480
         if isinstance(faces, list):
             for face in faces:
                 if isinstance(face, list):
-                    face[0] = int(face[0] * 640)
-                    face[1] = int(face[1] * 360)
-                    face[2] = int(face[2] * 640)
-                    face[3] = int(face[3] * 360)
+                    face[0] = int(face[0] * width)
+                    face[1] = int(face[1] * height)
+                    face[2] = int(face[2] * width)
+                    face[3] = int(face[3] * height)
                 elif isinstance(face, dict):
                     bbox = face["face_coordinates"]
-                    bbox[0] = int(bbox[0] * 640)
-                    bbox[1] = int(bbox[1] * 360)
-                    bbox[2] = int(bbox[2] * 640)
-                    bbox[3] = int(bbox[3] * 360)
+                    bbox[0] = int(bbox[0] * width)
+                    bbox[1] = int(bbox[1] * height)
+                    bbox[2] = int(bbox[2] * width)
+                    bbox[3] = int(bbox[3] * height)
         else:
             faces = []
     return faces
@@ -1590,6 +1613,14 @@ def reset_modules():
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/oakd_service/oakd_pipeline"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            [["reset"]],
+        )
     video_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/vision_input_service/webcam_input"
     )
