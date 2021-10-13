@@ -13,6 +13,7 @@ import time
 import cv2
 import math
 import os
+import logging
 
 from curt.modules.vision.tvm_processing import TVMProcessing
 
@@ -50,6 +51,9 @@ class FaceDetection(TVMProcessing):
         self.resize_ratio = 1
 
         img = input_data[0]
+        if img is None:
+            logging.warning("Face detection: " + "imgae is None")
+            return None
 
         self.img_width = img.shape[1]
         self.img_height = img.shape[0]

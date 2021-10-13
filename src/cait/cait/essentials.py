@@ -299,7 +299,7 @@ def get_stereo_image():
         return None
 
 
-def detect_face(processor="oakd", spatial=False):
+def detect_face(processor, spatial=False):
     """Detects all person faces from camera feed. No need to pass in camera feed explicitly at this level.
 
     Returns:

@@ -57,6 +57,8 @@ var spatial_object_detection = false;
 
 var current_file_list_root = "";
 
+var current_camera = "";
+
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "setup_block",
@@ -490,11 +492,11 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "vision_detect_face_pi",
-    "message0": "%{BKY_FACE_DETECT}",
+    "message0": "%{BKY_FACE_DETECT_PI}",
     "inputsInline": true,
     "output": "String",
     "colour": "#5D0095",
-    "tooltip": "%{BKY_FACE_DETECT_TOOLTIP}",
+    "tooltip": "%{BKY_FACE_DETECT_PI_TOOLTIP}",
     "helpUrl": ""
   },
   {
@@ -1652,6 +1654,7 @@ Blockly.JavaScript['init_vision_pi'] = function (block) {
       camera_index = cameras[i]['index']
     }
   }
+  current_camera = "camera";
   var code = "await cait_init_vision({'index': " + String(camera_index) + "}, 'cpu');\n";
   return code;
 };
@@ -1710,6 +1713,7 @@ Blockly.JavaScript['add_pipeline_node'] = function (block) {
   var dropdown_node = block.getFieldValue('node');
   if (dropdown_node == "rgb") {
     var code = '<["add_rgb_cam_node", 640, 360], ["add_rgb_cam_preview_node"]>';
+    current_camera = "oakd";
   }
   else if (dropdown_node == "stereo") {
     var code = '<["add_stereo_cam_node", False], ["add_stereo_frame_node"]>';
@@ -1720,7 +1724,15 @@ Blockly.JavaScript['add_pipeline_node'] = function (block) {
   }
   else if (dropdown_node == "face_detection") {
     spatial_face_detection = false;
-    var code = '<["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]>';
+    console.log(current_camera);
+    if (current_camera != "camera") {
+      var code = '<["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]>';
+      vision_func_dependent_blocks['cait_detect_face'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"];
+    }
+    else {
+      var code = '<["add_nn_node", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]>';
+      vision_func_dependent_blocks['cait_detect_face'] = ["face_detection"];
+    }
   }
   else if (dropdown_node == "face_recognition") {
     var code = '<["add_nn_node", "face_landmarks", "landmarks-regression-retail-0009_openvino_2021.2_6shave.blob", 48, 48], ["add_nn_node", "face_features", "mobilefacenet.blob", 112, 112]>';
@@ -1987,6 +1999,12 @@ Blockly.Python['dictionary_add'] = function (block) {
 };
 
 Blockly.JavaScript['vision_detect_face'] = function (block) {
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_detect_face'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"];
+  }
+  else {
+    vision_func_dependent_blocks['cait_detect_face'] = ["face_detection"];
+  }
   var code = "await cait_detect_face('oakd')";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };

@@ -47,23 +47,38 @@ class OAKDPipeline:
             logging.warning("************************************************************************")
 
     def config_worker(self, config_data):
-        if self.pipeline_started and self.device is not None:
-            logging.warning("*********************RESET PIPELINE**********************")
-            self.reset = True
-            self.device.close()
-            self.pipeline = dai.Pipeline()
-            self.pipeline.setOpenVINOVersion(
-                version=dai.OpenVINO.Version.VERSION_2021_3
-            )
-            self.xlink_nodes = {}
-            self.consume_thread.join()
-            self.stream_nodes = {}
-            self.node_to_display = []
-            self.photo_count = 0
-            logging.warning("PIPELINE RESET DONE")
+        # if self.pipeline_started and self.device is not None:
+        #     logging.warning("*********************RESET PIPELINE**********************")
+        #     self.reset = True
+        #     self.device.close()
+        #     self.pipeline = dai.Pipeline()
+        #     self.pipeline.setOpenVINOVersion(
+        #         version=dai.OpenVINO.Version.VERSION_2021_3
+        #     )
+        #     self.xlink_nodes = {}
+        #     self.consume_thread.join()
+        #     self.stream_nodes = {}
+        #     self.node_to_display = []
+        #     self.photo_count = 0
+        #     logging.warning("PIPELINE RESET DONE")
         for data in config_data:
             logging.warning(data)
-            if data[0] == "version":
+            if data[0] == "reset":
+                if self.pipeline_started and self.device is not None:
+                    self.reset = True
+                    self.consume_thread.join()
+                    self.device.close()
+                    self.pipeline = dai.Pipeline()
+                    self.pipeline.setOpenVINOVersion(
+                        version=dai.OpenVINO.Version.VERSION_2021_3
+                    )
+                    self.xlink_nodes = {}
+                    self.stream_nodes = {}
+                    self.node_to_display = []
+                    self.photo_count = 0
+                logging.warning("PIPELINE RESET DONE")
+                return True
+            elif data[0] == "version":
                 self.config_pipeline_version(data[1])
             elif data[0] == "add_rgb_cam_node":
                 self.add_rgb_cam_node(data[1], data[2])
