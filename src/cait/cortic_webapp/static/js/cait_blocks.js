@@ -58,6 +58,7 @@ var spatial_object_detection = false;
 var current_file_list_root = "";
 
 var current_camera = "";
+var use_oakd_processing = false;
 
 Blockly.defineBlocksWithJsonArray([
   {
