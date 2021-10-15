@@ -5,6 +5,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 var hostname = window.location.hostname;
+var subscribed_to_system_status = false;
 
 (function ($) {
     "use strict";
@@ -81,11 +82,18 @@ function onFailure(message) {
 function onConnect() {
     // Once a connection has been made, make a subscription and send a message.
     console.log("Connected to cait");
-    client.subscribe("cait/output/" + hostname.split(".")[0] + "/system_status");
+    if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) {
+        client.subscribe("cait/output/device_info");
+        subscribed_to_system_status = false;
+    }
+    else {
+        client.subscribe("cait/output/" + hostname.split(".")[0] + "/system_status");
+    }
 }
 
 // called when the client loses its connection
 function onConnectionLost(resObj) {
+    subscribed_to_system_status = false;
     console.log("Lost connection to " + resObj.uri + "\nError code: " + resObj.errorCode + "\nError text: " + resObj.errorMessage);
     if (resObj.reconnect) {
         console.log("Automatic reconnect is currently active.");
@@ -96,11 +104,19 @@ function onConnectionLost(resObj) {
 
 // called when a message arrives
 function onMessageArrived(message) {
-    console.log(message.payloadString);
     if (message.payloadString == "CAIT UP") {
         if (!cait_system_up) {
             cait_system_up = true;
             login();
+        }
+    }
+    else {
+        var device_info = JSON.parse(message.payloadString);
+        if (device_info['host_ip'] == hostname) {
+            if (!subscribed_to_system_status) {
+                client.subscribe("cait/output/" + device_info['hostname'] + "/system_status");
+                subscribed_to_system_status = true;
+            }
         }
     }
 }

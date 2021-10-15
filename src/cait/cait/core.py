@@ -24,6 +24,7 @@ from .managers.device_manager import DeviceManager
 from .PID import PID
 from .core_data import *
 from .utils import (
+    get_ip_address,
     connect_mqtt,
     decode_image_byte,
     draw_face_detection,
@@ -60,8 +61,11 @@ while ret != True:
 
 def heartbeat_func():
     global hearbeat_client
+    device_info = {"hostname": os.uname()[1].lower(), "host_ip": get_ip_address()}
     while True:
         hearbeat_client.publish("cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1)
+        hearbeat_client.publish("cait/output/device_info", json.dumps(device_info), qos=1)
+
         time.sleep(2)
 
 heartbeat_thread = threading.Thread(

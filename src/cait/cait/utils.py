@@ -8,12 +8,17 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 import paho.mqtt.client as mqtt
 import logging
 import cv2
+import socket
 import base64
 import numpy as np
 from .core_data import *
 
 logging.getLogger().setLevel(logging.INFO)
 
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]
 
 def connect_mqtt(client, address):
     try:

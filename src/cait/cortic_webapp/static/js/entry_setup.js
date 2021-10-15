@@ -10,6 +10,7 @@ var stopStreaming = true;
 var hostname = window.location.hostname
 var clientID = "blockly_" + parseInt(Math.random() * 100);
 var client = new Paho.Client(hostname, 8083, clientID);
+var subscribed_to_programming_topics = false;
 
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
@@ -36,15 +37,23 @@ function onConnect() {
     {},
     function (data, status) {
       document.getElementById('loggedUser').innerHTML = localizedStrings.loggedInAs[locale] + data['username'];
-      client.subscribe("cait/output/" + hostname.split(".")[0] + "/displayFrame");
-      console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/displayFrame");
-      client.subscribe("cait/output/" + hostname.split(".")[0] + "/system_status");
-      console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/system_status");
+      if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) {
+        client.subscribe("cait/output/device_info");
+        subscribed_to_programming_topics = false;
+      }
+      else {
+        client.subscribe("cait/output/" + hostname.split(".")[0] + "/displayFrame");
+        console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/displayFrame");
+        client.subscribe("cait/output/" + hostname.split(".")[0] + "/system_status");
+        console.log("Subscribed to: " + "cait/output/" + hostname.split(".")[0] + "/system_status");
+      }
+
     });
 }
 
 // called when the client loses its connection
 function onConnectionLost(responseObject) {
+  subscribed_to_programming_topics = false;
   if (responseObject.errorCode !== 0) {
     console.log("onConnectionLost:" + responseObject.errorMessage);
     client.connect({ onSuccess: onConnect });
@@ -60,17 +69,30 @@ function onMessageArrived(message) {
     }
   }
   else {
-    if (stopStreaming) {
-      document.getElementById("cameraImage").setAttribute("src", '/static/img/video_placeholder.png');
+    if (message.topic == "cait/output/device_info") {
+      var device_info = JSON.parse(message.payloadString);
+      if (device_info['host_ip'] == hostname) {
+        if (!subscribed_to_programming_topics) {
+          client.subscribe("cait/output/" + device_info['hostname'] + "/displayFrame");
+          console.log("Subscribed to: " + "cait/output/" + device_info['hostname'] + "/displayFrame");
+          client.subscribe("cait/output/" + device_info['hostname'] + "/system_status");
+          console.log("Subscribed to: " + "cait/output/" + device_info['hostname'] + "/system_status");
+          subscribed_to_programming_topics = true;
+        }
+      }
     }
     else {
-      document.getElementById("cameraImage").setAttribute(
-        'src', "data:image/png;base64," + message.payloadString
-      );
+      if (stopStreaming) {
+        document.getElementById("cameraImage").setAttribute("src", '/static/img/video_placeholder.png');
+      }
+      else {
+        document.getElementById("cameraImage").setAttribute(
+          'src', "data:image/png;base64," + message.payloadString
+        );
+      }
     }
   }
 }
-
 
 var scan_for_devices = true;
 
