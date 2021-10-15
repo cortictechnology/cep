@@ -415,10 +415,12 @@ function updateFunction(event) {
         if (block.getSurroundParent() != null) {
           if (block.getSurroundParent().type == "init_vision") {
             block.setEnabled(true);
+            use_oakd_processing = true;
             enableChildBlock(block);
           }
           else {
             block.setEnabled(false);
+            use_oakd_processing = false;
             disableChildBlock(block);
           }
         }
@@ -625,47 +627,47 @@ function run_code() {
         }
       }
     }
-    //if (current_camera != "camera") {
-    var missing_oakd_nodes = [];
-    for (i in vision_func_dependent_blocks) {
-      if (code.indexOf(i) != -1) {
-        var dependent_blocks = vision_func_dependent_blocks[i];
-        for (d in dependent_blocks) {
-          var blk = dependent_blocks[d];
-          if (typeof (blk) == "object") {
-            var node_present = false;
-            var missing_node = "";
-            for (j in blk) {
-              if (code.indexOf(blk[j]) != -1) {
-                node_present = true;
-              }
-              else {
-                if (missing_node == "") {
-                  missing_node = blk[j];
+    if (use_oakd_processing) {
+      var missing_oakd_nodes = [];
+      for (i in vision_func_dependent_blocks) {
+        if (code.indexOf(i) != -1) {
+          var dependent_blocks = vision_func_dependent_blocks[i];
+          for (d in dependent_blocks) {
+            var blk = dependent_blocks[d];
+            if (typeof (blk) == "object") {
+              var node_present = false;
+              var missing_node = "";
+              for (j in blk) {
+                if (code.indexOf(blk[j]) != -1) {
+                  node_present = true;
                 }
                 else {
-                  missing_node = missing_node + " or " + blk[j];
+                  if (missing_node == "") {
+                    missing_node = blk[j];
+                  }
+                  else {
+                    missing_node = missing_node + " or " + blk[j];
+                  }
                 }
               }
+              if (!node_present) {
+                missing_oakd_nodes.push(missing_node);
+              }
             }
-            if (!node_present) {
-              missing_oakd_nodes.push(missing_node);
-            }
-          }
-          else {
-            console.log(blk);
-            if (code.indexOf(blk) == -1) {
-              missing_oakd_nodes.push(blk);
+            else {
+              console.log(blk);
+              if (code.indexOf(blk) == -1) {
+                missing_oakd_nodes.push(blk);
+              }
             }
           }
         }
       }
+      if (missing_oakd_nodes.length > 0) {
+        alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
+        ready_to_execute_code = false;
+      }
     }
-    if (missing_oakd_nodes.length > 0) {
-      alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
-      ready_to_execute_code = false;
-    }
-    //}
 
     for (i in speech_func) {
       if (code.indexOf(speech_func[i]) != -1) {
