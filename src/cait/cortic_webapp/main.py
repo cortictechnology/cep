@@ -747,6 +747,13 @@ def draw_detected_objects():
     result = {"success": True}
     return jsonify(result)
 
+@application.route("/draw_image_classification", methods=["POST"])
+@login_required
+def draw_image_classification():
+    names = json.loads(request.form.get("names"))
+    essentials.draw_classified_image(names, from_web=True)
+    result = {"success": True}
+    return jsonify(result)
 
 @application.route("/draw_estimated_body_landmarks", methods=["POST"])
 @login_required
@@ -815,7 +822,8 @@ def recognizeface():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
-    people = essentials.recognize_face()
+    processor = request.form.get("processor")
+    people = essentials.recognize_face(processor)
     return jsonify(people)
 
 
@@ -828,8 +836,9 @@ def addperson():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     person_name = request.form.get("name")
-    success = essentials.add_person(person_name)
+    success = essentials.add_person(processor, person_name)
     result = {"success": success}
     return jsonify(result)
 
@@ -843,9 +852,10 @@ def removeperson():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     person_name = request.form.get("name")
     logging.info("Remove: " + person_name)
-    success = essentials.remove_person(person_name)
+    success = essentials.remove_person(processor, person_name)
     result = {"success": success}
     return jsonify(result)
 
@@ -859,12 +869,13 @@ def detectobject():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     spatial = request.form.get("spatial")
     if spatial == "false":
         spatial = False
     elif spatial == "true":
         spatial = True
-    objects = essentials.detect_objects(spatial)
+    objects = essentials.detect_objects(processor, spatial)
     return jsonify(objects)
 
 

@@ -15,6 +15,7 @@ var vision_func = ["cait_enable_drawing_mode",
   "cait_detect_objects",
   "cait_draw_detected_object",
   "cait_classify_image",
+  "cait_draw_classified_image",
   "cait_face_emotions_estimation",
   "cait_draw_estimated_emotions",
   "cait_facemesh_estimation",
@@ -58,7 +59,6 @@ var spatial_object_detection = false;
 var current_file_list_root = "";
 
 var current_camera = "";
-var use_oakd_processing = false;
 
 Blockly.defineBlocksWithJsonArray([
   {
@@ -483,7 +483,7 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_detect_face",
+    "type": "vision_detect_face_oakd",
     "message0": "%{BKY_FACE_DETECT}",
     "inputsInline": true,
     "output": "String",
@@ -517,7 +517,16 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_recognize_face",
+    "type": "vision_recognize_face_pi",
+    "message0": "%{BKY_FACE_RECOGNIZE_PI}",
+    "inputsInline": true,
+    "output": "String",
+    "colour": "#5D0095",
+    "tooltip": "%{BKY_FACE_RECOGNIZE_PI_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "vision_recognize_face_oakd",
     "message0": "%{BKY_FACE_RECOGNIZE}",
     "inputsInline": true,
     "output": "String",
@@ -542,7 +551,23 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_add_person",
+    "type": "vision_add_person_pi",
+    "message0": "%{BKY_FACE_ADD_PI}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "person_name",
+        "align": "CENTRE"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#5D0095",
+    "tooltip": "%{BKY_FACE_ADD_PI_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "vision_add_person_oakd",
     "message0": "%{BKY_FACE_ADD}",
     "args0": [
       {
@@ -558,7 +583,23 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_remove_person",
+    "type": "vision_remove_person_pi",
+    "message0": "%{BKY_FACE_DELETE_PI}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "person_name",
+        "align": "CENTRE"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#5D0095",
+    "tooltip": "%{BKY_FACE_DELETE_PI_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "vision_remove_person_oakd",
     "message0": "%{BKY_FACE_DELETE}",
     "args0": [
       {
@@ -574,7 +615,17 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_detect_objects",
+    "type": "vision_detect_objects_pi",
+    "lastDummyAlign0": "CENTRE",
+    "message0": "%{BKY_OBJECT_DETECT_PI}",
+    "inputsInline": true,
+    "output": null,
+    "colour": "#5D0095",
+    "tooltip": "%{BKY_OBJECT_DETECT_PI_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "vision_detect_objects_oakd",
     "lastDummyAlign0": "CENTRE",
     "message0": "%{BKY_OBJECT_DETECT}",
     "inputsInline": true,
@@ -600,13 +651,29 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   },
   {
-    "type": "vision_classify_image",
+    "type": "vision_classify_image_pi",
     "lastDummyAlign0": "CENTRE",
-    "message0": "%{BKY_IMAGE_CLASSIFY}",
+    "message0": "%{BKY_IMAGE_CLASSIFY_PI}",
     "inputsInline": true,
     "output": null,
     "colour": "#5D0095",
-    "tooltip": "%{BKY_IMAGE_CLASSIFY_TOOLTIP}",
+    "tooltip": "%{BKY_IMAGE_CLASSIFY_PI_TOOLTIP}",
+    "helpUrl": ""
+  },
+  {
+    "type": "vision_draw_classified_image",
+    "message0": "%{BKY_DRAW_CLASSIFIED_IMAGE}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "names",
+        "align": "CENTRE"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#5D0095",
+    "tooltip": "%{BKY_DRAW_CLASSIFIED_IMAGE_TOOLTIP}",
     "helpUrl": ""
   },
   {
@@ -1999,7 +2066,7 @@ Blockly.Python['dictionary_add'] = function (block) {
   return code;
 };
 
-Blockly.JavaScript['vision_detect_face'] = function (block) {
+Blockly.JavaScript['vision_detect_face_oakd'] = function (block) {
   if (current_camera != "camera") {
     vision_func_dependent_blocks['cait_detect_face'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"];
   }
@@ -2010,7 +2077,7 @@ Blockly.JavaScript['vision_detect_face'] = function (block) {
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
 
-Blockly.Python['vision_detect_face'] = function (block) {
+Blockly.Python['vision_detect_face_oakd'] = function (block) {
   var code = "cait.essentials.detect_face(processor='oakd')";
   if (spatial_face_detection) {
     var code = "cait.essentials.detect_face(processor='oakd', spatial=True)";
@@ -2051,9 +2118,24 @@ Blockly.Python['vision_draw_detected_face'] = function (block) {
   return code;
 };
 
-Blockly.JavaScript['vision_recognize_face'] = function (block) {
-  var code = "await cait_recognize_face()";
+Blockly.JavaScript['vision_recognize_face_pi'] = function (block) {
+  var code = "await cait_recognize_face('pi')";
   return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.Python['vision_recognize_face_pi'] = function (block) {
+  var code = "cait.essentials.recognize_face(processor='pi')";
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.JavaScript['vision_recognize_face_oakd'] = function (block) {
+  var code = "await cait_recognize_face('oakd')";
+  return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.Python['vision_recognize_face_oakd'] = function (block) {
+  var code = "cait.essentials.recognize_face(processor='oakd')";
+  return [code, Blockly.Python.ORDER_NONE];
 };
 
 Blockly.JavaScript['vision_draw_recognized_face'] = function (block) {
@@ -2068,44 +2150,76 @@ Blockly.Python['vision_draw_recognized_face'] = function (block) {
   return code;
 };
 
-Blockly.Python['vision_recognize_face'] = function (block) {
-  var code = "cait.essentials.recognize_face()";
-  return [code, Blockly.Python.ORDER_NONE];
-};
-
-Blockly.JavaScript['vision_add_person'] = function (block) {
+Blockly.JavaScript['vision_add_person_pi'] = function (block) {
   var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
-  var code = "await cait_add_person(" + String(value_person_name) + ");\n";
+  var code = "await cait_add_person('pi', " + String(value_person_name) + ");\n";
   return code;
 };
 
-Blockly.Python['vision_add_person'] = function (block) {
+Blockly.Python['vision_add_person_pi'] = function (block) {
   var value_person_name = Blockly.Python.valueToCode(block, 'person_name', Blockly.Python.ORDER_ATOMIC);
-  var code = "cait.essentials.add_person(" + String(value_person_name) + ")\n";
+  var code = "cait.essentials.add_person(processor='pi', " + String(value_person_name) + ")\n";
   return code;
 };
 
-Blockly.JavaScript['vision_remove_person'] = function (block) {
+Blockly.JavaScript['vision_add_person_oakd'] = function (block) {
   var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
-  var code = "await cait_delete_person(" + String(value_person_name) + ");\n";
+  var code = "await cait_add_person('oakd', " + String(value_person_name) + ");\n";
   return code;
 };
 
-Blockly.Python['vision_remove_person'] = function (block) {
+Blockly.Python['vision_add_person_oakd'] = function (block) {
   var value_person_name = Blockly.Python.valueToCode(block, 'person_name', Blockly.Python.ORDER_ATOMIC);
-  var code = "cait.essentials.remove_person(" + String(value_person_name) + ")\n";
+  var code = "cait.essentials.add_person(processor='oakd', " + String(value_person_name) + ")\n";
   return code;
 };
 
-Blockly.JavaScript['vision_detect_objects'] = function (block) {
-  var code = 'await cait_detect_objects()';
+Blockly.JavaScript['vision_remove_person_pi'] = function (block) {
+  var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
+  var code = "await cait_delete_person('pi', " + String(value_person_name) + ");\n";
+  return code;
+};
+
+Blockly.Python['vision_remove_person_pi'] = function (block) {
+  var value_person_name = Blockly.Python.valueToCode(block, 'person_name', Blockly.Python.ORDER_ATOMIC);
+  var code = "cait.essentials.remove_person(processor='pi', " + String(value_person_name) + ")\n";
+  return code;
+};
+
+Blockly.JavaScript['vision_remove_person_oakd'] = function (block) {
+  var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
+  var code = "await cait_delete_person('oakd', " + String(value_person_name) + ");\n";
+  return code;
+};
+
+Blockly.Python['vision_remove_person_oakd'] = function (block) {
+  var value_person_name = Blockly.Python.valueToCode(block, 'person_name', Blockly.Python.ORDER_ATOMIC);
+  var code = "cait.essentials.remove_person(processor='oakd', " + String(value_person_name) + ")\n";
+  return code;
+};
+
+Blockly.JavaScript['vision_detect_objects_pi'] = function (block) {
+  var code = "await cait_detect_objects('pi')";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
 
-Blockly.Python['vision_detect_objects'] = function (block) {
-  var code = 'cait.essentials.detect_objects()';
+Blockly.Python['vision_detect_objects_pi'] = function (block) {
+  var code = "cait.essentials.detect_objects(processor='pi')";
   if (spatial_object_detection) {
-    var code = "cait.essentials.detect_objects(spatial=True)";
+    var code = "cait.essentials.detect_objects(processor='pi', spatial=True)";
+  }
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.JavaScript['vision_detect_objects_oakd'] = function (block) {
+  var code = "await cait_detect_objects('oakd')";
+  return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.Python['vision_detect_objects_oakd'] = function (block) {
+  var code = "cait.essentials.detect_objects(processor='oakd')";
+  if (spatial_object_detection) {
+    var code = "cait.essentials.detect_objects(processor='oakd', spatial=True)";
   }
   return [code, Blockly.Python.ORDER_NONE];
 };
@@ -2122,14 +2236,26 @@ Blockly.Python['vision_draw_detected_objects'] = function (block) {
   return code;
 };
 
-Blockly.JavaScript['vision_classify_image'] = function (block) {
+Blockly.JavaScript['vision_classify_image_pi'] = function (block) {
   var code = 'await cait_classify_image()';
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
 
-Blockly.Python['vision_classify_image'] = function (block) {
+Blockly.Python['vision_classify_image_pi'] = function (block) {
   var code = 'cait.essentials.classify_image()';
   return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.JavaScript['vision_draw_classified_image'] = function (block) {
+  var value_names = Blockly.JavaScript.valueToCode(block, 'names', Blockly.JavaScript.ORDER_ATOMIC);
+  var code = "await cait_draw_classified_image(" + String(value_names) + "); \n";
+  return code;
+};
+
+Blockly.Python['vision_draw_classified_image'] = function (block) {
+  var value_names = Blockly.Python.valueToCode(block, 'names', Blockly.Python.ORDER_ATOMIC);
+  var code = "cait.essentials.draw_classified_image(" + String(value_names) + ")\n";
+  return code;
 };
 
 Blockly.JavaScript['vision_face_emotions'] = function (block) {

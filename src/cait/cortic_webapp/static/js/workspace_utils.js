@@ -413,12 +413,10 @@ function updateFunction(event) {
         if (block.getSurroundParent() != null) {
           if (block.getSurroundParent().type == "init_vision") {
             block.setEnabled(true);
-            use_oakd_processing = true;
             enableChildBlock(block);
           }
           else {
             block.setEnabled(false);
-            use_oakd_processing = false;
             disableChildBlock(block);
           }
         }
@@ -539,6 +537,7 @@ function run_code() {
   //var xml_text = Blockly.Xml.domToText(xml);
   //console.log(xml_text);
   stopCode = false;
+  var use_oakd_processing = false;
   Blockly.JavaScript.addReservedWords('code');
   Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
   Blockly.JavaScript.addReservedWords('highlightBlock');
@@ -622,6 +621,9 @@ function run_code() {
           alert(localizedStrings.visNotInit[locale]);
           ready_to_execute_code = false;
           break;
+        }
+        else {
+
         }
       }
     }

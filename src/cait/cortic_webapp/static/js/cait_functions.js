@@ -129,6 +129,14 @@ async function cait_draw_detected_objects(objects) {
   }
 }
 
+async function cait_draw_classified_image(names) {
+  try {
+    await ajax_post("/draw_image_classification", { 'names': JSON.stringify(names['names']) });
+  } catch (err) {
+    throw new Error(err.statusText);
+  }
+}
+
 async function cait_draw_estimated_emotions(emotions) {
   try {
     await ajax_post("/draw_estimated_emotions", { 'emotions': JSON.stringify(emotions['emotions']) });
@@ -179,9 +187,9 @@ async function cait_detect_face(processor) {
   }
 }
 
-async function cait_recognize_face() {
+async function cait_recognize_face(processor) {
   try {
-    const res = await ajax_post("/recognizeface", {});
+    const res = await ajax_post("/recognizeface", { 'processor': processor });
     //console.log(res);
     if (res['success'] == false) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");
@@ -192,9 +200,9 @@ async function cait_recognize_face() {
   }
 }
 
-async function cait_add_person(name) {
+async function cait_add_person(processor, name) {
   try {
-    const res = await ajax_post("/addperson", { 'name': name });
+    const res = await ajax_post("/addperson", { 'processor': processor, 'name': name });
     // console.log(res);
     if (res['success'] == false) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");
@@ -204,9 +212,9 @@ async function cait_add_person(name) {
   }
 }
 
-async function cait_delete_person(name) {
+async function cait_delete_person(processor, name) {
   try {
-    const res = await ajax_post("/removeperson", { 'name': name });
+    const res = await ajax_post("/removeperson", { 'processor': processor, 'name': name });
     // console.log(res);
     if (res['success'] == false) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");
@@ -216,9 +224,9 @@ async function cait_delete_person(name) {
   }
 }
 
-async function cait_detect_objects() {
+async function cait_detect_objects(processor) {
   try {
-    const res = await ajax_post("/detectobject", { 'spatial': spatial_object_detection });
+    const res = await ajax_post("/detectobject", { 'processor': processor, 'spatial': spatial_object_detection });
     //console.log(res);
     if (res['success'] == false) {
       throw new Error(res["error"] + ". Please fix the problem and click Run again.");

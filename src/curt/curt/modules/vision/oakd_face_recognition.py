@@ -30,7 +30,7 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
         self.ref_face_landmarks = np.expand_dims(self.ref_face_landmarks, axis=0)
 
         self.face_database = {"Names": [], "Features": []}
-        self.load_database("/models/database")
+        self.load_database("/models/oakd/database")
         self.modify_face_db__mode = False
 
     def get_aligned_faces(self, img, detected_faces, largest_face_only=False):
@@ -82,7 +82,7 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
                 )
             face_landmarks = face_landmarks.reshape((-1, 2))
             aligned_face = norm_crop(img, face_landmarks, self.ref_face_landmarks)
-            return aligned_face
+            return aligned_face, largest_detection
         else:
             for face_frame in face_frames:
                 face_landmarks = self.get_face_landmarks(
@@ -118,7 +118,7 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
             self.fl_nn_node_names = self.oakd_pipeline.xlink_nodes["face_landmarks"]
             self.ff_nn_node_names = self.oakd_pipeline.xlink_nodes["face_features"]
 
-            aligned_face = self.get_aligned_faces(
+            aligned_face, _ = self.get_aligned_faces(
                 img, detected_faces, largest_face_only=True
             )
 
@@ -196,28 +196,29 @@ class OAKDFaceRecognition(OAKDProcessingWorker):
         else:
             if isinstance(inference_results, tuple):
                 face_features, person_name = inference_results
-                new_dir = os.path.join("/models/database", person_name)
-                try:
-                    os.mkdir(new_dir)
-                except OSError:
-                    logging.info(
-                        "Creation of the directory new person directory failed"
-                    )
-                    return False
+                new_dir = os.path.join("/models/oakd/database", person_name)
+                if not (os.path.exists(new_dir)):
+                    try:
+                        os.mkdir(new_dir)
+                    except OSError:
+                        logging.info(
+                            "Creation of the directory new person directory failed"
+                        )
+                        return False
                 feature_path = os.path.join(new_dir, "features.bin")
                 face_features.tofile(feature_path)
-                self.load_database("/models/database")
+                self.load_database("/models/oakd/database")
                 return True
             else:
                 person_name = inference_results
                 try:
-                    shutil.rmtree("/models/database/" + person_name)
+                    shutil.rmtree("/models/oakd/database/" + person_name)
                 except:
                     logging.warning(
                         "Error while removing person, please try again later.."
                     )
                     return False
-                self.load_database("/models/database")
+                self.load_database("/models/oakd/database")
                 return True
 
     # def generate_database(
