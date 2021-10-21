@@ -28,16 +28,16 @@ class OAKDObjectDetection(OAKDProcessingWorker):
         if operation == "get_spatial_object_detections":
             self.spatial_detection = True
             return True
-        elif operation == "detect_object_pipeline":
-            return True
-        else:
+        elif operation == "detect_object":
             img = params[1]
             if img is None:
                 return None
             if isinstance(img, str):
                 img = decode_image_byte(img)
             return img
-
+        elif operation == "detect_object_pipeline":
+            return True
+            
     def execute_nn_operation(self, preprocessed_data):
         detections = []
         if isinstance(preprocessed_data, bool):
