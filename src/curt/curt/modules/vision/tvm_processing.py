@@ -9,7 +9,7 @@ import tvm
 from tvm.contrib import graph_runtime
 import numpy as np
 from curt.modules.vision.base_vision_processing import BaseVisionProcessing
-from curt.modules.vision.utils import decode_image_byte
+import logging
 
 class TVMProcessing(BaseVisionProcessing):
     def __init__(
@@ -59,23 +59,17 @@ class TVMProcessing(BaseVisionProcessing):
     def config_worker(self, params):
         pass
 
-    def preprocess_input(self, input_data):
+    def preprocess_input(self, params):
         pass
 
-    def postprocess_result(self, inference_outputs):
-        pass
-
-    def run_inference(self, input_data):
+    def tvm_process(self, data):
         # t1 = time.time()
-        data = input_data
-        if isinstance(data, str):
-            data = decode_image_byte(data)
-        preprocessed_data = self.preprocess_input(data)
-        if isinstance(preprocessed_data, list):
-            if len(preprocessed_data) > 0:
+        if isinstance(data, list):
+            if len(data) > 0:
                 results = []
-                for i in range(len(preprocessed_data)):
-                    data = preprocessed_data[i]
+                for i in range(len(data)):
+                    data = data[i]
+                    data = data.astype("float32")
                     self.inference_module.set_input(self.input_node, tvm.nd.array(data))
                     self.inference_module.run()
                     inference_outputs = []
@@ -83,13 +77,14 @@ class TVMProcessing(BaseVisionProcessing):
                         inference_outputs.append(
                             self.inference_module.get_output(j).asnumpy()
                         )
-                    results.append(self.postprocess_result(inference_outputs))
+                    results.append(inference_outputs)
                 # print("Inference time:", time.time() - t1)
                 return results
         else:
-            if preprocessed_data is not None:
+            if data is not None:
+                data = data.astype("float32")
                 self.inference_module.set_input(
-                    self.input_node, tvm.nd.array(preprocessed_data)
+                    self.input_node, tvm.nd.array(data.copy())
                 )
                 self.inference_module.run()
                 inference_outputs = []
@@ -97,7 +92,22 @@ class TVMProcessing(BaseVisionProcessing):
                     inference_outputs.append(
                         self.inference_module.get_output(i).asnumpy()
                     )
-                result = self.postprocess_result(inference_outputs)
+                result = inference_outputs
                 # print("Inference time:", time.time() - t1)
-                return result
+                return [result]
         return []
+
+    def process_data(self, preprocessed_data):
+        pass
+
+    def postprocess_result(self, inference_outputs):
+        pass
+
+    def run_inference(self, params):
+        postprocessed_data = []
+        preprocessed_data = self.preprocess_input(params)
+        if preprocessed_data is None:
+            return None
+        processed_data = self.process_data(preprocessed_data)
+        postprocessed_data = self.postprocess_result(processed_data)
+        return postprocessed_data

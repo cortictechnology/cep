@@ -227,6 +227,34 @@ def draw_object_detection(img, names, coordinates):
         )
     return img
 
+def draw_image_classification(img, names):
+    logging.warning(str(names))
+    for i in range(len(names)):
+        name = names[i][0]
+        prob = names[i][1]
+        text = "{:.1f}".format(prob * 100) + "% - " + name
+        ft.putText(
+            img=img,
+            text=text,
+            org=(9, 30+30*i-1),
+            fontHeight=25,
+            color=(0, 0, 0),
+            thickness=-1,
+            line_type=cv2.LINE_AA,
+            bottomLeftOrigin=True,
+        )
+        ft.putText(
+            img=img,
+            text=text,
+            org=(10, 30+30*i),
+            fontHeight=25,
+            color=(255,255,255),
+            thickness=-1,
+            line_type=cv2.LINE_AA,
+            bottomLeftOrigin=True,
+        )
+
+    return img
 
 def draw_face_emotions(img, emotions):
     for emotion in emotions:

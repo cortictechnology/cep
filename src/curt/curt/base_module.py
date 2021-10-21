@@ -142,6 +142,8 @@ class BaseModule:
     def on_message(self, client, userdata, msg):
         data = msg.payload.decode()
         try:
+            if data is None:
+                return
             data = json.loads(data)
             if msg.topic == self.config_channel:
                 if data["dataType"] == "SubscribeTo":

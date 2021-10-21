@@ -179,6 +179,7 @@ drawing_modes = {
     "Face Emotions": [],
     "Face Mesh": [],
     "Object Detection": [],
+    "Image Classification": [],
     "Hand Landmarks": [],
     "Pose Landmarks": [],
 }

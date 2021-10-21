@@ -11,7 +11,7 @@ import numpy as np
 import logging
 from pathlib import Path
 import threading
-
+from string import Template
 
 class OAKDPipeline:
     def __init__(self):
@@ -61,6 +61,13 @@ class OAKDPipeline:
         #     self.node_to_display = []
         #     self.photo_count = 0
         #     logging.warning("PIPELINE RESET DONE")
+        face_detection_template = None
+        face_detection_code = ""
+        try:
+            with open("/models/oakd/oakd_face_detection_script.py", 'r') as file:
+                face_detection_template = Template(file.read())
+        except:
+            pass
         for data in config_data:
             logging.warning(data)
             if data[0] == "reset":
@@ -81,6 +88,16 @@ class OAKDPipeline:
             elif data[0] == "version":
                 self.config_pipeline_version(data[1])
             elif data[0] == "add_rgb_cam_node":
+                # if face_detection_template is not None:
+                #     face_detection_code = face_detection_template.substitute(
+                #             _TRACE = "node.warn" if self.trace else "#",
+                #             _img_h = self.img_h,
+                #             _img_w = self.img_w
+                #             )
+                #     import re
+                #     face_detection_code = re.sub(r'"{3}.*?"{3}', '', face_detection_code, flags=re.DOTALL)
+                #     face_detection_code = re.sub(r'#.*', '', face_detection_code)
+                #     face_detection_code = re.sub('\n\s*\n', '\n', face_detection_code)
                 self.add_rgb_cam_node(data[1], data[2])
             elif data[0] == "add_rgb_cam_preview_node":
                 self.add_rgb_cam_preview_node()
@@ -111,7 +128,10 @@ class OAKDPipeline:
             elif data[0] == "add_nn_node":
                 self.add_nn_node(data[1], data[2], data[3], data[4])
             elif data[0] == "add_nn_node_pipeline":
-                self.add_nn_node_pipeline(data[1], data[2], data[3], data[4])
+                if data[1] == "face_detection":
+                    self.add_nn_node_pipeline(data[1], data[2], data[3], data[4], face_detection_code)
+                else:
+                    self.add_nn_node_pipeline(data[1], data[2], data[3], data[4])
         # logging.info("finished adding nodes")
         #sysLog = self.pipeline.createSystemLogger()
         #linkOut = self.pipeline.createXLinkOut()
@@ -392,7 +412,7 @@ class OAKDPipeline:
         self.xlink_nodes[node_type] = [node_type + "_in", node_type + "_out"]
         self.nn_node_input_sizes[node_type] = [input_width, input_height]
 
-    def add_nn_node_pipeline(self, node_type, nn_name, input_width, input_height):
+    def add_nn_node_pipeline(self, node_type, nn_name, input_width, input_height, code=""):
         if node_type not in OAKDNodeTypes:
             logging.warning(node_type + " does not supported.")
             return
@@ -404,18 +424,50 @@ class OAKDPipeline:
                 "No existing rgb node found in pipeline, cannot add spatial mobilenetSSD node."
             )
             return
+
         manip = self.pipeline.createImageManip()
         manip.initialConfig.setResize(input_width, input_height)
         manip.setKeepAspectRatio(False)
         self.device_nodes["rgb_camera"].preview.link(manip.inputImage)
-
         nn = self.pipeline.createNeuralNetwork()
         nn.setBlobPath(str(Path("/models/oakd/" + nn_name).resolve().absolute()))
         nn.setNumInferenceThreads(2)
         manip.out.link(nn.input)
-        nn_out = self.pipeline.createXLinkOut()
-        nn_out.setStreamName(node_type + "_out")
-        nn.out.link(nn_out.input)
+
+        use_scripting_node = False
+
+        # Future work: Enable the use of face landmark model with the detection model in the same pipeline 
+        # if node_type == "face_detection":
+        #     if code != "":
+        #         manager_script = self.pipeline.create(dai.node.Script)
+        #         manager_script.setScript(code)
+        #         nn.out.link(manager_script.inputs['from_fd_nn'])
+                
+        #         pre_lm_manip = self.pipeline.create(dai.node.ImageManip)
+        #         pre_lm_manip.setMaxOutputFrameSize(48*48*3)
+        #         pre_lm_manip.setWaitForConfigInput(True)
+        #         pre_lm_manip.inputImage.setQueueSize(1)
+        #         pre_lm_manip.inputImage.setBlocking(False)
+        #         self.device_nodes["rgb_camera"].preview.link(pre_lm_manip.inputImage)
+        #         manager_script.outputs['pre_lm_manip_cfg'].link(pre_lm_manip.inputConfig)
+                
+            
+        #         face_landmark_nn = self.pipeline.createNeuralNetwork()
+        #         face_landmark_nn.setBlobPath(str(Path("/models/oakd/landmarks-regression-retail-0009_openvino_2021.2_6shave.blob").resolve().absolute()))
+        #         face_landmark_nn.setNumInferenceThreads(2)
+        #         pre_lm_manip.out.link(face_landmark_nn.input)
+        #         face_landmark_nn.out.link(manager_script.inputs['from_lm_nn'])
+
+        #         manager_out = self.pipeline.create(dai.node.XLinkOut)
+        #         manager_out.setStreamName(node_type + "_out")
+        #         manager_script.outputs['host'].link(manager_out.input)
+        #         use_scripting_node = True
+
+        if not use_scripting_node:
+            nn_out = self.pipeline.createXLinkOut()
+            nn_out.setStreamName(node_type + "_out")
+            nn.out.link(nn_out.input)
+            
         self.xlink_nodes[node_type] = ["", node_type + "_out"]
         self.stream_nodes[node_type + "_out"] = None
 

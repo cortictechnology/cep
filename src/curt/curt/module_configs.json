@@ -17,6 +17,9 @@
         "oakd_hand_asl": "OAKDASL",
         "heartrate_measure": "HeartrateMeasure",
         "face_detection": "FaceDetection",
+        "face_recognition": "FaceRecognition",
+        "object_detection": "ObjectDetection",
+        "image_classification": "ImageClassification",
         "opencv_render": "OpenCVRender",
         "oakd_service": {
             "class": "OAKDPipelineService",
@@ -50,7 +53,10 @@
             "friendly_name": "Vision Processor Service",
             "worker_list": [
                 "face_detection",
-                "heartrate_measure"
+                "face_recognition",
+                "heartrate_measure",
+                "object_detection",
+                "image_classification"
             ]
         },
         "vision_render_service": {
