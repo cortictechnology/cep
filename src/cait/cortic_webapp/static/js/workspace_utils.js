@@ -561,6 +561,19 @@ function run_code() {
       ready_to_execute_code = false
     }
 
+    console.log(code.indexOf('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]'));
+
+    if (current_camera == "camera") {
+      if (code.indexOf('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]') != -1) {
+        code = code.replace('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]',
+          '["add_mobilenetssd_node", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]');
+      }
+      if (code.indexOf('["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]') != -1) {
+        code = code.replace('["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]',
+          '["add_nn_node", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]');
+      }
+    }
+
 
     save_workspace(true);
     if (code.indexOf("await") != -1) {
