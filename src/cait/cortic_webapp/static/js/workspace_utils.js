@@ -539,7 +539,8 @@ function run_code() {
   //var xml_text = Blockly.Xml.domToText(xml);
   //console.log(xml_text);
   stopCode = false;
-  var use_oakd_processing = false;
+  use_oakd_processing = false;
+  current_camera = "";
   Blockly.JavaScript.addReservedWords('code');
   Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
   Blockly.JavaScript.addReservedWords('highlightBlock');
@@ -547,7 +548,20 @@ function run_code() {
   Blockly.JavaScript.addReservedWords('de_highlightBlock');
   resetStepUi(true);
   try {
+    var ready_to_execute_code = true;
     var code = Blockly.JavaScript.workspaceToCode(workspace);
+    var init_oakd_rgb_idx = code.indexOf("add_rgb_cam_preview_node");
+    var init_pi_rgb_idx = code.indexOf("await cait_init_vision({'index':");
+    if (init_oakd_rgb_idx != -1 && init_pi_rgb_idx != -1) {
+      alert("There are more than one camera block in the program, please only use one camera block");
+      ready_to_execute_code = false;
+    }
+    if (current_camera == "") {
+      alert("You need to add an initialize vision block to the program first");
+      ready_to_execute_code = false
+    }
+
+
     save_workspace(true);
     if (code.indexOf("await") != -1) {
       if (code.indexOf("function") != -1) {
@@ -616,7 +630,6 @@ function run_code() {
       }
     }
 
-    var ready_to_execute_code = true;
     for (i in vision_func) {
       if (code.indexOf(vision_func[i]) != -1) {
         if (code.indexOf('init_vision') == -1) {
@@ -633,40 +646,45 @@ function run_code() {
       var missing_oakd_nodes = [];
       for (i in vision_func_dependent_blocks) {
         if (code.indexOf(i) != -1) {
-          var dependent_blocks = vision_func_dependent_blocks[i];
-          for (d in dependent_blocks) {
-            var blk = dependent_blocks[d];
-            if (typeof (blk) == "object") {
-              var node_present = false;
-              var missing_node = "";
-              for (j in blk) {
-                if (code.indexOf(blk[j]) != -1) {
-                  node_present = true;
-                }
-                else {
-                  if (missing_node == "") {
-                    missing_node = blk[j];
+          var function_start = code.indexOf('(', code.indexOf(i));
+          var function_end = code.indexOf(';', function_start);
+          var func_body = code.substring(function_start, function_end);
+          if (func_body.indexOf("'oakd'") != -1) {
+            var dependent_blocks = vision_func_dependent_blocks[i];
+            for (d in dependent_blocks) {
+              var blk = dependent_blocks[d];
+              if (typeof (blk) == "object") {
+                var node_present = false;
+                var missing_node = "";
+                for (j in blk) {
+                  if (code.indexOf(blk[j]) != -1) {
+                    node_present = true;
                   }
                   else {
-                    missing_node = missing_node + " or " + blk[j];
+                    if (missing_node == "") {
+                      missing_node = blk[j];
+                    }
+                    else {
+                      missing_node = missing_node + " or " + blk[j];
+                    }
                   }
                 }
+                if (!node_present) {
+                  missing_oakd_nodes.push(missing_node);
+                }
               }
-              if (!node_present) {
-                missing_oakd_nodes.push(missing_node);
-              }
-            }
-            else {
-              console.log(blk);
-              if (code.indexOf(blk) == -1) {
-                missing_oakd_nodes.push(blk);
+              else {
+                //console.log(blk);
+                if (code.indexOf(blk) == -1) {
+                  missing_oakd_nodes.push(blk);
+                }
               }
             }
           }
         }
       }
       if (missing_oakd_nodes.length > 0) {
-        alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
+        alert("You need to add these nodes in the OAK-D initialization block: " + String(missing_oakd_nodes));
         ready_to_execute_code = false;
       }
     }

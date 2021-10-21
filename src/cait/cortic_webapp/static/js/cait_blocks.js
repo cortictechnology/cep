@@ -60,6 +60,8 @@ var current_file_list_root = "";
 
 var current_camera = "";
 
+var use_oakd_processing = false;
+
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "setup_block",
@@ -1792,14 +1794,11 @@ Blockly.JavaScript['add_pipeline_node'] = function (block) {
   }
   else if (dropdown_node == "face_detection") {
     spatial_face_detection = false;
-    console.log(current_camera);
     if (current_camera != "camera") {
       var code = '<["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]>';
-      vision_func_dependent_blocks['cait_detect_face'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"];
     }
     else {
       var code = '<["add_nn_node", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]>';
-      vision_func_dependent_blocks['cait_detect_face'] = ["face_detection"];
     }
   }
   else if (dropdown_node == "face_recognition") {
@@ -1811,7 +1810,12 @@ Blockly.JavaScript['add_pipeline_node'] = function (block) {
   }
   else if (dropdown_node == "object_detection") {
     spatial_object_detection = false;
-    var code = '<["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]>';
+    if (current_camera != "camera") {
+      var code = '<["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]>';
+    }
+    else {
+      var code = '<["add_mobilenetssd_node", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]>';
+    }
   }
   else if (dropdown_node == "face_emotion") {
     var code = '<["add_nn_node", "face_emotions", "emotions-recognition-retail-0003.blob", 64, 64]>';
@@ -2067,6 +2071,7 @@ Blockly.Python['dictionary_add'] = function (block) {
 };
 
 Blockly.JavaScript['vision_detect_face_oakd'] = function (block) {
+  use_oakd_processing = true;
   if (current_camera != "camera") {
     vision_func_dependent_blocks['cait_detect_face'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "face_detection"];
   }
@@ -2097,6 +2102,7 @@ Blockly.Python['vision_detect_face_pi'] = function (block) {
 };
 
 Blockly.JavaScript['vision_draw_stereo_frame'] = function (block) {
+  use_oakd_processing = true;
   var code = "await cait_enable_drawing_mode('Depth Mode');\n";
   return code;
 };
@@ -2129,6 +2135,13 @@ Blockly.Python['vision_recognize_face_pi'] = function (block) {
 };
 
 Blockly.JavaScript['vision_recognize_face_oakd'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_recognize_face'] = ["add_rgb_cam_node", "face_detection", "face_features"];
+  }
+  else {
+    vision_func_dependent_blocks['cait_recognize_face'] = ["face_detection", "face_features"];
+  }
   var code = "await cait_recognize_face('oakd')";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
@@ -2163,6 +2176,13 @@ Blockly.Python['vision_add_person_pi'] = function (block) {
 };
 
 Blockly.JavaScript['vision_add_person_oakd'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_add_person'] = ["add_rgb_cam_node", "face_detection", "face_features"];
+  }
+  else {
+    vision_func_dependent_blocks['cait_add_person'] = ["face_detection", "face_features"];
+  }
   var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
   var code = "await cait_add_person('oakd', " + String(value_person_name) + ");\n";
   return code;
@@ -2187,6 +2207,13 @@ Blockly.Python['vision_remove_person_pi'] = function (block) {
 };
 
 Blockly.JavaScript['vision_remove_person_oakd'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_delete_person'] = ["add_rgb_cam_node", "face_detection", "face_features"];
+  }
+  else {
+    vision_func_dependent_blocks['cait_delete_person'] = ["face_detection", "face_features"];
+  }
   var value_person_name = Blockly.JavaScript.valueToCode(block, 'person_name', Blockly.JavaScript.ORDER_ATOMIC);
   var code = "await cait_delete_person('oakd', " + String(value_person_name) + ");\n";
   return code;
@@ -2212,6 +2239,13 @@ Blockly.Python['vision_detect_objects_pi'] = function (block) {
 };
 
 Blockly.JavaScript['vision_detect_objects_oakd'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_detect_objects'] = [["add_rgb_cam_node", "add_stereo_cam_node"], "object_detection"];
+  }
+  else {
+    vision_func_dependent_blocks['cait_detect_objects'] = ["object_detection"];
+  }
   var code = "await cait_detect_objects('oakd')";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
@@ -2259,6 +2293,13 @@ Blockly.Python['vision_draw_classified_image'] = function (block) {
 };
 
 Blockly.JavaScript['vision_face_emotions'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_face_emotions_estimation'] = ["add_rgb_cam_node", "face_detection", '"add_nn_node", "face_emotions"'];
+  }
+  else {
+    vision_func_dependent_blocks['cait_face_emotions_estimation'] = ["face_detection", '"add_nn_node", "face_emotions"'];
+  }
   var code = "await cait_face_emotions_estimation()";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
@@ -2281,6 +2322,13 @@ Blockly.Python['vision_draw_face_emotions'] = function (block) {
 };
 
 Blockly.JavaScript['vision_facemesh'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_facemesh_estimation'] = ["add_rgb_cam_node", "face_detection", '"add_nn_node", "facemesh"'];
+  }
+  else {
+    vision_func_dependent_blocks['cait_facemesh_estimation'] = ["face_detection", '"add_nn_node", "facemesh"'];
+  }
   var code = "await cait_facemesh_estimation()";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
@@ -2304,6 +2352,13 @@ Blockly.Python['vision_draw_facemesh'] = function (block) {
 
 
 Blockly.JavaScript['vision_human_pose'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_get_body_landmarks'] = ["add_rgb_cam_node", '"add_nn_node", "body_landmarks'];
+  }
+  else {
+    vision_func_dependent_blocks['cait_get_body_landmarks'] = ['"add_nn_node", "body_landmarks'];
+  }
   var code = "await cait_get_body_landmarks()";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
@@ -2327,6 +2382,13 @@ Blockly.Python['vision_draw_human_pose'] = function (block) {
 
 
 Blockly.JavaScript['vision_hand_landmarks'] = function (block) {
+  use_oakd_processing = true;
+  if (current_camera != "camera") {
+    vision_func_dependent_blocks['cait_get_hand_landmarks'] = ["add_rgb_cam_node", '"add_nn_node", "hand_landmarks"'];
+  }
+  else {
+    vision_func_dependent_blocks['cait_get_hand_landmarks'] = ['"add_nn_node", "hand_landmarks"'];
+  }
   var code = "await cait_get_hand_landmarks()";
   return [code, Blockly.JavaScript.ORDER_NONE];
 };
