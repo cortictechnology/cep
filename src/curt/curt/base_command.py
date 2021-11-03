@@ -50,12 +50,14 @@ class BaseCommand:
         self.unclaimed_data = collections.deque(maxlen=50)
         self.unclaimed_data_stream = collections.deque(maxlen=50)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ("", 9435)
-        try:
-            self.sock.bind(server_address)
-        except:
-            server_address = ("", 9433)
-            self.sock.bind(server_address)
+        for ii in range(9):
+            port = 9433 + ii
+            server_address = ("", port)
+            try:
+                self.sock.bind(server_address)
+                logging.info("BaseCommand: Port {} is available".format(port))
+            except:
+                continue
         self.current_listening_topics = []
 
     def connect_mqtt(self, client, address):
