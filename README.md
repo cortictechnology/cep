@@ -24,6 +24,8 @@ CEP currently supports the following hardware configuration.
 * Any of Raspberry Pi 4B 2GB/4Gb/8GB or 400 models
 * Micro SD card (we recommend at least 32GB)
 * OAK-D camera
+* USB Webcam
+* CSI Camera
 * ReSpeaker 4-Mic Array for Raspberry Pi
 * Mini speaker with 3.5mm audio jack
 * Any Raspberry Pi compatible battery HAT
