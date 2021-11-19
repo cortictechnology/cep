@@ -23,6 +23,7 @@ sudo apt-get install -y libatlas-base-dev gfortran
 sudo apt-get install -y libhdf5-dev libhdf5-serial-dev libhdf5-103
 sudo apt-get install -y libqtgui4 libqtwebkit4 libqt4-test python3-pyqt5
 sudo pip3 install opencv-contrib-python==4.5.2.52
+sudo pip3 install -U numpy
 sudo apt-get install npm nodejs -y
 sudo touch /opt/accounts
 sudo npm install -g configurable-http-proxy
