@@ -16,7 +16,7 @@ sudo apt update
 sudo sh -c "echo 'dtparam=spi=on' >> /boot/config.txt"
 sudo apt-get install v4l-utils whois -y
 sudo apt-get install portaudio19-dev mplayer graphviz libbluetooth-dev bluez-tools -y
-sudo pip3 install docker-compose flask Flask-HTTPAuth flask-login flask_cors paho-mqtt gunicorn pyaudio lolviz cython pybluez
+sudo pip3 install docker-compose flask Flask-AutoIndex Flask-HTTPAuth flask-login flask_cors paho-mqtt gunicorn pyaudio lolviz cython pybluez
 sudo pip3 install filelock wifi
 sudo apt-get install -y libusb-1.0-0-dev libjpeg-dev libtiff5-dev libjasper-dev libpng-dev 
 sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev 
@@ -26,7 +26,8 @@ sudo apt-get install -y libatlas-base-dev gfortran
 sudo apt-get install -y libhdf5-dev libhdf5-serial-dev libhdf5-103
 sudo apt-get install -y libqtgui4 libqtwebkit4 libqt4-test python3-pyqt5
 sudo apt-get install -y libilmbase-dev libopenexr-dev libgstreamer1.0-dev
-sudo pip3 install opencv-contrib-python==4.1.0.25
+sudo pip3 install opencv-contrib-python==4.5.2.52
+sudo pip3 install -U numpy
 sudo apt-get install npm nodejs -y
 sudo touch /opt/accounts
 sudo npm install -g configurable-http-proxy

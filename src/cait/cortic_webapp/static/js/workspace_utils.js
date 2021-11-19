@@ -776,7 +776,7 @@ async function gen_py_code() {
   console.log(code);
   var filename;
   filename = prompt(localizedStrings.genPyName[locale]);
-  if (filename != '') {
+  if (filename != null) {
     const res = await $.ajax({
       url: "/savepythoncode",
       type: 'POST',
@@ -793,7 +793,7 @@ async function gen_py_notebook() {
   var code = Blockly.Python.workspaceToCode(workspace);
   var filename;
   filename = prompt(localizedStrings.genPyNBName[locale]);
-  if (filename != '') {
+  if (filename != null) {
     const res = await $.ajax({
       url: "/savenotebook",
       type: 'POST',
@@ -834,7 +834,7 @@ async function save_workspace(autosave = false) {
     save_type = "save";
     filename = prompt(localizedStrings.saveName[locale]);
   }
-  if (filename != '') {
+  if (filename != null) {
     const res = await $.ajax({
       url: "/saveworkspace",
       type: 'POST',
@@ -879,9 +879,6 @@ function load_workspace_from_res(res) {
 
 async function load_workspace(from_autosave = false) {
   var filename;
-  var path;
-  var autosave;
-  window.open("/files", 'popup', 'width=600,height=600');
   if (from_autosave) {
     save_type = "autosave";
     filename = "workspace_autosave.xml";
@@ -892,10 +889,7 @@ async function load_workspace(from_autosave = false) {
     });
     // console.log(res);
     load_workspace_from_res(res);
+  } else {
+    window.open("/files", 'popup', 'width=600,height=600');
   }
-  // else {
-  //   save_type = "save";
-  //   filename = prompt(localizedStrings.loadName[locale]);
-  // }
-
 }
