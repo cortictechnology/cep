@@ -805,6 +805,22 @@ async function gen_py_notebook() {
   }
 }
 
+async function clickItem(filename) {
+  if (filename.includes(".cait")) {
+    filename = filename.replace('/files', '');
+    console.log(filename);
+    const res = await $.ajax({
+      url: "/loadworkspace",
+      type: 'POST',
+      data: { "filename": filename, "save_type": 'save' }
+    });
+    window.opener.load_workspace_from_res(res);
+    window.close();
+  } else {
+    location.href = filename;
+  }
+}
+
 async function save_workspace(autosave = false) {
   var xml = Blockly.Xml.workspaceToDom(workspace);
   var xml_text = Blockly.Xml.domToText(xml);
@@ -848,24 +864,7 @@ async function new_workspace_save() {
   await save_workspace();
 }
 
-async function load_workspace(from_autosave = false) {
-  var filename;
-  var path;
-  var autosave;
-  if (from_autosave) {
-    save_type = "autosave";
-    filename = "workspace_autosave.xml";
-  }
-  else {
-    save_type = "save";
-    filename = prompt(localizedStrings.loadName[locale]);
-  }
-  const res = await $.ajax({
-    url: "/loadworkspace",
-    type: 'POST',
-    data: { "filename": filename, "save_type": save_type }
-  });
-  // console.log(res);
+function load_workspace_from_res(res) {
   var xml_text = res['xml_text'];
   var scale = res['scale'];
   var scroll_x = res['scroll_x'];
@@ -876,4 +875,27 @@ async function load_workspace(from_autosave = false) {
   }
   workspace.setScale(scale);
   workspace.scroll(scroll_x, scroll_y);
+}
+
+async function load_workspace(from_autosave = false) {
+  var filename;
+  var path;
+  var autosave;
+  window.open("/files", 'popup', 'width=600,height=600');
+  if (from_autosave) {
+    save_type = "autosave";
+    filename = "workspace_autosave.xml";
+    const res = await $.ajax({
+      url: "/loadworkspace",
+      type: 'POST',
+      data: { "filename": filename, "save_type": save_type }
+    });
+    // console.log(res);
+    load_workspace_from_res(res);
+  }
+  // else {
+  //   save_type = "save";
+  //   filename = prompt(localizedStrings.loadName[locale]);
+  // }
+
 }

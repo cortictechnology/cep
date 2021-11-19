@@ -6,6 +6,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 
 from flask import Flask
+from flask_autoindex import AutoIndex
 from flask import render_template, request, redirect, session, jsonify, url_for
 from flask_cors import CORS
 from flask_login import (
@@ -39,6 +40,8 @@ from shutil import copyfile
 logging.getLogger().setLevel(logging.INFO)
 
 application = Flask(__name__)
+ppath = "/home"
+files_index = AutoIndex(application, ppath, add_url_rules=False) 
 application.secret_key = "corticCAIT"
 
 login_manager = LoginManager()
@@ -495,7 +498,7 @@ def login():
     if out.decode("utf-8").find("Correct") != -1:
         user = User(username)
         login_user(user)
-    result = {"result": out, "error": err}
+    result = {"result": out.decode("utf-8"), "error": err}
     return jsonify(result)
 
 
@@ -543,6 +546,14 @@ def getusername():
     result = {"username": current_user.id}
     return jsonify(result)
 
+@application.route('/files')
+@application.route('/files/')
+@application.route('/files/<path:path>')
+def autoindex(path='.'):
+    if path == ".":
+        return files_index.render_autoindex(current_user.id + "/" + path, template='file_template.html')
+    else:
+        return files_index.render_autoindex(path, template='file_template.html')    
 
 @application.route("/programming")
 @login_required
@@ -1258,9 +1269,11 @@ def loadworkspace():
         save_type = request.form.get("save_type")
         if save_type == "autosave":
             location = "/home/" + current_user.id + "/tmp/"
+            savename = location + filename
         else:
-            location = "/home/" + current_user.id + "/cait_workspace/"
-        savename = location + filename
+            location = "/home/" + filename
+            savename = location
+
         if os.path.exists(savename):
             f = open(savename, "r")
             scale = f.readline()

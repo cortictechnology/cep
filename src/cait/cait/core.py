@@ -1058,10 +1058,10 @@ def face_emotions_estimation(for_streaming=False):
             emo["anger"] = raw_emtotions[4]
             emotion[0] = emo
             bbox = emotion[1]
-            bbox[0] = bbox[0] * height
-            bbox[1] = bbox[1] * 360
-            bbox[2] = bbox[2] * height
-            bbox[3] = bbox[3] * 360
+            bbox[0] = bbox[0] * width
+            bbox[1] = bbox[1] * height
+            bbox[2] = bbox[2] * width
+            bbox[3] = bbox[3] * height
     return emotions
 
 

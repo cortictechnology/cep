@@ -5,6 +5,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
   
  */
 
+
 var cait_system_up = false;
 var stopStreaming = true;
 var hostname = window.location.hostname

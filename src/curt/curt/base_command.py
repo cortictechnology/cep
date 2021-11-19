@@ -22,7 +22,9 @@ logging.getLogger().setLevel(logging.INFO)
 
 # Use one mqtt client for publishing command
 class BaseCommand:
-    def __init__(self):
+    def __init__(self, port=9435, backup_port=9433):
+        self.port = port
+        self.backup_port = backup_port
         self.command_client = mqtt.Client()
         self.command_client.on_disconnect= self.on_disconnect
         self.sync_client = mqtt.Client()
