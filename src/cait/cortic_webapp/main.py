@@ -562,6 +562,14 @@ def getusername():
     result = {"username": current_user.id}
     return jsonify(result)
 
+@application.route('/files')
+@application.route('/files/')
+@application.route('/files/<path:path>')
+def autoindex(path='.'):
+    if path == ".":
+        return files_index.render_autoindex(current_user.id + "/" + path, template='file_template.html')
+    else:
+        return files_index.render_autoindex(path, template='file_template.html')    
 
 @application.route("/save_file")
 @application.route("/save_file/")
