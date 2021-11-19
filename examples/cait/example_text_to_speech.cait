@@ -1,1 +1,4 @@
+scale: 0.8769796237716696
+scroll_x: -38.925291755449436
+scroll_y: 54.79259445438754
 <xml xmlns="https://developers.google.com/blockly/xml"><block type="setup_block" id="I8m3%nJ;u#p)3R8u;J}N" x="100" y="20"><statement name="init_blocks"><block type="init_voice" id="V8m?0zq3LyAg}J4DTkSn"><field name="mode">on device</field><field name="accounts">google_cloud</field><field name="language">english</field></block></statement></block><block type="main_block" id="vB:BuppW{d7et*Nph.xa" x="100" y="180"><statement name="main_blocks"><block type="say" id=":Ehm7~g2iHDYOP70Zrt7"><value name="text"><block type="text" id="D*QF:KK{/:u!.Fa_*d3`"><field name="TEXT">Hello, world!</field></block></value></block></statement></block></xml>
