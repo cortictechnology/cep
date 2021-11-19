@@ -39536,7 +39536,7 @@ M.acR.prototype={
 $0(){this.a.y1=this.b},
 $S:2}
 M.acD.prototype={
-$1(a){var s=null,r=L.bH("Reboot is needed",s,s,s,s,s,s),q=L.bH("The device will reboot now, make sure to switch to the WiFi network you selected previously to start using CAIT.",s,s,s,s,s,s)
+$1(a){var s=null,r=L.bH("Reboot is needed",s,s,s,s,s,s),q=L.bH("The device will reboot now. Make sure to switch to the local network area that the device is in to start using CAIT.",s,s,s,s,s,s)
 return E.CQ(H.b([N.vi(L.bH("OK",s,s,s,s,s,s),new M.acC(this.a,this.b,a))],t.a),q,r)},
 $S:44}
 M.acC.prototype={
