@@ -7,6 +7,8 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 
 var current_workspace = "";
 
+var file_exist = false;
+
 var start_new_workspace = false;
 
 function replaceAll(str, find, replace) {
@@ -770,7 +772,6 @@ async function gen_py_notebook() {
 async function clickItem(filename) {
   if (filename.includes(".cait")) {
     filename = filename.replace('/files', '');
-    console.log(filename);
     const res = await $.ajax({
       url: "/loadworkspace",
       type: 'POST',
@@ -783,32 +784,132 @@ async function clickItem(filename) {
   }
 }
 
-async function save_workspace(autosave = false) {
+function clickItemSave(filename) {
+  var isDir = false;
+  filename = filename.replace('/files', '/save_file');
+  if (filename.includes("./")) {
+    if (filename.includes(".", filename.indexOf("./") + 2)) {
+      isDir = false;
+    } else {
+      isDir = true;
+    }
+  }
+  else if (filename.includes("..")) {
+    isDir = true;
+  } else {
+    if (filename.includes(".")) {
+      isDir = false;
+    } else {
+      isDir = true;
+    }
+  }
+
+  if (isDir) {
+    location.href = filename;
+  } else {
+    var filename_text = document.getElementById('filename');
+    var the_filename = filename.substring(filename.lastIndexOf("/") + 1, filename.length);
+    filename_text.value = the_filename;
+    file_exist = true;
+  }
+}
+
+async function clickSave() {
+  var filename_text = document.getElementById('filename');
+  if (filename_text.value == '') {
+    alert("Please enter a name for the CAIT program.");
+  } else {
+    var filepath;
+    if (window.location.pathname == '/save_file/') {
+      filepath = '/home/' + window.opener.current_username;
+    } else {
+      filepath = window.location.pathname.replace('/save_file', '/home');
+    }
+    var full_path = filepath + "/" + filename_text.value;
+    full_path = full_path.replace("//", "/");
+    const res = await $.ajax({
+      url: "/isfileexist",
+      type: 'POST',
+      data: { "filename": full_path }
+    });
+    file_exist = res['result'];
+
+
+    if (file_exist) {
+      $("#overwrite_dialog").dialog(
+        {
+          buttons: [
+            {
+              id: "yes_save",
+              text: "Yes",
+              class: 'leftButton',
+              click: async function () {
+                const result = await window.opener.save_workspace_post(full_path, 'save');
+                $(this).dialog("close");
+                alert("File is saved!");
+                window.close();
+                // if (result["success"]) {
+                //   alert("File is saved!");
+                //   window.close();
+                // } else {
+                //   alert("There is an error occurred, please try again.");
+                // }
+              }
+            },
+            {
+              id: "no_save",
+              text: "No",
+              class: 'leftButton',
+              click: function () {
+                $(this).dialog("close");
+              }
+            }
+          ]
+        }
+      );
+    } else {
+      const result = await window.opener.save_workspace_post(full_path, 'save');
+      alert("File is saved!");
+      window.close();
+      // console.log(result);
+      // if (result["success"]) {
+      //   alert("File is saved!");
+      //   window.close();
+      // } else {
+      //   alert("There is an error occurred, please try again.");
+      // }
+    }
+  }
+}
+
+async function save_workspace_post(filename, save_type) {
   var xml = Blockly.Xml.workspaceToDom(workspace);
   var xml_text = Blockly.Xml.domToText(xml);
+  const res = await $.ajax({
+    url: "/saveworkspace",
+    type: 'POST',
+    data: {
+      "filename": filename,
+      "xml_text": xml_text,
+      "save_type": save_type,
+      "scale": workspace.scale,
+      "scroll_x": workspace.getMetrics()['viewLeft'] * -1,
+      "scroll_y": workspace.getMetrics()['viewTop'] * -1
+    }
+  });
+}
+
+async function save_workspace(autosave = false) {
   var filename;
-  var path;
   if (autosave) {
     save_type = "autosave";
     filename = "workspace_autosave.xml";
+    save_workspace_post(filename, save_type);
   }
   else {
-    save_type = "save";
-    filename = prompt(localizedStrings.saveName[locale]);
-  }
-  if (filename != null) {
-    const res = await $.ajax({
-      url: "/saveworkspace",
-      type: 'POST',
-      data: {
-        "filename": filename,
-        "xml_text": xml_text,
-        "save_type": save_type,
-        "scale": workspace.scale,
-        "scroll_x": workspace.getMetrics()['viewLeft'] * -1,
-        "scroll_y": workspace.getMetrics()['viewTop'] * -1
-      }
-    });
+    //save_type = "save";
+    //filename = prompt(localizedStrings.saveName[locale]);
+    window.open("/save_file", 'popup', 'width=600,height=600');
   }
 }
 
