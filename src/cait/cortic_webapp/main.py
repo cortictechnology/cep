@@ -89,11 +89,14 @@ def is_internet_connected(host="8.8.8.8", port=53, timeout=3):
     """
     try:
         socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((host, port))
+        ip = s.getsockname()[0]
+        s.close()
+        return True, ip
     except socket.error as ex:
         print(ex)
-        return False
+        return False, ""
 
 
 def import_cait_modules():
@@ -141,11 +144,13 @@ def prev_setup():
 
 @application.route("/isconnected", methods=["GET"])
 def isConnected():
-    connected = is_internet_connected()
+    connected, ip = is_internet_connected()
     if connected:
         wifi_name = get_connected_wifi()
-        ip = get_ip("wlan0")
-        result = {"connected": True, "wifi": wifi_name, "ip": ip}
+        if wifi_name != "":
+            result = {"connected": True, "wifi": wifi_name, "ip": ip}
+        else:
+            result = {"connected": True, "wifi": "Ethernet", "ip": ip}
     else:
         result = {"connected": False}
     return jsonify(result)
@@ -153,7 +158,8 @@ def isConnected():
 
 @application.route("/wifi")
 def wifi():
-    if is_internet_connected():
+    connected, ip = is_internet_connected()
+    if connected:
         return redirect("/setup")
     return render_template("wifi.html")
 
@@ -200,7 +206,8 @@ def connectwifi():
     os.system("sudo wpa_cli -i wlan0 reconfigure")
     init_time = time.time()
     connecting_to_wifi = True
-    while not is_internet_connected():
+    connected, ip = is_internet_connected()
+    while not connected:
         time.sleep(1)
         logging.info("Connecting to wifi..no internet yet...")
         if time.time() - init_time >= 60:
@@ -209,7 +216,7 @@ def connectwifi():
                 "sudo mv /etc/wpa_supplicant/wpa_supplicant.conf.bak /etc/wpa_supplicant/wpa_supplicant.conf"
             )
             break
-    if is_internet_connected():
+    if connected:
         logging.info("Wifi connected.Internet connected.")
         success = True
         os.system(
