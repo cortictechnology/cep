@@ -12,6 +12,7 @@ var hostname = window.location.hostname
 var clientID = "blockly_" + parseInt(Math.random() * 100);
 var client = new Paho.Client(hostname, 8083, clientID);
 var subscribed_to_programming_topics = false;
+var current_username = "";
 
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
@@ -38,6 +39,7 @@ function onConnect() {
     {},
     function (data, status) {
       document.getElementById('loggedUser').innerHTML = localizedStrings.loggedInAs[locale] + data['username'];
+      current_username = data['username'];
       if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) {
         client.subscribe("cait/output/device_info");
         subscribed_to_programming_topics = false;

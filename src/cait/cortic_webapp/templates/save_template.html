@@ -1,8 +1,7 @@
 {% from "__autoindex__/macros.html" import entry, thead, breadcrumb
 with context %}
 
-
-{% macro mysaveentry(ent) %}
+{% macro myentry(ent) %}
 <tr>
     {% set icon = ent.guess_icon() %}
     <td class="icon">
@@ -11,7 +10,7 @@ with context %}
         {% endif %}
     </td>
     <td class="name">
-        <a id={{ url_for(endpoint, path=ent.path) }} href="#" onclick="clickItem(this.id);return false;">
+        <a id={{ url_for(endpoint, path=ent.path) }} href="#" onclick="clickItemSave(this.id);return false;">
             {%- if ent.name == ".." -%}
             Parent folder
             {%- else -%}
@@ -41,13 +40,47 @@ with context %}
     {% block meta %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('__autoindex__.static', filename='autoindex.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css">
+    <style>
+        input[type=text],
+        select {
+            width: 50%;
+            padding: 0px 5px 2px;
+            margin: 0px 5px 10px;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            border: 1px solid #ccc;
+            background-color: white;
+            color: black;
+            padding: 0px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 2px 2px 12px 4px;
+        }
+
+        .leftButton {
+            width: 60px;
+        }
+    </style>
     <script type=text/javascript src="{{url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+    <script type=text/javascript src="{{url_for('static', filename='js/jquery-ui.min.js') }}"></script>
     {% endblock %}
 </head>
 
 <body>
     <div style="width: 500px; margin: 30px auto;">
-        <h2>Select CAIT Program</h2>
+        <h2>Choose a place to save the CAIT Program</h2>
+        <br>
+        <div style="display:flex; flex-direction: row;">
+            <label for="filename">Save as:</label>
+            <input type="text" id="filename" placeholder="enter your filename here" />
+            <button type="button" class="btn default" id="save_file" onclick="clickSave()">Save</button>
+        </div>
         {% block table %}
         <table>
             <thead>
@@ -62,7 +95,7 @@ with context %}
             </thead>
             <tbody>
                 {% for ent in entries %}
-                {{ mysaveentry(ent) }}
+                {{ myentry(ent) }}
                 {% endfor %}
             </tbody>
         </table>
@@ -74,6 +107,9 @@ with context %}
         Server at {{ env.HTTP_HOST }}
         Port {{ env.SERVER_PORT }}</address>
     {% endblock %}
+    <div id="overwrite_dialog" title="Overwrite existing file">
+        <p>Do you want to overwrite the existing file?</p>
+    </div>
     <script type=text/javascript src="{{url_for('static', filename='js/workspace_utils.js') }}"></script>
 </body>
 

@@ -41,7 +41,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 application = Flask(__name__)
 ppath = "/home"
-files_index = AutoIndex(application, ppath, add_url_rules=False) 
+files_index = AutoIndex(application, ppath, add_url_rules=False)
 application.secret_key = "corticCAIT"
 
 login_manager = LoginManager()
@@ -89,11 +89,14 @@ def is_internet_connected(host="8.8.8.8", port=53, timeout=3):
     """
     try:
         socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((host, port))
+        ip = s.getsockname()[0]
+        s.close()
+        return True, ip
     except socket.error as ex:
         print(ex)
-        return False
+        return False, ""
 
 
 def import_cait_modules():
@@ -141,11 +144,13 @@ def prev_setup():
 
 @application.route("/isconnected", methods=["GET"])
 def isConnected():
-    connected = is_internet_connected()
+    connected, ip = is_internet_connected()
     if connected:
         wifi_name = get_connected_wifi()
-        ip = get_ip("wlan0")
-        result = {"connected": True, "wifi": wifi_name, "ip": ip}
+        if wifi_name != "":
+            result = {"connected": True, "wifi": wifi_name, "ip": ip}
+        else:
+            result = {"connected": True, "wifi": "Ethernet", "ip": ip}
     else:
         result = {"connected": False}
     return jsonify(result)
@@ -153,7 +158,8 @@ def isConnected():
 
 @application.route("/wifi")
 def wifi():
-    if is_internet_connected():
+    connected, ip = is_internet_connected()
+    if connected:
         return redirect("/setup")
     return render_template("wifi.html")
 
@@ -200,7 +206,8 @@ def connectwifi():
     os.system("sudo wpa_cli -i wlan0 reconfigure")
     init_time = time.time()
     connecting_to_wifi = True
-    while not is_internet_connected():
+    connected, ip = is_internet_connected()
+    while not connected:
         time.sleep(1)
         logging.info("Connecting to wifi..no internet yet...")
         if time.time() - init_time >= 60:
@@ -209,7 +216,7 @@ def connectwifi():
                 "sudo mv /etc/wpa_supplicant/wpa_supplicant.conf.bak /etc/wpa_supplicant/wpa_supplicant.conf"
             )
             break
-    if is_internet_connected():
+    if connected:
         logging.info("Wifi connected.Internet connected.")
         success = True
         os.system(
@@ -267,6 +274,7 @@ def getusbdev():
             usb_devices.append(dev)
     return jsonify(usb_devices)
 
+
 @application.route("/getvideodev", methods=["GET"])
 def getvideodev():
     devices = essentials.get_video_devices()
@@ -282,7 +290,11 @@ def getaudiodev():
     devices = essentials.get_audio_devices()
     audio_devices = []
     for aud_dev in devices:
-        dev = {"index": aud_dev["index"], "device": aud_dev["device"], "type": aud_dev["type"]}
+        dev = {
+            "index": aud_dev["index"],
+            "device": aud_dev["device"],
+            "type": aud_dev["type"],
+        }
         audio_devices.append(dev)
     return jsonify(audio_devices)
 
@@ -337,9 +349,13 @@ def testspeaker():
     )
 
     curt_path = os.getenv("CURT_PATH")
-    #out = os.system("sudo -u pi aplay /opt/cortic_modules/voice_module/siri.wav")
-    out = os.system("sudo -u pi aplay -f cd -Dhw:0 " + curt_path + "models/modules/voice/siri.wav")
-    out = os.system("sudo -u pi aplay -f cd -Dhw:1 " + curt_path + "models/modules/voice/siri.wav")
+    # out = os.system("sudo -u pi aplay /opt/cortic_modules/voice_module/siri.wav")
+    out = os.system(
+        "sudo -u pi aplay -f cd -Dhw:0 " + curt_path + "models/modules/voice/siri.wav"
+    )
+    out = os.system(
+        "sudo -u pi aplay -f cd -Dhw:1 " + curt_path + "models/modules/voice/siri.wav"
+    )
 
     result = {"result": out}
     return jsonify(result)
@@ -350,7 +366,7 @@ def testmicrophone():
     data = request.get_json()
     index = data["index"]
     RESPEAKER_RATE = 16000
-    RESPEAKER_CHANNELS = 2 
+    RESPEAKER_CHANNELS = 2
     RESPEAKER_WIDTH = 2
     # run getDeviceInfo.py to get index
     RESPEAKER_INDEX = index  # refer to input device id
@@ -366,7 +382,7 @@ def testmicrophone():
             format=p.get_format_from_width(RESPEAKER_WIDTH),
             channels=RESPEAKER_CHANNELS,
             input=True,
-            input_device_index=RESPEAKER_INDEX
+            input_device_index=RESPEAKER_INDEX,
         )
 
         frames = []  # Initialize array to store frames
@@ -385,11 +401,11 @@ def testmicrophone():
         print("Finished recording")
 
         # Save the recorded data as a WAV file
-        wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+        wf = wave.open(WAVE_OUTPUT_FILENAME, "wb")
         wf.setnchannels(RESPEAKER_CHANNELS)
         wf.setsampwidth(p.get_sample_size(p.get_format_from_width(RESPEAKER_WIDTH)))
         wf.setframerate(RESPEAKER_RATE)
-        wf.writeframes(b''.join(frames))
+        wf.writeframes(b"".join(frames))
         wf.close()
 
         os.system("sudo -u pi aplay -f cd -Dhw:0 " + WAVE_OUTPUT_FILENAME)
@@ -554,6 +570,32 @@ def autoindex(path='.'):
         return files_index.render_autoindex(current_user.id + "/" + path, template='file_template.html')
     else:
         return files_index.render_autoindex(path, template='file_template.html')    
+
+@application.route("/save_file")
+@application.route("/save_file/")
+@application.route("/save_file/<path:path>")
+@login_required
+def save_file(path="."):
+    if path == ".":
+        return files_index.render_autoindex(
+            current_user.id + "/" + path, template="save_template.html"
+        )
+    else:
+        return files_index.render_autoindex(path, template="save_template.html")
+
+
+@application.route("/files")
+@application.route("/files/")
+@application.route("/files/<path:path>")
+@login_required
+def autoindex(path="."):
+    if path == ".":
+        return files_index.render_autoindex(
+            current_user.id + "/" + path, template="file_template.html"
+        )
+    else:
+        return files_index.render_autoindex(path, template="file_template.html")
+
 
 @application.route("/programming")
 @login_required
@@ -749,6 +791,7 @@ def draw_estimated_facemesh():
     result = {"success": True}
     return jsonify(result)
 
+
 @application.route("/draw_detected_objects", methods=["POST"])
 @login_required
 def draw_detected_objects():
@@ -769,15 +812,20 @@ def draw_image_classification():
 @application.route("/draw_estimated_body_landmarks", methods=["POST"])
 @login_required
 def draw_estimated_body_landmarks():
-    body_landmarks_coordinates = json.loads(request.form.get("body_landmarks_coordinates"))
+    body_landmarks_coordinates = json.loads(
+        request.form.get("body_landmarks_coordinates")
+    )
     essentials.draw_estimated_body_landmarks(body_landmarks_coordinates, from_web=True)
     result = {"success": True}
     return jsonify(result)
 
+
 @application.route("/draw_estimated_hand_landmarks", methods=["POST"])
 @login_required
 def draw_estimated_hand_landmarks():
-    hand_landmarks_coordinates = json.loads(request.form.get("hand_landmarks_coordinates"))
+    hand_landmarks_coordinates = json.loads(
+        request.form.get("hand_landmarks_coordinates")
+    )
     essentials.draw_estimated_hand_landmarks(hand_landmarks_coordinates, from_web=True)
     result = {"success": True}
     return jsonify(result)
@@ -965,6 +1013,7 @@ def listen():
         result = {"success": success, "text": text}
     return jsonify(result)
 
+
 @application.route("/say", methods=["POST"])
 @login_required
 def say():
@@ -972,6 +1021,7 @@ def say():
     success = essentials.say(text)
     result = {"success": success}
     return jsonify(result)
+
 
 @application.route("/create_file_list", methods=["POST"])
 @login_required
@@ -999,6 +1049,14 @@ def analyze():
     return jsonify(result)
 
 
+@application.route("/isfileexist", methods=["POST"])
+@login_required
+def isfileexist():
+    filename = request.form.get("filename")
+    file_exist = os.path.exists(filename)
+    return jsonify({"result": file_exist})
+
+
 @application.route("/saveworkspace", methods=["POST"])
 @login_required
 def saveworkspace():
@@ -1011,27 +1069,28 @@ def saveworkspace():
         save_type = request.form.get("save_type")
         if save_type == "autosave":
             location = "/home/" + current_user.id + "/tmp/"
+            savename = location + filename
+            if not os.path.exists(os.path.dirname(savename)):
+                try:
+                    # os.makedirs(os.path.dirname(savename))
+                    os.system("sudo mkdir " + location)
+                    os.system("sudo chown " + current_user.id + ":cait " + location)
+                    os.system("sudo chmod -R g+rwx " + location)
+                except OSError as exc:  # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
         else:
-            location = "/home/" + current_user.id + "/cait_workspace/"
-        savename = location + filename
-        if not os.path.exists(os.path.dirname(savename)):
-            try:
-                # os.makedirs(os.path.dirname(savename))
-                os.system("sudo mkdir " + location)
-                os.system("sudo chown " + current_user.id + ":cait " + location)
-                os.system("sudo chmod -R g+rwx " + location)
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
+            # location = "/home/" + current_user.id + "/cait_workspace/"
+            savename = filename
         f = open(savename, "w")
         f.write("scale: " + str(scale) + "\n")
         f.write("scroll_x: " + str(scroll_x) + "\n")
         f.write("scroll_y: " + str(scroll_y) + "\n")
         f.write(xml_text)
         f.close()
-        result = {"success": 1}
+        result = {"success": True}
     else:
-        result = {"success": -1}
+        result = {"success": False}
     return jsonify(result)
 
 
@@ -1108,10 +1167,10 @@ def format_python_code(code_string):
             dispatch_func_code_idx.append([i])
         if line.find("# End of auto generated dispatch function") != -1:
             dispatch_func_code_idx[-1].append(i)
-    
+
     dispatch_func_code = []
     for idx in dispatch_func_code_idx:
-        dispatch_func_code.append(formatted_code[idx[0] : idx[1]+1])
+        dispatch_func_code.append(formatted_code[idx[0] : idx[1] + 1])
 
     remaining_code = []
 
@@ -1122,7 +1181,7 @@ def format_python_code(code_string):
                 in_range = True
         if not in_range:
             remaining_code.append(formatted_code[i])
-    
+
     insert_location = formatted_code.index("def setup():")
     for c in dispatch_func_code:
         num_space_to_remove = 0
@@ -1135,7 +1194,7 @@ def format_python_code(code_string):
                 num_space_to_remove = len(c[j]) - len(code_line)
             elif j != len(c) - 1:
                 spaces = " " * num_space_to_remove
-                code_line = code_line.replace(spaces , "")
+                code_line = code_line.replace(spaces, "")
             else:
                 code_line = code_line.strip()
             remaining_code.insert(insert_location, code_line)
@@ -1146,7 +1205,6 @@ def format_python_code(code_string):
     remaining_code.append('\nif __name__ == "__main__":')
     remaining_code.append("    setup()")
     remaining_code.append("    main()")
-    
 
     code = "\n".join(remaining_code)
 
@@ -1271,20 +1329,18 @@ def loadworkspace():
             location = "/home/" + current_user.id + "/tmp/"
             savename = location + filename
         else:
-            location = "/home/" + filename
-            savename = location
-
+            savename = "/home/" + filename
         if os.path.exists(savename):
             f = open(savename, "r")
             scale = f.readline()
             scale = scale.split("\n")[0]
-            scale = float(scale[scale.find(":")+2:])
+            scale = float(scale[scale.find(":") + 2 :])
             scroll_x = f.readline()
             scroll_x = scroll_x.split("\n")[0]
-            scroll_x = float(scroll_x[scroll_x.find(":")+2:])
+            scroll_x = float(scroll_x[scroll_x.find(":") + 2 :])
             scroll_y = f.readline()
             scroll_y = scroll_y.split("\n")[0]
-            scroll_y = float(scroll_y[scroll_y.find(":")+2:])
+            scroll_y = float(scroll_y[scroll_y.find(":") + 2 :])
             xml_text = f.read()
             f.close()
             # if filename == "workspace_autosave.xml":
@@ -1292,10 +1348,12 @@ def loadworkspace():
             #         os.remove(savename)
             #     except:
             #         pass
-    result = {"xml_text": xml_text, 
-              "scale": scale,
-              "scroll_x": scroll_x,
-              "scroll_y": scroll_y}
+    result = {
+        "xml_text": xml_text,
+        "scale": scale,
+        "scroll_x": scroll_x,
+        "scroll_y": scroll_y,
+    }
     return jsonify(result)
 
 
