@@ -33,8 +33,6 @@ sudo touch /opt/accounts
 sudo npm install -g configurable-http-proxy
 sudo pip3 install notebook
 sudo pip3 install jupyterhub
-sudo cp setup_scripts/chkpass.sh /opt
-sudo chmod +x /opt/chkpass.sh
 cp -R setup_scripts/homeassistant /home/pi
 sudo cp setup_scripts/curt_containers.service /etc/systemd/system
 sudo cp setup_scripts/cait_webapp.service /etc/systemd/system
