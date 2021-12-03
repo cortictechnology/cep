@@ -42,28 +42,34 @@ class OAKDPipeline:
                         break
                     self.stream_nodes[node] = self.get_output(node)
         except Exception as e:
-            logging.warning("***************OAKD STREAMING THREAD EXCEPTION:*************************")
+            logging.warning(
+                "***************OAKD STREAMING THREAD EXCEPTION:*************************"
+            )
             logging.warning(str(e))
-            logging.warning("************************************************************************")
+            logging.warning(
+                "************************************************************************"
+            )
 
     def config_worker(self, config_data):
-        if self.pipeline_started and self.device is not None:
-            logging.warning("*********************RESET PIPELINE**********************")
-            self.reset = True
-            self.device.close()
-            self.pipeline = dai.Pipeline()
-            self.pipeline.setOpenVINOVersion(
-                version=dai.OpenVINO.Version.VERSION_2021_3
-            )
-            self.xlink_nodes = {}
-            self.consume_thread.join()
-            self.stream_nodes = {}
-            self.node_to_display = []
-            self.photo_count = 0
-            logging.warning("PIPELINE RESET DONE")
+
         for data in config_data:
             logging.warning(data)
-            if data[0] == "version":
+            if data[0] == "reset":
+                if self.pipeline_started and self.device is not None:
+                    self.reset = True
+                    self.consume_thread.join()
+                    self.device.close()
+                    self.pipeline = dai.Pipeline()
+                    self.pipeline.setOpenVINOVersion(
+                        version=dai.OpenVINO.Version.VERSION_2021_3
+                    )
+                    self.xlink_nodes = {}
+                    self.stream_nodes = {}
+                    self.node_to_display = []
+                    self.photo_count = 0
+                logging.warning("PIPELINE RESET DONE")
+                return True
+            elif data[0] == "version":
                 self.config_pipeline_version(data[1])
             elif data[0] == "add_rgb_cam_node":
                 self.add_rgb_cam_node(data[1], data[2])
@@ -98,11 +104,11 @@ class OAKDPipeline:
             elif data[0] == "add_nn_node_pipeline":
                 self.add_nn_node_pipeline(data[1], data[2], data[3], data[4])
         # logging.info("finished adding nodes")
-        #sysLog = self.pipeline.createSystemLogger()
-        #linkOut = self.pipeline.createXLinkOut()
-        #linkOut.setStreamName("sysinfo")
-        #sysLog.setRate(1)  # 1 Hz
-        #sysLog.out.link(linkOut.input)
+        # sysLog = self.pipeline.createSystemLogger()
+        # linkOut = self.pipeline.createXLinkOut()
+        # linkOut.setStreamName("sysinfo")
+        # sysLog.setRate(1)  # 1 Hz
+        # sysLog.out.link(linkOut.input)
         # self.stream_nodes["sysinfo"] = None
         success = False
         retry_count = 0
@@ -127,11 +133,17 @@ class OAKDPipeline:
 
     def config_pipeline_version(self, version):
         if version == "2021.1":
-            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_1)
+            self.pipeline.setOpenVINOVersion(
+                version=dai.OpenVINO.Version.VERSION_2021_1
+            )
         elif version == "2021.2":
-            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_2)
+            self.pipeline.setOpenVINOVersion(
+                version=dai.OpenVINO.Version.VERSION_2021_2
+            )
         elif version == "2021.3":
-            self.pipeline.setOpenVINOVersion(version=dai.OpenVINO.Version.VERSION_2021_3)
+            self.pipeline.setOpenVINOVersion(
+                version=dai.OpenVINO.Version.VERSION_2021_3
+            )
 
     def run_inference(self, request_data):
         if request_data[-1]:

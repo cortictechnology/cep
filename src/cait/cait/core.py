@@ -6,6 +6,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 import os
 import sys
+
 curt_path = os.getenv("CURT_PATH")
 sys.path.insert(0, curt_path)
 from curt.command import CURTCommands
@@ -59,18 +60,22 @@ while ret != True:
     time.sleep(1)
     ret = connect_mqtt(hearbeat_client, broker_address)
 
+
 def heartbeat_func():
     global hearbeat_client
     device_info = {"hostname": os.uname()[1].lower(), "host_ip": get_ip_address()}
     while True:
-        hearbeat_client.publish("cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1)
-        hearbeat_client.publish("cait/output/device_info", json.dumps(device_info), qos=1)
+        hearbeat_client.publish(
+            "cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1
+        )
+        hearbeat_client.publish(
+            "cait/output/device_info", json.dumps(device_info), qos=1
+        )
 
         time.sleep(2)
 
-heartbeat_thread = threading.Thread(
-    target=heartbeat_func, daemon=True
-)
+
+heartbeat_thread = threading.Thread(target=heartbeat_func, daemon=True)
 heartbeat_thread.start()
 
 logging.warning("*********Core heartbeat thread started*********")
@@ -81,21 +86,26 @@ nlp_dispatch_queue = queue.Queue()
 control_dispatch_queue = queue.Queue()
 smart_home_dispatch_queue = queue.Queue()
 
+
 def dispatch_func(dispatch_queue):
     while True:
         task_data = dispatch_queue.get()
-        task_func = task_data['function']
-        task_args = task_data['args']
+        task_func = task_data["function"]
+        task_args = task_data["args"]
         task_func(task_args)
+
 
 def get_video_devices():
     return device_manager.get_video_devices()
 
+
 def get_usb_devices():
     return device_manager.get_usb_devices()
 
+
 def get_audio_devices():
     return device_manager.get_audio_devices()
+
 
 def get_control_devices():
     control_devices = device_manager.get_control_devices()
@@ -111,7 +121,8 @@ def get_control_devices():
 
 def test_camera(index):
     pass
-    
+
+
 def initialize_vision(processor="local", mode=[], from_web=False):
     global oakd_nodes
     global vision_initialized
@@ -172,7 +183,10 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
-            return False, "Failed to initialzie oakd pipeline, please check if the device is connected."
+            return (
+                False,
+                "Failed to initialzie oakd pipeline, please check if the device is connected.",
+            )
     else:
         # Selecting a VGA resolution, future work should provide a list of selected resolution
         config_handler = CURTCommands.config_worker(
@@ -182,8 +196,11 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
-            return False, "Failed to initialize local camera, please check if the device is connected."
-    
+            return (
+                False,
+                "Failed to initialize local camera, please check if the device is connected.",
+            )
+
     drawing_modes = {
         "Depth Mode": False,
         "Face Detection": [],
@@ -228,11 +245,14 @@ def initialize_voice(mode="online", account="default", language="english"):
     speaker_attached = False
     audio_devices = get_audio_devices()
     for device in audio_devices:
-        if device['type'] == 'Output':
+        if device["type"] == "Output":
             speaker_attached = True
     if not speaker_attached:
         voice_initialized = False
-        return False, "No audio output deveice is detected, or connected device is not supported",
+        return (
+            False,
+            "No audio output deveice is detected, or connected device is not supported",
+        )
 
     if language == "english":
         processing_language = "en-UK"
@@ -283,10 +303,15 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice generation is detected, or connected device is not supported",
         )
-    config_handler = CURTCommands.config_worker(voice_input_worker, {"audio_in_index": 0})
+    config_handler = CURTCommands.config_worker(
+        voice_input_worker, {"audio_in_index": 0}
+    )
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
-        return False, "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again."
+        return (
+            False,
+            "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again.",
+        )
     CURTCommands.request(voice_input_worker, params=["start"])
     # CURTCommands.start_voice_recording(voice_input_worker)
     if mode == "online":
@@ -352,7 +377,7 @@ def initialize_control(hub_address):
         return False, "No control worker available"
     if isinstance(hub_address, list):
         hub_address = hub_address[0]
-        address = hub_address[hub_address.find(": ") + 2:]
+        address = hub_address[hub_address.find(": ") + 2 :]
     else:
         address = hub_address[hub_address.find(": ") + 2 : -2]
     config_handler = CURTCommands.config_worker(
@@ -380,6 +405,7 @@ def deactivate_control():
     pid_controller = None
     return True
 
+
 def initialize_smarthome():
     global smarthome_initialized
     ha_worker = CURTCommands.get_worker(
@@ -389,7 +415,10 @@ def initialize_smarthome():
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
         smarthome_initialized = False
-        return False, "Failed to initialize smart home woker, check the connection with home assistant"
+        return (
+            False,
+            "Failed to initialize smart home woker, check the connection with home assistant",
+        )
     smarthome_initialized = True
     return True, "OK"
 
@@ -764,9 +793,7 @@ def detect_objects(spatial=False, for_streaming=False):
                 ]
             )
         else:
-            coordinates.append(
-                [obj[0] * 640, obj[1] * 360, obj[2] * 640, obj[3] * 360]
-            )
+            coordinates.append([obj[0] * 640, obj[1] * 360, obj[2] * 640, obj[3] * 360])
         names.append(object_labels[obj[-1]])
     return names, coordinates
 
@@ -999,12 +1026,19 @@ def say(message_topic, entities=[]):
     CURTCommands.request(voice_input_worker, params=["resume"])
     return True
 
+
 def create_file_list(directory_path):
-    file_list = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]    
+    file_list = [
+        f
+        for f in os.listdir(directory_path)
+        if os.path.isfile(os.path.join(directory_path, f))
+    ]
     return file_list
+
 
 audio_playing = False
 current_audio_file = ""
+
 
 def play_audio_func():
     global audio_playing
@@ -1020,8 +1054,10 @@ def play_audio_func():
         else:
             time.sleep(0.001)
 
-#play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
-#play_audio_thread.start()
+
+# play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
+# play_audio_thread.start()
+
 
 def play_audio(file_path):
     global audio_playing
@@ -1030,8 +1066,9 @@ def play_audio(file_path):
         audio_playing = True
         out = os.system("aplay " + file_path)
         audio_playing = False
-        #current_audio_file = file_path
+        # current_audio_file = file_path
     return True
+
 
 def listen():
     global voice_mode
@@ -1414,12 +1451,9 @@ def get_devices(device_type):
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
         return []
-    smarthome_params = {
-        "control_type": "get_devices",
-        "parameter": device_type
-    }
+    smarthome_params = {"control_type": "get_devices", "parameter": device_type}
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
-    devices = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]    
+    devices = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
     return devices
 
 
@@ -1435,9 +1469,9 @@ def control_light(device_name, operation, parameter=None):
     )
     smarthome_params = {
         "control_type": "light",
-        'device_name': device_name,
-        'operation': operation,
-        "parameter": parameter
+        "device_name": device_name,
+        "operation": operation,
+        "parameter": parameter,
     }
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
     result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
@@ -1456,8 +1490,8 @@ def control_media_player(device_name, operation):
     )
     smarthome_params = {
         "control_type": "media_player",
-        'device_name': device_name,
-        'operation': operation
+        "device_name": device_name,
+        "operation": operation,
     }
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
     result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
@@ -1497,7 +1531,9 @@ def streaming_func():
                             camera_img, drawing_modes["Face Emotions"]
                         )
                     if drawing_modes["Face Mesh"] != []:
-                        camera_img = draw_facemesh(camera_img, drawing_modes["Face Mesh"])
+                        camera_img = draw_facemesh(
+                            camera_img, drawing_modes["Face Mesh"]
+                        )
                     if drawing_modes["Object Detection"] != []:
                         camera_img = draw_object_detection(
                             camera_img,
@@ -1524,9 +1560,13 @@ def streaming_func():
                 print("Stream thread exiting")
                 break
     except Exception as e:
-        logging.warning("***************STREAMING THREAD EXCEPTION:*************************")
+        logging.warning(
+            "***************STREAMING THREAD EXCEPTION:*************************"
+        )
         logging.warning(str(e))
-        logging.warning("*******************************************************************")
+        logging.warning(
+            "*******************************************************************"
+        )
 
 
 def reset_modules():
@@ -1564,6 +1604,14 @@ def reset_modules():
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/oakd_service/oakd_pipeline"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            [["reset"]],
+        )
     return True
 
 
