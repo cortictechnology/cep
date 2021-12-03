@@ -34,6 +34,8 @@ import threading
 import pyaudio
 import wave
 import ast
+import crypt
+import spwd
 from wifi import Cell
 from shutil import copyfile
 
@@ -505,16 +507,33 @@ def signup_page():
 def login():
     username = request.form.get("username")
     password = request.form.get("password")
-    p = subprocess.Popen(
-        ["sudo", "/opt/chkpass.sh", username],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-    )
-    out, err = p.communicate(str.encode(password))
-    if out.decode("utf-8").find("Correct") != -1:
-        user = User(username)
-        login_user(user)
-    result = {"result": out.decode("utf-8"), "error": err}
+    result = False
+    err = ""
+    try:
+        enc_pwd = spwd.getspnam(username)[1]
+        if enc_pwd in ["NP", "!", "", None]:
+            result = False
+            err = "user '%s' has no password set" % username
+        if enc_pwd in ["LK", "*"]:
+            result = False
+            err = "account is locked"
+        if enc_pwd == "!!":
+            result = False
+            err = "password has expired"
+        # Encryption happens here, the hash is stripped from the
+        # enc_pwd and the algorithm id and salt are used to encrypt
+        # the password.
+        if crypt.crypt(password, enc_pwd) == enc_pwd:
+            result = True
+            user = User(username)
+            login_user(user)
+        else:
+            result = False
+            err = "incorrect password"
+    except KeyError:
+        result = False
+        err = "user '%s' not found" % username
+    result = {"result": result, "error": err}
     return jsonify(result)
 
 
@@ -563,6 +582,18 @@ def getusername():
     return jsonify(result)
 
 
+@application.route("/files")
+@application.route("/files/")
+@application.route("/files/<path:path>")
+def autoindex(path="."):
+    if path == ".":
+        return files_index.render_autoindex(
+            current_user.id + "/" + path, template="file_template.html"
+        )
+    else:
+        return files_index.render_autoindex(path, template="file_template.html")
+
+
 @application.route("/save_file")
 @application.route("/save_file/")
 @application.route("/save_file/<path:path>")
@@ -574,19 +605,6 @@ def save_file(path="."):
         )
     else:
         return files_index.render_autoindex(path, template="save_template.html")
-
-
-@application.route("/files")
-@application.route("/files/")
-@application.route("/files/<path:path>")
-@login_required
-def autoindex(path="."):
-    if path == ".":
-        return files_index.render_autoindex(
-            current_user.id + "/" + path, template="file_template.html"
-        )
-    else:
-        return files_index.render_autoindex(path, template="file_template.html")
 
 
 @application.route("/programming")

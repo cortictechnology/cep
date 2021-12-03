@@ -128,11 +128,16 @@ function login() {
     if (username_.length > 0 && password_.length > 0) {
         $.post("/login", { username: username_, password: password_ })
             .done(function (data) {
-                if (data['result'] == "") {
-                    alert(localizedStrings.usernameNotExist[locale]);
-                }
-                else if (data['result'] == "Wrong password.\n") {
-                    alert(localizedStrings.wrongPass[locale]);
+                if (!data['result']) {
+                    if (data['error'].indexOf('not found') != -1) {
+                        alert(localizedStrings.usernameNotExist[locale]);
+                    }
+                    else if (data['error'] == "incorrect password") {
+                        alert(localizedStrings.wrongPass[locale]);
+                    }
+                    else {
+                        alert(data['error']);
+                    }
                 }
                 else {
                     if (!cait_system_up) {
