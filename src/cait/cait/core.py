@@ -132,6 +132,8 @@ def initialize_vision(processor="local", mode=[], from_web=False):
     global spatial_object_detection
     global user_mode
     global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
     reset_all = False
     drawing_modes = {
         "Depth Mode": False,
@@ -325,6 +327,8 @@ def initialize_voice(
     global reset_all
     reset_all = False
     speaker_attached = False
+    while reset_in_progress:
+        time.sleep(0.1)
     audio_devices = get_audio_devices()
     for device in audio_devices:
         if device["type"] == "Output":
@@ -453,6 +457,8 @@ def initialize_nlp(mode="english_default"):
     global nlp_initialized
     global current_nlp_model
     global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
     reset_all = False
     rasa_intent_worker = CURTCommands.get_worker(
         full_domain_name + "/nlp/nlp_intent_classify_service/rasa_intent_classifier"
@@ -473,6 +479,8 @@ def deactivate_nlp():
 def initialize_control(hub_address):
     global control_initialized
     global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
     reset_all = False
     robot_inventor_control_worker = CURTCommands.get_worker(
         full_domain_name + "/control/control_service/robot_inventor_control"
@@ -513,6 +521,8 @@ def deactivate_control():
 def initialize_smarthome():
     global smarthome_initialized
     global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
     reset_all = False
     ha_worker = CURTCommands.get_worker(
         full_domain_name + "/smarthome/smarthome_service/ha_provider"
@@ -1976,6 +1986,7 @@ def streaming_func():
 
 def reset_modules():
     global reset_all
+    global reset_in_progress
     global vision_initialized
     global voice_initialized
     global nlp_initialized
@@ -1988,7 +1999,8 @@ def reset_modules():
     global drawing_modes
     global spatial_face_detection
     global spatial_object_detection
-    logging.warning("------------RESETTING MODULES-------------")
+    #logging.warning("------------RESETTING MODULES-------------")
+    reset_in_progress = True
     reset_all = True
     vision_initialized = False
     spatial_face_detection = False
@@ -2022,6 +2034,7 @@ def reset_modules():
             video_worker,
             [["reset"]],
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     video_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/vision_input_service/webcam_input"
     )
@@ -2030,6 +2043,7 @@ def reset_modules():
             video_worker,
             {"reset": True},
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     video_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/vision_input_service/picam_input"
     )
@@ -2038,6 +2052,7 @@ def reset_modules():
             video_worker,
             {"reset": True},
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     current_camera = ""
 
     webcam_microphone_worker = CURTCommands.get_worker(
@@ -2047,12 +2062,15 @@ def reset_modules():
         voice_handler = CURTCommands.request(
             webcam_microphone_worker, params=["release"]
         )
+        success = CURTCommands.get_result(voice_handler)["dataValue"]["data"]
 
     respeaker_worker = CURTCommands.get_worker(
         full_domain_name + "/voice/voice_input_service/respeaker_input"
     )
     if respeaker_worker is not None:
         voice_handler = CURTCommands.request(respeaker_worker, params=["release"])
+        success = CURTCommands.get_result(voice_handler)["dataValue"]["data"]
+    reset_in_progress = False
     return True
 
 

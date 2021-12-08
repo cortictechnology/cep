@@ -147,6 +147,7 @@ function updateFunction(event) {
       }
     }
   }
+
   if (event.type == Blockly.Events.BLOCK_CHANGE) {
     if (event.element == "field") {
       if (block.type == "add_control_hub") {
@@ -751,6 +752,8 @@ async function release_components() {
     type: 'POST',
     data: {}
   });
+  console.log(res);
+  console.log("*********************");
 }
 
 $(document).ready(function () {
@@ -974,6 +977,15 @@ function load_workspace_from_res(res) {
   }
   workspace.setScale(scale);
   workspace.scroll(scroll_x, scroll_y);
+  var init_voice_blks = workspace.getBlocksByType("init_voice");
+  for (i in init_voice_blks) {
+    var blk = init_voice_blks[i];
+    if (blk.getInput('voice_mode').fieldRow[1].value_ == "online") {
+      blk.getInput("ending").setVisible(true);
+      blk.getField("language").setVisible(true);
+      blk.render();
+    } 
+  }
 }
 
 async function load_workspace(from_autosave = false) {

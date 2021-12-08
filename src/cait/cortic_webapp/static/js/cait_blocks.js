@@ -1355,7 +1355,7 @@ Blockly.Extensions.register('dynamic_camera_list_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'cameras');
@@ -1373,7 +1373,7 @@ Blockly.Extensions.register('dynamic_lights_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'light');
@@ -1391,7 +1391,7 @@ Blockly.Extensions.register('dynamic_media_players_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'media_player');
@@ -1409,11 +1409,13 @@ Blockly.Extensions.register("dynamic_voice_mode_extension",
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'mode');
   });
+
+var test1;
 
 Blockly.Extensions.register('dynamic_cloud_accounts_extension',
   function () {
@@ -1427,7 +1429,7 @@ Blockly.Extensions.register('dynamic_cloud_accounts_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'accounts');
@@ -1450,11 +1452,11 @@ Blockly.Extensions.register('dynamic_microphones_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'avail_microphones');
-    if (cloud_accounts.length < 1 || this.getInput('voice_mode').fieldRow[1].value_ == "on device") {
+    if (this.getInput('voice_mode').fieldRow[1].value_ == "on device") {
       this.getInput("ending").setVisible(false);
       this.getField("language").setVisible(false);
     }
@@ -1472,7 +1474,7 @@ Blockly.Extensions.register('dynamic_model_list_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'models');
@@ -1491,7 +1493,7 @@ Blockly.Extensions.register('dynamic_control_hubs_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'hubs');
@@ -1509,7 +1511,7 @@ Blockly.Extensions.register('dynamic_added_hubs_extension',
             }
           }
           else {
-            options.push(['none', 'none']);
+            options.push(['loading...', 'loading...']);
           }
           return options;
         }), 'available_hubs');
@@ -1986,7 +1988,7 @@ Blockly.Python['init_pid'] = function (block) {
 
 Blockly.JavaScript['add_control_hub'] = function (block) {
   var dropdown_hub = block.getFieldValue('hubs');
-  if (dropdown_hub == "none") {
+  if (dropdown_hub == "loading...") {
     throw new Error("The selected hub: " + dropdown_hub + " is not valid, please make sure to select an available hub.");
   }
   var code = "<" + dropdown_hub + ">";

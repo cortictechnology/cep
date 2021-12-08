@@ -366,9 +366,12 @@ def testspeaker():
 @application.route("/testmicrophone", methods=["POST"])
 def testmicrophone():
     data = request.get_json()
-    index = data["index"]
+    device = data["device"]
+    index = int(device[0:device.find(":")])
     RESPEAKER_RATE = 16000
-    RESPEAKER_CHANNELS = 2
+    RESPEAKER_CHANNELS = 1
+    if device.find("seeed") != -1:
+        RESPEAKER_CHANNELS = 2
     RESPEAKER_WIDTH = 2
     # run getDeviceInfo.py to get index
     RESPEAKER_INDEX = index  # refer to input device id
@@ -729,13 +732,11 @@ def release_components():
     global current_nlp_user
     global current_control_hub_user
     success = False
-    logging.warning("Releasing components")
+    logging.warning("---------------Releasing components---------------")
     if current_vision_user == current_user.id:
         current_vision_user = ""
-        # success = essentials.deactivate_vision()
     if current_voice_user == current_user.id:
         current_voice_user = ""
-        success = essentials.deactivate_voice()
     if current_nlp_user == current_user.id:
         current_nlp_user = ""
         success = True
@@ -744,6 +745,7 @@ def release_components():
         success = True
     success = essentials.reset_modules()
     result = {"success": success}
+    logging.warning("---------------Releasing components completed---------------")
     return jsonify(result)
 
 

@@ -11,6 +11,7 @@ import os
 import numpy as np
 
 reset_all = False
+reset_in_progress = False
 
 # Font used in drawing
 ft = cv2.freetype.createFreeType2()

@@ -24,15 +24,18 @@ class OfflineVoiceProcessing(BaseVoiceProcessing):
 
     def run_inference(self, input_data):
         text = ""
-        content = base64.b64decode(input_data[0])
-        if content != b"":
-            print("Got speech bytes for processing")
-            audio_frames = np.frombuffer(content, np.int16)
-            stream_context = self.model.createStream()
-            # for audio_frame in audio_frames:
-            stream_context.feedAudioContent(audio_frames)
-            text = stream_context.finishStream()
-            print("Returning text:", text)
+        if input_data[0] is not None:
+            content = base64.b64decode(input_data[0])
+            if content != b"":
+                print("Got speech bytes for processing")
+                audio_frames = np.frombuffer(content, np.int16)
+                stream_context = self.model.createStream()
+                # for audio_frame in audio_frames:
+                stream_context.feedAudioContent(audio_frames)
+                text = stream_context.finishStream()
+                print("Returning text:", text)
+            else:
+                return ""
         else:
             return ""
         return text

@@ -43,19 +43,22 @@ class OnlineVoiceProcessing(BaseVoiceProcessing):
 
     def run_inference(self, input_data):
         if self.client is not None:
-            content = base64.b64decode(input_data[0])
-            if content != b"":
-                print("Got speech bytes for processing")
-                audio = speech.RecognitionAudio(content=content)
-                operation = self.client.long_running_recognize(
-                    request={"config": self.config, "audio": audio}
-                )
-                response = operation.result(timeout=90)
-                text = ""
-                for result in response.results:
-                    text = result.alternatives[0].transcript
-                print("Returning text:", text)
-                return text
+            if input_data[0] is not None:
+                content = base64.b64decode(input_data[0])
+                if content != b"":
+                    print("Got speech bytes for processing")
+                    audio = speech.RecognitionAudio(content=content)
+                    operation = self.client.long_running_recognize(
+                        request={"config": self.config, "audio": audio}
+                    )
+                    response = operation.result(timeout=90)
+                    text = ""
+                    for result in response.results:
+                        text = result.alternatives[0].transcript
+                    print("Returning text:", text)
+                    return text
+                else:
+                    return ""
             else:
                 return ""
 

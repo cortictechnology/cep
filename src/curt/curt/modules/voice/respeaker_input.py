@@ -92,13 +92,13 @@ class RespeakerInput(BaseVoiceInput):
         return True
 
     def release_input_handler(self):
-        logging.warning("Releasing recording handler")
+        logging.warning("Releasing respeaker recording handler")
         self.started_recording = False
         self.audio_index = -1
         if self.input_handler is not None:
             self.input_handler.destroy()
             self.input_handler = None
-        logging.warning("Recording handler released")
+        logging.warning("Respeaker recording handler released")
         return True
 
     # RATE = 16000
