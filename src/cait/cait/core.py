@@ -31,6 +31,7 @@ from .utils import (
     draw_face_detection,
     draw_face_recognition,
     draw_object_detection,
+    draw_image_classification,
     draw_face_emotions,
     draw_facemesh,
     draw_body_landmarks,
@@ -119,11 +120,8 @@ def get_control_devices():
     return control_devices
 
 
-def test_camera(index):
-    pass
-
-
 def initialize_vision(processor="local", mode=[], from_web=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     global stream_thread
@@ -133,6 +131,21 @@ def initialize_vision(processor="local", mode=[], from_web=False):
     global spatial_face_detection
     global spatial_object_detection
     global user_mode
+    global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
+    reset_all = False
+    drawing_modes = {
+        "Depth Mode": False,
+        "Face Detection": [],
+        "Face Recognition": [],
+        "Face Emotions": [],
+        "Face Mesh": [],
+        "Object Detection": [],
+        "Image Classification": [],
+        "Hand Landmarks": [],
+        "Pose Landmarks": [],
+    }
     if vision_initialized:
         vision_initialized = False
         if stream_thread is not None:
@@ -143,31 +156,20 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         user_mode = "code"
     current_video_device = None
     if processor == "oakd":
-        # all_usb_devices = get_usb_devices()
-        # for udev in all_usb_devices:
-        #     if udev['tag'] == 'Intel Movidius MyriadX':
-        #         current_video_device = 'Intel Movidius MyriadX'
         current_video_worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_pipeline"
         )
-    else:
-        all_video_devices = get_video_devices()
-        if len(all_video_devices) > 0:
-            current_video_device = all_video_devices[0]
-        current_video_worker = CURTCommands.get_worker(
-            full_domain_name + "/vision/vision_input_service/webcam_input"
-        )
-        if current_video_device is None:
+        if current_video_worker is None:
             vision_initialized = False
             return (
                 False,
-                "No video input device is detected, or connected device is not supported",
+                "No OAK device is detected, or connected device is not supported",
             )
-    if processor == "oakd":
         for node in mode:
             if node[0] == "add_rgb_cam_node":
                 preview_width = node[1]
                 preview_height = node[2]
+                current_camera = "oakd"
             if node[0] == "add_spatial_mobilenetSSD_node":
                 if node[1] == "face_detection":
                     spatial_face_detection = True
@@ -187,20 +189,83 @@ def initialize_vision(processor="local", mode=[], from_web=False):
                 False,
                 "Failed to initialzie oakd pipeline, please check if the device is connected.",
             )
-    else:
-        # Selecting a VGA resolution, future work should provide a list of selected resolution
-        config_handler = CURTCommands.config_worker(
-            current_video_worker,
-            {"camera_index": 0, "capture_width": 640, "capture_height": 480},
-        )
-        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    elif processor == "cpu":
+        success = False
+        if mode["index"] != -1 and mode["index"] != 99:
+            current_video_worker = CURTCommands.get_worker(
+                full_domain_name + "/vision/vision_input_service/webcam_input"
+            )
+            if current_video_worker is None:
+                vision_initialized = False
+                return (
+                    False,
+                    "No USB webcam is detected, or connected webcam is not supported",
+                )
+            current_camera = "webcam"
+            config_handler = CURTCommands.config_worker(
+                current_video_worker,
+                {
+                    "camera_index": mode["index"],
+                    "capture_width": 640,
+                    "capture_height": 480,
+                    "reset": False,
+                },
+            )
+            success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+        elif mode["index"] == 99:
+            current_video_worker = CURTCommands.get_worker(
+                full_domain_name + "/vision/vision_input_service/picam_input"
+            )
+            if current_video_worker is None:
+                vision_initialized = False
+                return (
+                    False,
+                    "No CSI-Camera is detected, or connected device is not supported",
+                )
+            current_camera = "picam"
+            config_handler = CURTCommands.config_worker(
+                current_video_worker,
+                {"capture_width": 640, "capture_height": 480, "reset": False},
+            )
+            success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
             return (
                 False,
-                "Failed to initialize local camera, please check if the device is connected.",
+                "Failed to initialize local camera, please check if the webcam or csi-camera is connected.",
             )
+    vision_initialized = True
+    stream_thread = threading.Thread(target=streaming_func, daemon=True)
+    stream_thread.start()
+    return True, "OK"
 
+
+def test_camera(index):
+    processor = "local"
+    mode = []
+    if index == "myriad":
+        processor = "oakd"
+        mode = [["add_rgb_cam_node", 640, 360], ["add_rgb_cam_preview_node"]]
+    else:
+        processor = "cpu"
+        mode = {"index": index}
+    return initialize_vision(processor, mode, True)
+
+
+def deactivate_vision():
+    global vision_initialized
+    global vision_mode
+    global stream_thread
+    global current_camera
+    global drawing_modes
+    global spatial_face_detection
+    global spatial_object_detection
+    vision_initialized = False
+    spatial_face_detection = False
+    spatial_object_detection = False
+    vision_mode = []
+    if stream_thread is not None:
+        stream_thread.join()
     drawing_modes = {
         "Depth Mode": False,
         "Face Detection": [],
@@ -208,21 +273,35 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         "Face Emotions": [],
         "Face Mesh": [],
         "Object Detection": [],
+        "Image Classification": [],
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
-    vision_initialized = True
-    stream_thread = threading.Thread(target=streaming_func, daemon=True)
-    stream_thread.start()
-    logging.info("***********Streaming preview thread started***********")
-    return True, "OK"
-
-
-def deactivate_vision():
-    global vision_initialized
-    global vision_mode
-    vision_initialized = False
-    vision_mode = []
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/oakd_service/oakd_pipeline"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            [["reset"]],
+        )
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/webcam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/picam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+    current_camera = ""
     return True
 
 
@@ -239,10 +318,17 @@ def get_nlp_models():
     return model_list
 
 
-def initialize_voice(mode="online", account="default", language="english"):
+def initialize_voice(
+    mode="online", account="default", language="english", input_device=""
+):
     global voice_initialized
     global voice_mode
+    global use_respeaker
+    global reset_all
+    reset_all = False
     speaker_attached = False
+    while reset_in_progress:
+        time.sleep(0.1)
     audio_devices = get_audio_devices()
     for device in audio_devices:
         if device["type"] == "Output":
@@ -253,7 +339,13 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No audio output deveice is detected, or connected device is not supported",
         )
-
+    logging.warning(str(input_device) + "*******************")
+    if input_device == "":
+        voice_initialized = False
+        return (
+            False,
+            "No audio input deveice is detected, or connected device is not supported",
+        )
     if language == "english":
         processing_language = "en-UK"
         generation_language = "en"
@@ -268,9 +360,20 @@ def initialize_voice(mode="online", account="default", language="english"):
         generation_accents = ""
     voice_generation_worker = None
     voice_processing_worker = None
-    voice_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/respeaker_input"
-    )
+    index = int(input_device[0 : input_device.find(":")])
+    channel_count = 1
+    voice_input_worker = None
+    if input_device.find("seeed") != -1:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/respeaker_input"
+        )
+        use_respeaker = True
+        channel_count = 4
+    else:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/live_input"
+        )
+        use_respeaker = False
     voice_processing_worker = None
     if mode == "online":
         voice_mode = "online"
@@ -303,8 +406,9 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice generation is detected, or connected device is not supported",
         )
+    logging.warning("Audio input index:" + str(index))
     config_handler = CURTCommands.config_worker(
-        voice_input_worker, {"audio_in_index": 0}
+        voice_input_worker, {"audio_in_index": index}
     )
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
@@ -312,7 +416,7 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again.",
         )
-    CURTCommands.request(voice_input_worker, params=["start"])
+    # CURTCommands.request(voice_input_worker, params=["start"])
     # CURTCommands.start_voice_recording(voice_input_worker)
     if mode == "online":
         curt_path = os.getenv("CURT_PATH")
@@ -325,7 +429,7 @@ def initialize_voice(mode="online", account="default", language="english"):
                 "account_crediential": account_info,
                 "language": processing_language,
                 "sample_rate": 16000,
-                "channel_count": 4,
+                "channel_count": channel_count,
             },
         )
         success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
@@ -352,6 +456,10 @@ def deactivate_voice():
 def initialize_nlp(mode="english_default"):
     global nlp_initialized
     global current_nlp_model
+    global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
+    reset_all = False
     rasa_intent_worker = CURTCommands.get_worker(
         full_domain_name + "/nlp/nlp_intent_classify_service/rasa_intent_classifier"
     )
@@ -370,6 +478,10 @@ def deactivate_nlp():
 
 def initialize_control(hub_address):
     global control_initialized
+    global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
+    reset_all = False
     robot_inventor_control_worker = CURTCommands.get_worker(
         full_domain_name + "/control/control_service/robot_inventor_control"
     )
@@ -408,6 +520,10 @@ def deactivate_control():
 
 def initialize_smarthome():
     global smarthome_initialized
+    global reset_all
+    while reset_in_progress:
+        time.sleep(0.1)
+    reset_all = False
     ha_worker = CURTCommands.get_worker(
         full_domain_name + "/smarthome/smarthome_service/ha_provider"
     )
@@ -425,6 +541,8 @@ def initialize_smarthome():
 
 def initialize_pid(kp, ki, kd):
     global pid_controller
+    global reset_all
+    reset_all = False
     if pid_controller is None:
         pid_controller = PID(kP=kp, kI=ki, kD=kd)
         pid_controller.initialize()
@@ -435,7 +553,28 @@ def change_module_parameters(parameter_name, value):
     pass
 
 
+def get_camera_worker():
+    global current_camera
+    worker = None
+    if current_camera == "oakd":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    else:
+        logging.warning("Current worker does not fit into any supported category")
+    return worker
+
+
 def get_camera_image(for_streaming=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -443,15 +582,20 @@ def get_camera_image(for_streaming=False):
             "Please call initialize_vision() function before using the vision module"
         )
         return False, "Vision module is not initialized"
-    worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    retry_count = 0
+    worker = get_camera_worker()
+    while worker is None:
+        worker = get_camera_worker()
+        retry_count += 1
+        if retry_count > 3:
+            break
+
+    if worker is None:
+        logging.warning("No rgb camera worker found.")
+        return False, "No rgb camera worker found."
     rgb_frame_handler = None
     frame = None
-    if worker is not None:
-        rgb_frame_handler = CURTCommands.request(worker, params=["get_rgb_frame"])
-    else:
-        logging.warning("No rgb camera worker found.")
+    rgb_frame_handler = CURTCommands.request(worker, params=["get_rgb_frame"])
     if rgb_frame_handler is not None:
         frame = CURTCommands.get_result(rgb_frame_handler, for_streaming)["dataValue"][
             "data"
@@ -498,6 +642,7 @@ def enable_drawing_mode(mode, from_web=False):
 
 
 def draw_detected_face(face, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -507,6 +652,7 @@ def draw_detected_face(face, from_web=False):
 
 
 def draw_recognized_face(names, coordinates, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -516,6 +662,7 @@ def draw_recognized_face(names, coordinates, from_web=False):
 
 
 def draw_estimated_emotions(emotions, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -525,6 +672,7 @@ def draw_estimated_emotions(emotions, from_web=False):
 
 
 def draw_estimated_facemesh(facemesh, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -534,6 +682,7 @@ def draw_estimated_facemesh(facemesh, from_web=False):
 
 
 def draw_detected_objects(names, coordinates, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -542,7 +691,18 @@ def draw_detected_objects(names, coordinates, from_web=False):
     drawing_modes["Object Detection"] = [names, coordinates]
 
 
+def draw_classified_image(names, from_web=False):
+    global drawing_modes
+    global user_mode
+    if from_web:
+        user_mode = "web"
+    else:
+        user_mode = "code"
+    drawing_modes["Image Classification"] = names
+
+
 def draw_estimated_body_landmarks(body_landmarks, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -552,6 +712,7 @@ def draw_estimated_body_landmarks(body_landmarks, from_web=False):
 
 
 def draw_estimated_hand_landmarks(hand_landmarks, from_web=False):
+    global drawing_modes
     global user_mode
     if from_web:
         user_mode = "web"
@@ -560,7 +721,8 @@ def draw_estimated_hand_landmarks(hand_landmarks, from_web=False):
     drawing_modes["Hand Landmarks"] = hand_landmarks
 
 
-def detect_face(processor="oakd", spatial=False, for_streaming=False):
+def detect_face(processor, spatial=False, for_streaming=False):
+    global current_camera
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -569,57 +731,79 @@ def detect_face(processor="oakd", spatial=False, for_streaming=False):
         )
         return None
     change_vision_mode("face_detection")
+    camera_worker = None
+    worker = None
+    logging.warning("Processor:" + str(processor))
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     if processor == "oakd":
         worker = CURTCommands.get_worker(
             full_domain_name + "/vision/oakd_service/oakd_face_detection"
         )
     else:
-        camera_worker = CURTCommands.get_worker(
-            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-        )
         worker = CURTCommands.get_worker(
             full_domain_name + "/vision/vision_processor_service/face_detection"
         )
     faces = []
-    if worker is not None:
+    if camera_worker is not None and worker is not None:
+        rgb_frame_handler = CURTCommands.request(
+            camera_worker, params=["get_rgb_frame"]
+        )
         if processor == "oakd":
             if spatial:
                 face_detection_handler = CURTCommands.request(
                     worker, params=["get_spatial_face_detections"]
                 )
             else:
-                face_detection_handler = CURTCommands.request(
-                    worker, params=["detect_face_pipeline", 0.6, False]
-                )
+                if current_camera != "oakd":
+                    face_detection_handler = CURTCommands.request(
+                        worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                    )
+                else:
+                    face_detection_handler = CURTCommands.request(
+                        worker, params=["detect_face_pipeline", 0.6, False]
+                    )
         else:
-            rgb_frame_handler = CURTCommands.request(
-                camera_worker, params=["get_rgb_frame"]
-            )
             face_detection_handler = CURTCommands.request(
                 worker, params=[rgb_frame_handler]
             )
         faces = CURTCommands.get_result(face_detection_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        width = 640
+        height = 360
+        if current_camera != "oakd":
+            width = 640
+            height = 480
         if isinstance(faces, list):
             for face in faces:
                 if isinstance(face, list):
-                    face[0] = int(face[0] * 640)
-                    face[1] = int(face[1] * 360)
-                    face[2] = int(face[2] * 640)
-                    face[3] = int(face[3] * 360)
+                    face[0] = int(face[0] * width)
+                    face[1] = int(face[1] * height)
+                    face[2] = int(face[2] * width)
+                    face[3] = int(face[3] * height)
                 elif isinstance(face, dict):
                     bbox = face["face_coordinates"]
-                    bbox[0] = int(bbox[0] * 640)
-                    bbox[1] = int(bbox[1] * 360)
-                    bbox[2] = int(bbox[2] * 640)
-                    bbox[3] = int(bbox[3] * 360)
+                    bbox[0] = int(bbox[0] * width)
+                    bbox[1] = int(bbox[1] * height)
+                    bbox[2] = int(bbox[2] * width)
+                    bbox[3] = int(bbox[3] * height)
         else:
             faces = []
     return faces
 
 
-def recognize_face(for_streaming=False):
+def recognize_face(processor, for_streaming=False):
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -630,58 +814,94 @@ def recognize_face(for_streaming=False):
     names = []
     coordinates = []
     change_vision_mode("face_recognition")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
-    face_detection_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_face_detection"
-    )
-    face_recognition_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_face_recognition"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    if processor == "oakd":
+        face_detection_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_face_detection"
+        )
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_face_recognition"
+        )
+    else:
+        face_detection_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/face_detection"
+        )
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/face_recognition"
+        )
+
     rgb_frame_handler = None
     if camera_worker is not None:
         rgb_frame_handler = CURTCommands.request(
             camera_worker, params=["get_rgb_frame"]
         )
     else:
-        logging.warning("No rgb camera preview node in the pipeline")
-    if spatial_face_detection:
-        face_detection_handler = CURTCommands.request(
-            face_detection_worker, params=["get_spatial_face_detections"]
-        )
+        logging.warning("No camera worker available")
+        return names, coordinates
+
+    if processor == "oakd":
+        if spatial_face_detection:
+            face_detection_handler = CURTCommands.request(
+                face_detection_worker, params=["get_spatial_face_detections"]
+            )
+        else:
+            if current_camera != "oakd":
+                face_detection_handler = CURTCommands.request(
+                    face_detection_worker,
+                    params=["detect_face", 0.6, False, rgb_frame_handler],
+                )
+            else:
+                face_detection_handler = CURTCommands.request(
+                    face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+                )
     else:
         face_detection_handler = CURTCommands.request(
-            face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+            face_detection_worker, params=[rgb_frame_handler]
         )
     if rgb_frame_handler is not None and face_detection_handler is not None:
         face_recognition_handler = CURTCommands.request(
             face_recognition_worker,
             params=[
+                "recognize_face",
                 rgb_frame_handler,
                 face_detection_handler,
-                "recognize_face",
             ],
         )
         identities = CURTCommands.get_result(face_recognition_handler, for_streaming)[
             "dataValue"
         ]["data"]
+        width = 640
+        height = 360
+        if current_camera != "oakd":
+            width = 640
+            height = 480
         if identities is not None:
             # rgb_frame = identities["frame"]
             for name in identities:
                 if name != "frame":
                     detection = identities[name]
                     names.append(name)
-                    x1 = int(detection[0] * 640)
-                    y1 = int(detection[1] * 360)
-                    x2 = int(detection[2] * 640)
-                    y2 = int(detection[3] * 360)
+                    x1 = int(detection[0] * width)
+                    y1 = int(detection[1] * height)
+                    x2 = int(detection[2] * width)
+                    y2 = int(detection[3] * height)
                     coordinates.append([x1, y1, x2, y2])
 
     return names, coordinates
 
 
-def add_person(name):
+def add_person(processor, name):
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -690,15 +910,32 @@ def add_person(name):
         )
         return None, []
     change_vision_mode("face_recognition")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
-    face_detection_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_face_detection"
-    )
-    face_recognition_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_face_recognition"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    if processor == "oakd":
+        face_detection_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_face_detection"
+        )
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_face_recognition"
+        )
+    else:
+        face_detection_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/face_detection"
+        )
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/face_recognition"
+        )
     success = False
     while not success:
         rgb_frame_handler = None
@@ -707,14 +944,27 @@ def add_person(name):
                 camera_worker, params=["get_rgb_frame"]
             )
         else:
-            logging.warning("No rgb camera preview node in the pipeline")
-        if spatial_face_detection:
-            face_detection_handler = CURTCommands.request(
-                face_detection_worker, params=["get_spatial_face_detections"]
-            )
+            logging.warning("No camera worker available")
+            break
+        if processor == "oakd":
+            if spatial_face_detection:
+                face_detection_handler = CURTCommands.request(
+                    face_detection_worker, params=["get_spatial_face_detections"]
+                )
+            else:
+                if current_camera != "oakd":
+                    face_detection_handler = CURTCommands.request(
+                        face_detection_worker,
+                        params=["detect_face", 0.6, False, rgb_frame_handler],
+                    )
+                else:
+                    face_detection_handler = CURTCommands.request(
+                        face_detection_worker,
+                        params=["detect_face_pipeline", 0.6, False],
+                    )
         else:
             face_detection_handler = CURTCommands.request(
-                face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+                face_detection_worker, params=[rgb_frame_handler]
             )
         if rgb_frame_handler is not None and face_detection_handler is not None:
             face_recognition_handler = CURTCommands.request(
@@ -727,7 +977,7 @@ def add_person(name):
     return success
 
 
-def remove_person(name):
+def remove_person(processor, name):
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -736,9 +986,14 @@ def remove_person(name):
         )
         return None, []
     change_vision_mode("face_recognition")
-    face_recognition_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_face_recognition"
-    )
+    if processor == "oakd":
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_face_recognition"
+        )
+    else:
+        face_recognition_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/face_recognition"
+        )
     success = False
     while not success:
         face_recognition_handler = CURTCommands.request(
@@ -749,7 +1004,7 @@ def remove_person(name):
     return success
 
 
-def detect_objects(spatial=False, for_streaming=False):
+def detect_objects(processor, spatial=False, for_streaming=False):
     global oakd_nodes
     global vision_initialized
     if not vision_initialized:
@@ -758,44 +1013,125 @@ def detect_objects(spatial=False, for_streaming=False):
         )
         return None
     change_vision_mode("object_detection")
-    worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_object_detection"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    if processor == "oakd":
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_object_detection"
+        )
+    else:
+        worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_processor_service/object_detection"
+        )
     coordinates = []
     names = []
     objects = []
-    if worker is not None:
-        if spatial:
-            object_detection_handler = CURTCommands.request(
-                worker, params=["get_spatial_object_detections"]
-            )
+    if camera_worker is not None and worker is not None:
+        if processor == "oakd":
+            if spatial:
+                object_detection_handler = CURTCommands.request(
+                    worker, params=["get_spatial_object_detections"]
+                )
+            else:
+                if current_camera != "oakd":
+                    rgb_frame_handler = CURTCommands.request(
+                        camera_worker, params=["get_rgb_frame"]
+                    )
+                    object_detection_handler = CURTCommands.request(
+                        worker, params=["detect_object", rgb_frame_handler]
+                    )
+                else:
+                    object_detection_handler = CURTCommands.request(
+                        worker, params=["detect_object_pipeline"]
+                    )
         else:
-            object_detection_handler = CURTCommands.request(
-                worker, params=["detect_object_pipeline"]
+            rgb_frame_handler = CURTCommands.request(
+                camera_worker, params=["get_rgb_frame"]
             )
+            object_detection_handler = CURTCommands.request(
+                worker, params=[rgb_frame_handler]
+            )
+
         objects = CURTCommands.get_result(object_detection_handler, for_streaming)[
             "dataValue"
         ]["data"]
-        logging.warning("Objects: " + str(objects))
+        # logging.warning("Objects: " + str(objects))
         if not isinstance(objects, list):
             objects = []
+    width = 640
+    height = 360
+    if current_camera != "oakd":
+        width = 640
+        height = 480
     for obj in objects:
         if len(obj) > 5:
             coordinates.append(
                 [
-                    obj[0] * 640,
-                    obj[1] * 360,
-                    obj[2] * 640,
-                    obj[3] * 360,
+                    obj[0] * width,
+                    obj[1] * height,
+                    obj[2] * width,
+                    obj[3] * height,
                     obj[4],
                     obj[5],
                     obj[6],
                 ]
             )
         else:
-            coordinates.append([obj[0] * 640, obj[1] * 360, obj[2] * 640, obj[3] * 360])
-        names.append(object_labels[obj[-1]])
+            coordinates.append(
+                [obj[0] * width, obj[1] * height, obj[2] * width, obj[3] * height]
+            )
+        names.append(object_labels[int(obj[-1])])
     return names, coordinates
+
+
+def classify_image(for_streaming=False):
+    global oakd_nodes
+    global vision_initialized
+    if not vision_initialized:
+        logging.info(
+            "Please call initialize_vision() function before using the vision module"
+        )
+        return None
+    change_vision_mode("image_classification")
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
+    worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_processor_service/image_classification"
+    )
+    image_classes = []
+    if camera_worker is not None and worker is not None:
+        rgb_frame_handler = CURTCommands.request(
+            camera_worker, params=["get_rgb_frame"]
+        )
+        image_classification_handler = CURTCommands.request(
+            worker, params=[rgb_frame_handler]
+        )
+        image_classes = CURTCommands.get_result(
+            image_classification_handler, for_streaming
+        )["dataValue"]["data"]
+        if image_classes is None:
+            image_classes = []
+    return image_classes
 
 
 def face_emotions_estimation(for_streaming=False):
@@ -807,9 +1143,18 @@ def face_emotions_estimation(for_streaming=False):
         )
         return None
     change_vision_mode("face_emotions")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     face_detection_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/oakd_service/oakd_face_detection"
     )
@@ -827,10 +1172,21 @@ def face_emotions_estimation(for_streaming=False):
             face_detection_worker, params=["get_spatial_face_detections"]
         )
     else:
-        face_detection_handler = CURTCommands.request(
-            face_detection_worker, params=["detect_face_pipeline", 0.6, False]
-        )
+        if current_camera != "oakd":
+            face_detection_handler = CURTCommands.request(
+                face_detection_worker,
+                params=["detect_face", 0.6, False, rgb_frame_handler],
+            )
+        else:
+            face_detection_handler = CURTCommands.request(
+                face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+            )
     emotions = []
+    width = 640
+    height = 360
+    if current_camera != "oakd":
+        width = 640
+        height = 480
     if rgb_frame_handler is not None and face_detection_handler is not None:
         face_emotions_handler = CURTCommands.request(
             face_emotions_worker,
@@ -841,6 +1197,7 @@ def face_emotions_estimation(for_streaming=False):
         ]["data"]
         if emotions is None:
             return []
+
         for emotion in emotions:
             raw_emtotions = emotion[0]
             emo = {}
@@ -851,10 +1208,10 @@ def face_emotions_estimation(for_streaming=False):
             emo["anger"] = raw_emtotions[4]
             emotion[0] = emo
             bbox = emotion[1]
-            bbox[0] = bbox[0] * 640
-            bbox[1] = bbox[1] * 360
-            bbox[2] = bbox[2] * 640
-            bbox[3] = bbox[3] * 360
+            bbox[0] = bbox[0] * width
+            bbox[1] = bbox[1] * height
+            bbox[2] = bbox[2] * width
+            bbox[3] = bbox[3] * height
     return emotions
 
 
@@ -867,9 +1224,18 @@ def facemesh_estimation(for_streaming=False):
         )
         return None
     change_vision_mode("facemesh")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     face_detection_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/oakd_service/oakd_face_detection"
     )
@@ -887,10 +1253,21 @@ def facemesh_estimation(for_streaming=False):
             face_detection_worker, params=["get_spatial_face_detections"]
         )
     else:
-        face_detection_handler = CURTCommands.request(
-            face_detection_worker, params=["detect_face_pipeline", 0.6, False]
-        )
+        if current_camera != "oakd":
+            face_detection_handler = CURTCommands.request(
+                face_detection_worker,
+                params=["detect_face", 0.6, False, rgb_frame_handler],
+            )
+        else:
+            face_detection_handler = CURTCommands.request(
+                face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+            )
     facemeshes = []
+    width = 640
+    height = 360
+    if current_camera != "oakd":
+        width = 640
+        height = 480
     if rgb_frame_handler is not None and face_detection_handler is not None:
         facemesh_handler = CURTCommands.request(
             facemesh_worker, params=[rgb_frame_handler, face_detection_handler]
@@ -902,8 +1279,8 @@ def facemesh_estimation(for_streaming=False):
             return []
         for facemesh in facemeshes:
             for pt in facemesh:
-                pt[0] = pt[0] * 640
-                pt[1] = pt[1] * 360
+                pt[0] = pt[0] * width
+                pt[1] = pt[1] * height
     return facemeshes
 
 
@@ -916,9 +1293,18 @@ def get_hand_landmarks(for_streaming=False):
         )
         return None
     change_vision_mode("hand_landmarks")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     hand_landmarks_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/oakd_service/oakd_hand_landmarks"
     )
@@ -931,6 +1317,11 @@ def get_hand_landmarks(for_streaming=False):
     hand_landmarks_coordinates = []
     hand_bboxes = []
     handnesses = []
+    width = 640
+    height = 360
+    if current_camera != "oakd":
+        width = 640
+        height = 480
     if rgb_frame_handler is not None:
         hand_landmarks_handler = CURTCommands.request(
             hand_landmarks_worker,
@@ -943,13 +1334,13 @@ def get_hand_landmarks(for_streaming=False):
             return [], [], []
         for landmarks in hand_landmarks:
             for lm_xy in landmarks[0]:
-                lm_xy[0] = lm_xy[0] * 640
-                lm_xy[1] = lm_xy[1] * 360
+                lm_xy[0] = lm_xy[0] * width
+                lm_xy[1] = lm_xy[1] * height
             hand_landmarks_coordinates.append(landmarks[0])
-            landmarks[1][0] = landmarks[1][0] * 640
-            landmarks[1][1] = landmarks[1][1] * 360
-            landmarks[1][2] = landmarks[1][2] * 640
-            landmarks[1][3] = landmarks[1][3] * 360
+            landmarks[1][0] = landmarks[1][0] * width
+            landmarks[1][1] = landmarks[1][1] * height
+            landmarks[1][2] = landmarks[1][2] * width
+            landmarks[1][3] = landmarks[1][3] * height
             hand_bboxes.append(landmarks[1])
             handnesses.append(landmarks[2])
     return hand_landmarks_coordinates, hand_bboxes, handnesses
@@ -964,9 +1355,18 @@ def get_body_landmarks(for_streaming=False):
         )
         return None
     change_vision_mode("body_landmarks")
-    camera_worker = CURTCommands.get_worker(
-        full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
-    )
+    if current_camera == "oakd":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/oakd_service/oakd_rgb_camera_input"
+        )
+    elif current_camera == "webcam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/webcam_input"
+        )
+    elif current_camera == "picam":
+        camera_worker = CURTCommands.get_worker(
+            full_domain_name + "/vision/vision_input_service/picam_input"
+        )
     body_landmarks_worker = CURTCommands.get_worker(
         full_domain_name + "/vision/oakd_service/oakd_pose_estimation"
     )
@@ -977,6 +1377,11 @@ def get_body_landmarks(for_streaming=False):
     else:
         logging.warning("No rgb camera worker found.")
     body_ladmarks = []
+    width = 640
+    height = 360
+    if current_camera != "oakd":
+        width = 640
+        height = 480
     if rgb_frame_handler is not None:
         body_landmarks_handler = CURTCommands.request(
             body_landmarks_worker,
@@ -988,14 +1393,10 @@ def get_body_landmarks(for_streaming=False):
         if body_ladmarks is None:
             return []
         for landmarks in body_ladmarks:
-            landmarks[0] = landmarks[0] * 640
-            landmarks[1] = landmarks[1] * 360
+            landmarks[0] = landmarks[0] * width
+            landmarks[1] = landmarks[1] * height
 
     return body_ladmarks
-
-
-def classify_image():
-    return []
 
 
 def say(message_topic, entities=[]):
@@ -1072,9 +1473,16 @@ def play_audio(file_path):
 
 def listen():
     global voice_mode
-    voice_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/respeaker_input"
-    )
+    global use_respeaker
+    voice_input_worker = None
+    if use_respeaker:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/respeaker_input"
+        )
+    else:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/live_input"
+        )
     if voice_mode == "online":
         voice_generation_worker = CURTCommands.get_worker(
             full_domain_name + "/voice/text_to_speech_service/online_voice_generation"
@@ -1083,16 +1491,18 @@ def listen():
         voice_generation_worker = CURTCommands.get_worker(
             full_domain_name + "/voice/text_to_speech_service/offline_voice_generation"
         )
-    CURTCommands.request(voice_input_worker, params=["pause"])
+    # CURTCommands.request(voice_input_worker, params=["pause"])
     voice_generation_handler = CURTCommands.request(
         voice_generation_worker, params=["notification_tone"]
     )
     generation_status = CURTCommands.get_result(voice_generation_handler)
     time.sleep(0.1)
-    CURTCommands.request(voice_input_worker, params=["resume"])
+    # CURTCommands.request(voice_input_worker, params=["resume"])
     time.sleep(0.05)
     speech = ""
     while speech == "":
+        if reset_all:
+            return
         voice_handler = CURTCommands.request(voice_input_worker, params=["get"])
         voice_processing_worker = None
         if voice_mode == "online":
@@ -1113,6 +1523,7 @@ def listen():
             speech = speech_result["dataValue"]["data"]
             if speech is None:
                 speech = ""
+        time.sleep(0.1)
     return True, speech
 
 
@@ -1540,6 +1951,10 @@ def streaming_func():
                             drawing_modes["Object Detection"][0],
                             drawing_modes["Object Detection"][1],
                         )
+                    if drawing_modes["Image Classification"] != []:
+                        camera_img = draw_image_classification(
+                            camera_img, drawing_modes["Image Classification"]
+                        )
                     if drawing_modes["Pose Landmarks"] != []:
                         camera_img = draw_body_landmarks(
                             camera_img, drawing_modes["Pose Landmarks"]
@@ -1570,17 +1985,23 @@ def streaming_func():
 
 
 def reset_modules():
+    global reset_all
+    global reset_in_progress
     global vision_initialized
     global voice_initialized
     global nlp_initialized
     global control_initialized
     global smarthome_initialized
     global vision_mode
+    global current_camera
     global stream_thread
     global pid_controller
     global drawing_modes
     global spatial_face_detection
     global spatial_object_detection
+    # logging.warning("------------RESETTING MODULES-------------")
+    reset_in_progress = True
+    reset_all = True
     vision_initialized = False
     spatial_face_detection = False
     spatial_object_detection = False
@@ -1601,6 +2022,7 @@ def reset_modules():
         "Face Emotions": [],
         "Face Mesh": [],
         "Object Detection": [],
+        "Image Classification": [],
         "Hand Landmarks": [],
         "Pose Landmarks": [],
     }
@@ -1612,6 +2034,43 @@ def reset_modules():
             video_worker,
             [["reset"]],
         )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/webcam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/picam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+        success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
+    current_camera = ""
+
+    webcam_microphone_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/live_input"
+    )
+    if webcam_microphone_worker is not None:
+        voice_handler = CURTCommands.request(
+            webcam_microphone_worker, params=["release"]
+        )
+        success = CURTCommands.get_result(voice_handler)["dataValue"]["data"]
+
+    respeaker_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/respeaker_input"
+    )
+    if respeaker_worker is not None:
+        voice_handler = CURTCommands.request(respeaker_worker, params=["release"])
+        success = CURTCommands.get_result(voice_handler)["dataValue"]["data"]
+    reset_in_progress = False
     return True
 
 

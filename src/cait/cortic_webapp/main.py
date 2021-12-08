@@ -272,7 +272,7 @@ def getusbdev():
     usb_devices = []
     for udev in devices:
         if udev["tag"] == "Intel Movidius MyriadX":
-            dev = {"tag": udev["tag"], "device": udev["device"]}
+            dev = {"tag": "OpenCV AI Kit", "device": udev["device"]}
             usb_devices.append(dev)
     return jsonify(usb_devices)
 
@@ -366,9 +366,12 @@ def testspeaker():
 @application.route("/testmicrophone", methods=["POST"])
 def testmicrophone():
     data = request.get_json()
-    index = data["index"]
+    device = data["device"]
+    index = int(device[0:device.find(":")])
     RESPEAKER_RATE = 16000
-    RESPEAKER_CHANNELS = 2
+    RESPEAKER_CHANNELS = 1
+    if device.find("seeed") != -1:
+        RESPEAKER_CHANNELS = 2
     RESPEAKER_WIDTH = 2
     # run getDeviceInfo.py to get index
     RESPEAKER_INDEX = index  # refer to input device id
@@ -695,9 +698,10 @@ def initialize_component():
         account = current_user.id
     processor = request.form.get("processor")
     language = request.form.get("language")
+    device = request.form.get("device")
 
     success, msg = essentials.initialize_component(
-        component_name, mode, account, processor, language, from_web=True
+        component_name, mode, account, processor, language, device, from_web=True
     )
     if success == False:
         result = {"success": success, "error": msg}
@@ -728,13 +732,11 @@ def release_components():
     global current_nlp_user
     global current_control_hub_user
     success = False
-    logging.warning("Releasing components")
+    logging.warning("---------------Releasing components---------------")
     if current_vision_user == current_user.id:
         current_vision_user = ""
-        success = essentials.deactivate_vision()
     if current_voice_user == current_user.id:
         current_voice_user = ""
-        success = essentials.deactivate_voice()
     if current_nlp_user == current_user.id:
         current_nlp_user = ""
         success = True
@@ -743,6 +745,7 @@ def release_components():
         success = True
     success = essentials.reset_modules()
     result = {"success": success}
+    logging.warning("---------------Releasing components completed---------------")
     return jsonify(result)
 
 
@@ -808,6 +811,15 @@ def draw_detected_objects():
     names = json.loads(request.form.get("names"))
     coordinates = json.loads(request.form.get("coordinates"))
     essentials.draw_detected_objects((names, coordinates), from_web=True)
+    result = {"success": True}
+    return jsonify(result)
+
+
+@application.route("/draw_image_classification", methods=["POST"])
+@login_required
+def draw_image_classification():
+    names = json.loads(request.form.get("names"))
+    essentials.draw_classified_image(names, from_web=True)
     result = {"success": True}
     return jsonify(result)
 
@@ -884,7 +896,8 @@ def recognizeface():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
-    people = essentials.recognize_face()
+    processor = request.form.get("processor")
+    people = essentials.recognize_face(processor)
     return jsonify(people)
 
 
@@ -897,8 +910,9 @@ def addperson():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     person_name = request.form.get("name")
-    success = essentials.add_person(person_name)
+    success = essentials.add_person(processor, person_name)
     result = {"success": success}
     return jsonify(result)
 
@@ -912,9 +926,10 @@ def removeperson():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     person_name = request.form.get("name")
     logging.info("Remove: " + person_name)
-    success = essentials.remove_person(person_name)
+    success = essentials.remove_person(processor, person_name)
     result = {"success": success}
     return jsonify(result)
 
@@ -928,12 +943,13 @@ def detectobject():
             "error": "Vision compoent is being used by another user, please try again later.",
         }
         return jsonify(result)
+    processor = request.form.get("processor")
     spatial = request.form.get("spatial")
     if spatial == "false":
         spatial = False
     elif spatial == "true":
         spatial = True
-    objects = essentials.detect_objects(spatial)
+    objects = essentials.detect_objects(processor, spatial)
     return jsonify(objects)
 
 

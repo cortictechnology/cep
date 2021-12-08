@@ -22,7 +22,9 @@ logging.getLogger().setLevel(logging.INFO)
 
 # Use one mqtt client for publishing command
 class BaseCommand:
-    def __init__(self):
+    def __init__(self, port=9435, backup_port=9433):
+        self.port = port
+        self.backup_port = backup_port
         self.command_client = mqtt.Client()
         self.command_client.on_disconnect= self.on_disconnect
         self.sync_client = mqtt.Client()
@@ -50,12 +52,14 @@ class BaseCommand:
         self.unclaimed_data = collections.deque(maxlen=50)
         self.unclaimed_data_stream = collections.deque(maxlen=50)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ("", 9435)
-        try:
-            self.sock.bind(server_address)
-        except:
-            server_address = ("", 9433)
-            self.sock.bind(server_address)
+        for ii in range(9):
+            port = 9433 + ii
+            server_address = ("", port)
+            try:
+                self.sock.bind(server_address)
+                logging.info("BaseCommand: Port {} is available".format(port))
+            except:
+                continue
         self.current_listening_topics = []
 
     def connect_mqtt(self, client, address):

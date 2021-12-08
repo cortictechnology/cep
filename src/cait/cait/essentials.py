@@ -37,6 +37,7 @@ def get_nlp_models():
     model_list = core.get_nlp_models()
     return {"models": model_list}
 
+
 def get_usb_devices():
     """Get a list of connected usb device
 
@@ -91,6 +92,7 @@ def initialize_component(
     account="default",
     processor="local",
     language="english",
+    device="",
     from_web=False,
 ):
     """Initalization function for different components
@@ -107,7 +109,7 @@ def initialize_component(
     if component_name == "vision":
         success, msg = core.initialize_vision(processor, mode, from_web=from_web)
     elif component_name == "voice":
-        success, msg = core.initialize_voice(mode, account, language)
+        success, msg = core.initialize_voice(mode, account, language, device)
     elif component_name == "nlp":
         success, msg = core.initialize_nlp(mode)
     elif component_name == "control":
@@ -241,6 +243,18 @@ def draw_detected_objects(objects, from_web=False):
         core.draw_detected_objects(objects[0], objects[1], from_web=from_web)
 
 
+def draw_classified_image(names, from_web=False):
+    """Wrapper function to draw image category of camera scene
+    Parameters:
+        names: top-5 categories of the image
+
+    """
+    if isinstance(names, dict):
+        core.draw_classified_image(names["names"], from_web=from_web)
+    else:
+        core.draw_classified_image(names, from_web=from_web)
+
+
 def draw_estimated_body_landmarks(body_landmarks_coordinates, from_web=False):
     """Wrapper function to draw body landmarks to current camera feed
     Parameters:
@@ -299,7 +313,7 @@ def get_stereo_image():
         return None
 
 
-def detect_face(processor="oakd", spatial=False):
+def detect_face(processor, spatial=False):
     """Detects all person faces from camera feed. No need to pass in camera feed explicitly at this level.
 
     Returns:
@@ -315,7 +329,7 @@ def detect_face(processor="oakd", spatial=False):
         return {"success": False}
 
 
-def recognize_face():
+def recognize_face(processor):
     """Recognize the name of person from camera feed. No need to pass in camera feed explicitly at this level.
 
     Returns:
@@ -323,7 +337,7 @@ def recognize_face():
         coordinates (List): coordinates of recognized faces
     """
 
-    names, coordinates = core.recognize_face()
+    names, coordinates = core.recognize_face(processor)
 
     if names is not None and coordinates is not None:
         result = {"success": True, "names": names, "coordinates": coordinates}
@@ -332,7 +346,7 @@ def recognize_face():
         return {"success": False}
 
 
-def add_person(name=None):
+def add_person(processor, name=None):
     """Add a new person into face database, associate the name with the person's face image captured from camera feed.
 
     Parameters:
@@ -344,12 +358,12 @@ def add_person(name=None):
     if name == None:
         return -1
 
-    success = core.add_person(name)
+    success = core.add_person(processor, name)
 
     return success
 
 
-def remove_person(name):
+def remove_person(processor, name):
     """Remove a specific person from database
 
     Parameters:
@@ -358,19 +372,19 @@ def remove_person(name):
     if name == None:
         return -1
 
-    success = core.remove_person(name)
+    success = core.remove_person(processor, name)
 
     return success
 
 
-def detect_objects(spatial=False):
+def detect_objects(processor, spatial=False):
     """detect the object appearing in camera feed
 
     Returns:
         (list): names of the objects
         (list): coordinates of objects
     """
-    objects = core.detect_objects(spatial=spatial)
+    objects = core.detect_objects(processor, spatial=spatial)
 
     if objects is not None:
         names, coordinates = objects
@@ -442,7 +456,6 @@ def classify_image():
         (list): top 5 possible image types
     """
     names = core.classify_image()
-
     if names is not None:
         names = {"success": True, "names": names}
         return names
@@ -491,6 +504,7 @@ def say(text):
 
     return success
 
+
 def create_file_list(directory_path):
     """Read all the files in a directory and return a list
 
@@ -505,11 +519,11 @@ def create_file_list(directory_path):
 
     file_list = core.create_file_list(directory_path)
 
-    return {'file_list': file_list}
+    return {"file_list": file_list}
 
 
 def play_audio(file_path):
-    """Play an audio file 
+    """Play an audio file
 
     Parameters:
         file_path (string): Path to the audio file.

@@ -18,8 +18,7 @@ MAX_TDOA_4 = MIC_DISTANCE_4 / float(SOUND_SPEED)
 
 
 class MicArray(object):
-
-    def __init__(self, rate=16000, channels=8, chunk_size=None):
+    def __init__(self, rate=16000, channels=8, device_idx=-1, chunk_size=None):
         self.pyaudio_instance = pyaudio.PyAudio()
         self.queue = queue.Queue()
         self.quit_event = threading.Event()
@@ -27,18 +26,21 @@ class MicArray(object):
         self.sample_rate = rate
         self.chunk_size = chunk_size if chunk_size else rate / 100
 
-        device_index = None
-        for i in range(self.pyaudio_instance.get_device_count()):
-            dev = self.pyaudio_instance.get_device_info_by_index(i)
-            name = dev['name'].encode('utf-8')
-            print(i, name, dev['maxInputChannels'], dev['maxOutputChannels'])
-            if dev['maxInputChannels'] == self.channels:
-                print('Use {}'.format(name))
-                device_index = i
-                break
+        device_index = device_idx
+        if device_idx == -1:
+            for i in range(self.pyaudio_instance.get_device_count()):
+                dev = self.pyaudio_instance.get_device_info_by_index(i)
+                name = dev["name"].encode("utf-8")
+                print(i, name, dev["maxInputChannels"], dev["maxOutputChannels"])
+                if dev["maxInputChannels"] == self.channels:
+                    print("Use {}".format(name))
+                    device_index = i
+                    break
 
-        if device_index is None:
-            raise Exception('can not find input device with {} channel(s)'.format(self.channels))
+        if device_index == -1:
+            raise Exception(
+                "can not find input device with {} channel(s)".format(self.channels)
+            )
 
         self.stream = self.pyaudio_instance.open(
             input=True,
@@ -59,7 +61,6 @@ class MicArray(object):
         self.queue.queue.clear()
         self.stream.start_stream()
 
-
     def read_chunks(self):
         self.quit_event.clear()
         while not self.quit_event.is_set():
@@ -67,13 +68,15 @@ class MicArray(object):
             if not frames:
                 break
 
-            frames = np.fromstring(frames, dtype='int16')
+            frames = np.fromstring(frames, dtype="int16")
             yield frames
 
     def stop(self):
         self.quit_event.set()
         self.stream.stop_stream()
-        self.queue.put('')
+        self.stream.close()
+        self.pyaudio_instance.terminate()
+        self.queue.put("")
 
     def __enter__(self):
         self.start()
@@ -95,14 +98,22 @@ class MicArray(object):
 
             # buf = np.fromstring(buf, dtype='int16')
             for i, v in enumerate(MIC_GROUP):
-                tau[i], _ = gcc_phat(buf[v[0]::8], buf[v[1]::8], fs=self.sample_rate, max_tau=MAX_TDOA_6P1, interp=1)
+                tau[i], _ = gcc_phat(
+                    buf[v[0] :: 8],
+                    buf[v[1] :: 8],
+                    fs=self.sample_rate,
+                    max_tau=MAX_TDOA_6P1,
+                    interp=1,
+                )
                 theta[i] = math.asin(tau[i] / MAX_TDOA_6P1) * 180 / math.pi
 
             min_index = np.argmin(np.abs(tau))
-            if (min_index != 0 and theta[min_index - 1] >= 0) or (min_index == 0 and theta[MIC_GROUP_N - 1] < 0):
+            if (min_index != 0 and theta[min_index - 1] >= 0) or (
+                min_index == 0 and theta[MIC_GROUP_N - 1] < 0
+            ):
                 best_guess = (theta[min_index] + 360) % 360
             else:
-                best_guess = (180 - theta[min_index])
+                best_guess = 180 - theta[min_index]
 
             best_guess = (best_guess + 120 + min_index * 60) % 360
         elif self.channels == 4:
@@ -112,28 +123,31 @@ class MicArray(object):
             tau = [0] * MIC_GROUP_N
             theta = [0] * MIC_GROUP_N
             for i, v in enumerate(MIC_GROUP):
-                tau[i], _ = gcc_phat(buf[v[0]::4], buf[v[1]::4], fs=self.sample_rate, max_tau=MAX_TDOA_4, interp=1)
+                tau[i], _ = gcc_phat(
+                    buf[v[0] :: 4],
+                    buf[v[1] :: 4],
+                    fs=self.sample_rate,
+                    max_tau=MAX_TDOA_4,
+                    interp=1,
+                )
                 theta[i] = math.asin(tau[i] / MAX_TDOA_4) * 180 / math.pi
 
             if np.abs(theta[0]) < np.abs(theta[1]):
                 if theta[1] > 0:
                     best_guess = (theta[0] + 360) % 360
                 else:
-                    best_guess = (180 - theta[0])
+                    best_guess = 180 - theta[0]
             else:
                 if theta[0] < 0:
                     best_guess = (theta[1] + 360) % 360
                 else:
-                    best_guess = (180 - theta[1])
+                    best_guess = 180 - theta[1]
 
                 best_guess = (best_guess + 90 + 180) % 360
 
-
             best_guess = (-best_guess + 120) % 360
 
-             
         elif self.channels == 2:
             pass
 
         return best_guess
-

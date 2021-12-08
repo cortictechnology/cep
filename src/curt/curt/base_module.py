@@ -142,6 +142,8 @@ class BaseModule:
     def on_message(self, client, userdata, msg):
         data = msg.payload.decode()
         try:
+            if data is None:
+                return
             data = json.loads(data)
             if msg.topic == self.config_channel:
                 if data["dataType"] == "SubscribeTo":
@@ -249,8 +251,8 @@ class BaseModule:
         # Publish and store result data to service queue
         # t1 = time.time()
         worker_name = worker
-        if worker == "webcam_input" or worker == "picam_input":
-            worker_name = "camera_input"
+        #if worker == "webcam_input" or worker == "picam_input":
+        #    worker_name = "camera_input"
         if isinstance(result, tuple):
             msg = {
                 "dataType": "Data",

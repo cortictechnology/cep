@@ -10,6 +10,9 @@ import ast
 import os
 import numpy as np
 
+reset_all = False
+reset_in_progress = False
+
 # Font used in drawing
 ft = cv2.freetype.createFreeType2()
 curt_path = os.getenv("CURT_PATH")
@@ -139,6 +142,8 @@ for line in acc_list:
     except:
         pass
 
+current_camera = ""
+
 startedListen = False
 startedTimer = False
 startTime = None
@@ -149,6 +154,7 @@ current_nlp_model = ""
 
 vision_mode = []
 voice_mode = "offline"
+use_respeaker = False
 
 oakd_nodes = {}
 
@@ -177,6 +183,7 @@ drawing_modes = {
     "Face Emotions": [],
     "Face Mesh": [],
     "Object Detection": [],
+    "Image Classification": [],
     "Hand Landmarks": [],
     "Pose Landmarks": [],
 }

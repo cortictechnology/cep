@@ -8,6 +8,9 @@ sudo mkdir ~/cait_workspace
 sudo cp examples/cait/*.cait ~/cait_workspace
 sudo systemctl restart docker
 rm get-docker.sh
+sudo touch /etc/cron.daily/docker-prune
+sudo bash -c 'printf "#!/bin/bash\ndocker system prune -af  --filter \"until=$((30*24))h\"" > /etc/cron.daily/docker-prune'
+sudo chmod +x /etc/cron.daily/docker-prune
 
 sudo apt update
 sudo sh -c "echo 'dtparam=spi=on' >> /boot/config.txt"
@@ -22,6 +25,7 @@ sudo apt-get install -y libgtk2.0-dev libgtk-3-dev
 sudo apt-get install -y libatlas-base-dev gfortran
 sudo apt-get install -y libhdf5-dev libhdf5-serial-dev libhdf5-103
 sudo apt-get install -y libqtgui4 libqtwebkit4 libqt4-test python3-pyqt5
+sudo apt-get install -y libilmbase-dev libopenexr-dev libgstreamer1.0-dev
 sudo pip3 install opencv-contrib-python==4.5.2.52
 sudo pip3 install -U numpy
 sudo apt-get install npm nodejs -y

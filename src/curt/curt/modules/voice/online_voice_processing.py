@@ -12,6 +12,7 @@ import numpy as np
 import wave
 import base64
 import threading
+import time
 
 
 class OnlineVoiceProcessing(BaseVoiceProcessing):
@@ -19,7 +20,6 @@ class OnlineVoiceProcessing(BaseVoiceProcessing):
         super().__init__()
         self.client = None
         self.config = None
-        self.current_text = ""
 
     def config_module(self, params):
         account_credentials = params["account_crediential"]
@@ -41,35 +41,27 @@ class OnlineVoiceProcessing(BaseVoiceProcessing):
         print("Online account config finished")
         return True
 
-    def cloud_request_thread(self, content):
-        audio = speech.RecognitionAudio(content=content)
-        operation = self.client.long_running_recognize(
-            request={"config": self.config, "audio": audio}
-        )
-        response = operation.result(timeout=90)
-        text = ""
-        for result in response.results:
-            text = result.alternatives[0].transcript
-        self.current_text = text
-
     def run_inference(self, input_data):
         if self.client is not None:
-            content = base64.b64decode(input_data[0])
-            if content != b"":
-                print("Got speech bytes for processing")
-                # print(content)
-                # print("******************Done printing content*******************")
-                cloud_thread = threading.Thread(
-                    target=self.cloud_request_thread, args=(content,), daemon=True
-                )
-                cloud_thread.start()
-            else:
-                text = ""
-                if self.current_text != "":
-                    text = self.current_text
-                    self.current_text = ""
+            if input_data[0] is not None:
+                content = base64.b64decode(input_data[0])
+                if content != b"":
+                    print("Got speech bytes for processing")
+                    audio = speech.RecognitionAudio(content=content)
+                    operation = self.client.long_running_recognize(
+                        request={"config": self.config, "audio": audio}
+                    )
+                    response = operation.result(timeout=90)
+                    text = ""
+                    for result in response.results:
+                        text = result.alternatives[0].transcript
                     print("Returning text:", text)
-                return text
+                    return text
+                else:
+                    return ""
+            else:
+                return ""
+
         else:
             print("Online processing client is not configured.")
             return ""

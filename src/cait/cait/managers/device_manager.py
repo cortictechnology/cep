@@ -60,15 +60,16 @@ class DeviceManager:
                 for cam in TESTED_CAMERAS.keys():
                     if cam in l[0]:
                         resolution = TESTED_CAMERAS[cam]
-                cam_index = l[1][l[1].find('/video')+6:]
-                vinfo = {"device": l[0], "index": cam_index, "resolution": resolution, "time": time.time()}
-                video_devices.append(vinfo)
+                if l[0].find("mmal service 16.1") == -1:
+                    cam_index = l[1][l[1].find('/video')+6:]
+                    vinfo = {"device": l[0][0:-1], "index": cam_index, "resolution": resolution, "time": time.time()}
+                    video_devices.append(vinfo)
                 #logging.info(vinfo)
         picamera_present = os.popen("vcgencmd get_camera").readline()
         picamera_present = picamera_present.replace("supported=", "")
         picamera_present = picamera_present.replace("detected=", "")
         if int(picamera_present[0]) == 1 and int(picamera_present[2]) == 1:
-            vinfo = {"device": 'PiCamera', "index": 99, "resolution": [640,480], "time": time.time()}
+            vinfo = {"device": 'CSI-Camera', "index": 99, "resolution": [640,480], "time": time.time()}
             video_devices.append(vinfo)
         return video_devices
 

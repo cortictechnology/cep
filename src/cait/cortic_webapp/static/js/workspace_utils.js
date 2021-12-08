@@ -147,6 +147,7 @@ function updateFunction(event) {
       }
     }
   }
+
   if (event.type == Blockly.Events.BLOCK_CHANGE) {
     if (event.element == "field") {
       if (block.type == "add_control_hub") {
@@ -198,13 +199,13 @@ function updateFunction(event) {
       }
 
       if (event.oldValue == "on device") {
-        block.getInput("cloud_accounts").setVisible(true);
+        //block.getInput("cloud_accounts").setVisible(true);
         block.getInput("ending").setVisible(true);
         block.getField("language").setVisible(true);
         block.render();
       }
       if (event.newValue == "on device") {
-        block.getInput("cloud_accounts").setVisible(false);
+        //block.getInput("cloud_accounts").setVisible(false);
         block.getInput("ending").setVisible(false);
         block.getField("language").setVisible(false);
         block.render();
@@ -539,6 +540,8 @@ function run_code() {
   //var xml_text = Blockly.Xml.domToText(xml);
   //console.log(xml_text);
   stopCode = false;
+  use_oakd_processing = false;
+  current_camera = "";
   Blockly.JavaScript.addReservedWords('code');
   Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
   Blockly.JavaScript.addReservedWords('highlightBlock');
@@ -546,7 +549,31 @@ function run_code() {
   Blockly.JavaScript.addReservedWords('de_highlightBlock');
   resetStepUi(true);
   try {
+    var ready_to_execute_code = true;
     var code = Blockly.JavaScript.workspaceToCode(workspace);
+    var init_oakd_rgb_idx = code.indexOf("add_rgb_cam_preview_node");
+    var init_pi_rgb_idx = code.indexOf("await cait_init_vision({'index':");
+    if (init_oakd_rgb_idx != -1 && init_pi_rgb_idx != -1) {
+      alert("There are more than one camera block in the program, please only use one camera block");
+      ready_to_execute_code = false;
+    }
+    if (current_camera == "" && code.indexOf('vision') != -1) {
+      alert("You need to add an initialize vision block to the program first");
+      ready_to_execute_code = false
+    }
+
+    if (current_camera == "camera") {
+      if (code.indexOf('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]') != -1) {
+        code = code.replace('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]',
+          '["add_mobilenetssd_node", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]');
+      }
+      if (code.indexOf('["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]') != -1) {
+        code = code.replace('["add_nn_node_pipeline", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]',
+          '["add_nn_node", "face_detection", "face-detection-retail-0004_openvino_2021.2_6shave.blob", 300, 300]');
+      }
+    }
+
+
     save_workspace(true);
     if (code.indexOf("await") != -1) {
       if (code.indexOf("function") != -1) {
@@ -615,7 +642,6 @@ function run_code() {
       }
     }
 
-    var ready_to_execute_code = true;
     for (i in vision_func) {
       if (code.indexOf(vision_func[i]) != -1) {
         if (code.indexOf('init_vision') == -1) {
@@ -623,47 +649,58 @@ function run_code() {
           ready_to_execute_code = false;
           break;
         }
+        else {
+
+        }
       }
     }
-    var missing_oakd_nodes = [];
-    for (i in vision_func_dependent_blocks) {
-      if (code.indexOf(i) != -1) {
-        var dependent_blocks = vision_func_dependent_blocks[i];
-        for (d in dependent_blocks) {
-          var blk = dependent_blocks[d];
-          if (typeof (blk) == "object") {
-            var node_present = false;
-            var missing_node = "";
-            for (j in blk) {
-              if (code.indexOf(blk[j]) != -1) {
-                node_present = true;
+    if (use_oakd_processing) {
+      var missing_oakd_nodes = [];
+      for (i in vision_func_dependent_blocks) {
+        if (code.indexOf(i) != -1) {
+          var function_start = code.indexOf('(', code.indexOf(i));
+          var function_end = code.indexOf(';', function_start);
+          var func_body = code.substring(function_start, function_end);
+          if (func_body.indexOf("'oakd'") != -1) {
+            var dependent_blocks = vision_func_dependent_blocks[i];
+            for (d in dependent_blocks) {
+              var blk = dependent_blocks[d];
+              if (typeof (blk) == "object") {
+                var node_present = false;
+                var missing_node = "";
+                for (j in blk) {
+                  if (code.indexOf(blk[j]) != -1) {
+                    node_present = true;
+                  }
+                  else {
+                    if (missing_node == "") {
+                      missing_node = blk[j];
+                    }
+                    else {
+                      missing_node = missing_node + " or " + blk[j];
+                    }
+                  }
+                }
+                if (!node_present) {
+                  missing_oakd_nodes.push(missing_node);
+                }
               }
               else {
-                if (missing_node == "") {
-                  missing_node = blk[j];
-                }
-                else {
-                  missing_node = missing_node + " or " + blk[j];
+                //console.log(blk);
+                if (code.indexOf(blk) == -1) {
+                  missing_oakd_nodes.push(blk);
                 }
               }
-            }
-            if (!node_present) {
-              missing_oakd_nodes.push(missing_node);
-            }
-          }
-          else {
-            console.log(blk);
-            if (code.indexOf(blk) == -1) {
-              missing_oakd_nodes.push(blk);
             }
           }
         }
       }
+      if (missing_oakd_nodes.length > 0) {
+        alert("You need to add these nodes in the OAK-D initialization block: " + String(missing_oakd_nodes));
+        ready_to_execute_code = false;
+      }
     }
-    if (missing_oakd_nodes.length > 0) {
-      alert("You need to add these nodes in the initialization block: " + String(missing_oakd_nodes));
-      ready_to_execute_code = false;
-    }
+
     for (i in speech_func) {
       if (code.indexOf(speech_func[i]) != -1) {
         if (code.indexOf('init_voice') == -1) {
@@ -715,6 +752,8 @@ async function release_components() {
     type: 'POST',
     data: {}
   });
+  console.log(res);
+  console.log("*********************");
 }
 
 $(document).ready(function () {
@@ -938,6 +977,15 @@ function load_workspace_from_res(res) {
   }
   workspace.setScale(scale);
   workspace.scroll(scroll_x, scroll_y);
+  var init_voice_blks = workspace.getBlocksByType("init_voice");
+  for (i in init_voice_blks) {
+    var blk = init_voice_blks[i];
+    if (blk.getInput('voice_mode').fieldRow[1].value_ == "online") {
+      blk.getInput("ending").setVisible(true);
+      blk.getField("language").setVisible(true);
+      blk.render();
+    } 
+  }
 }
 
 async function load_workspace(from_autosave = false) {

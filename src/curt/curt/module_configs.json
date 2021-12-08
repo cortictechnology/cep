@@ -1,5 +1,7 @@
 {
     "vision": {
+        "webcam_input": "WebcamInput",
+        "picam_input": "PicamInput",
         "oakd_pipeline": "OAKDPipeline",
         "oakd_rgb_camera_input": "OAKDRgbCamera",
         "oakd_stereo_camera_input": "OAKDStereoCamera",
@@ -15,6 +17,9 @@
         "oakd_hand_asl": "OAKDASL",
         "heartrate_measure": "HeartrateMeasure",
         "face_detection": "FaceDetection",
+        "face_recognition": "FaceRecognition",
+        "object_detection": "ObjectDetection",
+        "image_classification": "ImageClassification",
         "opencv_render": "OpenCVRender",
         "oakd_service": {
             "class": "OAKDPipelineService",
@@ -35,12 +40,23 @@
                 "oakd_hand_asl"
             ]
         },
+        "vision_input_service": {
+            "class": "VisionInputService",
+            "friendly_name": "Vision Input Service",
+            "worker_list": [
+                "webcam_input",
+                "picam_input"
+            ]
+        },
         "vision_processor_service": {
             "class": "VisionProcessorService",
             "friendly_name": "Vision Processor Service",
             "worker_list": [
                 "face_detection",
-                "heartrate_measure"
+                "face_recognition",
+                "heartrate_measure",
+                "object_detection",
+                "image_classification"
             ]
         },
         "vision_render_service": {
@@ -53,6 +69,7 @@
     },
     "voice": {
         "respeaker_input": "RespeakerInput",
+        "live_input": "LiveInput",
         "online_voice_processing": "OnlineVoiceProcessing",
         "offline_voice_processing": "OfflineVoiceProcessing",
         "online_voice_generation": "OnlineVoiceGeneration",
@@ -61,6 +78,7 @@
             "class": "VoiceInputService",
             "friendly_name": "Voice Input Service",
             "worker_list": [
+                "live_input",
                 "respeaker_input"
             ]
         },

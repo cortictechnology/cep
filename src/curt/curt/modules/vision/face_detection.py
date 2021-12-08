@@ -13,7 +13,8 @@ import time
 import cv2
 import math
 import os
-
+import logging
+from curt.modules.vision.utils import decode_image_byte
 from curt.modules.vision.tvm_processing import TVMProcessing
 
 class FaceDetection(TVMProcessing):
@@ -31,17 +32,18 @@ class FaceDetection(TVMProcessing):
         self.borderType = cv2.BORDER_CONSTANT
         self.anchors = np.load(os.path.dirname(os.path.realpath(__file__)) + "/../../../models/modules/vision/platforms/rpi32/anchors.npy")
         self.one_face_mode = False
+        self.friendly_name = "face_detection_pi"
 
     
     def config_worker(self, params):
-        if params['Mode'] == "OneFace":
+        if params[0] == "OneFace":
             self.one_face_mode = True
-        elif params['Mode'] == "MultiFace":
+        elif params[0] == "MultiFace":
             self.one_face_mode = False
         return True
 
 
-    def preprocess_input(self, input_data):
+    def preprocess_input(self, params):
         self.top = 0
         self.bottom = 0
         self.right = 0
@@ -49,7 +51,12 @@ class FaceDetection(TVMProcessing):
         self.dim = None
         self.resize_ratio = 1
 
-        img = input_data[0]
+        img = params[0]
+        if img is None:
+            logging.warning("Face detection: " + "imgae is None")
+            return None
+        if isinstance(img, str):
+            img = decode_image_byte(img)
 
         self.img_width = img.shape[1]
         self.img_height = img.shape[0]
@@ -251,8 +258,13 @@ class FaceDetection(TVMProcessing):
 
             return output_detections  
 
+    def process_data(self, preprocessed_data):
+        return self.tvm_process(preprocessed_data)
 
-    def postprocess_result(self, inference_outputs):
+
+    def postprocess_result(self, data):
+        # Only perform single image inference
+        inference_outputs = data[0]
         raw_box_tensor = inference_outputs[0]
         #print(raw_box_tensor)
         raw_score_tensor = inference_outputs[1]
