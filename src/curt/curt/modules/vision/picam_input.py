@@ -63,6 +63,7 @@ class PicamInput(BaseVisionInput):
             if self.stop_capturing:
                 break
         self.camera.close()
+        logging.warning("Closed pi camera")
         self.camera = None
 
     def capture_image(self, data):

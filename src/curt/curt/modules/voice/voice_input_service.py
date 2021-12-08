@@ -32,5 +32,7 @@ class VoiceInputService(BaseService):
                     return worker.pause_recording()
                 elif processing_data[0] == "resume":
                     return worker.resume_recording()
+                elif processing_data[0] == "release":
+                    return worker.release_input_handler()
         except Exception as e:
             logging.error(traceback.format_exc())

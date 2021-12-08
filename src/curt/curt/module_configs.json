@@ -69,6 +69,7 @@
     },
     "voice": {
         "respeaker_input": "RespeakerInput",
+        "live_input": "LiveInput",
         "online_voice_processing": "OnlineVoiceProcessing",
         "offline_voice_processing": "OfflineVoiceProcessing",
         "online_voice_generation": "OnlineVoiceGeneration",
@@ -77,6 +78,7 @@
             "class": "VoiceInputService",
             "friendly_name": "Voice Input Service",
             "worker_list": [
+                "live_input",
                 "respeaker_input"
             ]
         },

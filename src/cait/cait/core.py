@@ -6,6 +6,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 import os
 import sys
+
 curt_path = os.getenv("CURT_PATH")
 sys.path.insert(0, curt_path)
 from curt.command import CURTCommands
@@ -60,18 +61,22 @@ while ret != True:
     time.sleep(1)
     ret = connect_mqtt(hearbeat_client, broker_address)
 
+
 def heartbeat_func():
     global hearbeat_client
     device_info = {"hostname": os.uname()[1].lower(), "host_ip": get_ip_address()}
     while True:
-        hearbeat_client.publish("cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1)
-        hearbeat_client.publish("cait/output/device_info", json.dumps(device_info), qos=1)
+        hearbeat_client.publish(
+            "cait/output/" + os.uname()[1].lower() + "/system_status", "CAIT UP", qos=1
+        )
+        hearbeat_client.publish(
+            "cait/output/device_info", json.dumps(device_info), qos=1
+        )
 
         time.sleep(2)
 
-heartbeat_thread = threading.Thread(
-    target=heartbeat_func, daemon=True
-)
+
+heartbeat_thread = threading.Thread(target=heartbeat_func, daemon=True)
 heartbeat_thread.start()
 
 logging.warning("*********Core heartbeat thread started*********")
@@ -82,21 +87,26 @@ nlp_dispatch_queue = queue.Queue()
 control_dispatch_queue = queue.Queue()
 smart_home_dispatch_queue = queue.Queue()
 
+
 def dispatch_func(dispatch_queue):
     while True:
         task_data = dispatch_queue.get()
-        task_func = task_data['function']
-        task_args = task_data['args']
+        task_func = task_data["function"]
+        task_args = task_data["args"]
         task_func(task_args)
+
 
 def get_video_devices():
     return device_manager.get_video_devices()
 
+
 def get_usb_devices():
     return device_manager.get_usb_devices()
 
+
 def get_audio_devices():
     return device_manager.get_audio_devices()
+
 
 def get_control_devices():
     control_devices = device_manager.get_control_devices()
@@ -110,9 +120,6 @@ def get_control_devices():
     return control_devices
 
 
-def test_camera(index):
-    pass
-    
 def initialize_vision(processor="local", mode=[], from_web=False):
     global current_camera
     global oakd_nodes
@@ -174,10 +181,13 @@ def initialize_vision(processor="local", mode=[], from_web=False):
         success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
-            return False, "Failed to initialzie oakd pipeline, please check if the device is connected."
+            return (
+                False,
+                "Failed to initialzie oakd pipeline, please check if the device is connected.",
+            )
     elif processor == "cpu":
         success = False
-        if mode['index'] != -1 and mode['index'] != 99:
+        if mode["index"] != -1 and mode["index"] != 99:
             current_video_worker = CURTCommands.get_worker(
                 full_domain_name + "/vision/vision_input_service/webcam_input"
             )
@@ -190,10 +200,15 @@ def initialize_vision(processor="local", mode=[], from_web=False):
             current_camera = "webcam"
             config_handler = CURTCommands.config_worker(
                 current_video_worker,
-                {"camera_index": mode['index'], "capture_width": 640, "capture_height": 480, "reset": False},
+                {
+                    "camera_index": mode["index"],
+                    "capture_width": 640,
+                    "capture_height": 480,
+                    "reset": False,
+                },
             )
             success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
-        elif mode['index'] == 99:
+        elif mode["index"] == 99:
             current_video_worker = CURTCommands.get_worker(
                 full_domain_name + "/vision/vision_input_service/picam_input"
             )
@@ -211,18 +226,78 @@ def initialize_vision(processor="local", mode=[], from_web=False):
             success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
         if not success:
             vision_initialized = False
-            return False, "Failed to initialize local camera, please check if the webcam or csi-camera is connected."
+            return (
+                False,
+                "Failed to initialize local camera, please check if the webcam or csi-camera is connected.",
+            )
     vision_initialized = True
     stream_thread = threading.Thread(target=streaming_func, daemon=True)
     stream_thread.start()
     return True, "OK"
 
 
+def test_camera(index):
+    processor = "local"
+    mode = []
+    if index == "myriad":
+        processor = "oakd"
+        mode = [["add_rgb_cam_node", 640, 360], ["add_rgb_cam_preview_node"]]
+    else:
+        processor = "cpu"
+        mode = {"index": index}
+    return initialize_vision(processor, mode, True)
+
+
 def deactivate_vision():
     global vision_initialized
     global vision_mode
+    global stream_thread
+    global current_camera
+    global drawing_modes
+    global spatial_face_detection
+    global spatial_object_detection
     vision_initialized = False
+    spatial_face_detection = False
+    spatial_object_detection = False
     vision_mode = []
+    if stream_thread is not None:
+        stream_thread.join()
+    drawing_modes = {
+        "Depth Mode": False,
+        "Face Detection": [],
+        "Face Recognition": [],
+        "Face Emotions": [],
+        "Face Mesh": [],
+        "Object Detection": [],
+        "Image Classification": [],
+        "Hand Landmarks": [],
+        "Pose Landmarks": [],
+    }
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/oakd_service/oakd_pipeline"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            [["reset"]],
+        )
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/webcam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+    video_worker = CURTCommands.get_worker(
+        full_domain_name + "/vision/vision_input_service/picam_input"
+    )
+    if video_worker is not None:
+        config_handler = CURTCommands.config_worker(
+            video_worker,
+            {"reset": True},
+        )
+    current_camera = ""
     return True
 
 
@@ -245,11 +320,14 @@ def initialize_voice(mode="online", account="default", language="english"):
     speaker_attached = False
     audio_devices = get_audio_devices()
     for device in audio_devices:
-        if device['type'] == 'Output':
+        if device["type"] == "Output":
             speaker_attached = True
     if not speaker_attached:
         voice_initialized = False
-        return False, "No audio output deveice is detected, or connected device is not supported",
+        return (
+            False,
+            "No audio output deveice is detected, or connected device is not supported",
+        )
 
     if language == "english":
         processing_language = "en-UK"
@@ -300,10 +378,15 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice generation is detected, or connected device is not supported",
         )
-    config_handler = CURTCommands.config_worker(voice_input_worker, {"audio_in_index": 0})
+    config_handler = CURTCommands.config_worker(
+        voice_input_worker, {"audio_in_index": 0}
+    )
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
-        return False, "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again."
+        return (
+            False,
+            "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again.",
+        )
     CURTCommands.request(voice_input_worker, params=["start"])
     # CURTCommands.start_voice_recording(voice_input_worker)
     if mode == "online":
@@ -369,7 +452,7 @@ def initialize_control(hub_address):
         return False, "No control worker available"
     if isinstance(hub_address, list):
         hub_address = hub_address[0]
-        address = hub_address[hub_address.find(": ") + 2:]
+        address = hub_address[hub_address.find(": ") + 2 :]
     else:
         address = hub_address[hub_address.find(": ") + 2 : -2]
     config_handler = CURTCommands.config_worker(
@@ -397,6 +480,7 @@ def deactivate_control():
     pid_controller = None
     return True
 
+
 def initialize_smarthome():
     global smarthome_initialized
     ha_worker = CURTCommands.get_worker(
@@ -406,7 +490,10 @@ def initialize_smarthome():
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
         smarthome_initialized = False
-        return False, "Failed to initialize smart home woker, check the connection with home assistant"
+        return (
+            False,
+            "Failed to initialize smart home woker, check the connection with home assistant",
+        )
     smarthome_initialized = True
     return True, "OK"
 
@@ -423,15 +510,8 @@ def change_module_parameters(parameter_name, value):
     pass
 
 
-def get_camera_image(for_streaming=False):
+def get_camera_worker():
     global current_camera
-    global oakd_nodes
-    global vision_initialized
-    if not vision_initialized:
-        logging.info(
-            "Please call initialize_vision() function before using the vision module"
-        )
-        return False, "Vision module is not initialized"
     worker = None
     if current_camera == "oakd":
         worker = CURTCommands.get_worker(
@@ -445,9 +525,31 @@ def get_camera_image(for_streaming=False):
         worker = CURTCommands.get_worker(
             full_domain_name + "/vision/vision_input_service/picam_input"
         )
+    else:
+        logging.warning("Current worker does not fit into any supported category")
+    return worker
+
+
+def get_camera_image(for_streaming=False):
+    global current_camera
+    global oakd_nodes
+    global vision_initialized
+    if not vision_initialized:
+        logging.info(
+            "Please call initialize_vision() function before using the vision module"
+        )
+        return False, "Vision module is not initialized"
+    retry_count = 0
+    worker = get_camera_worker()
+    while worker is None:
+        worker = get_camera_worker()
+        retry_count += 1
+        if retry_count > 3:
+            break
+
     if worker is None:
         logging.warning("No rgb camera worker found.")
-        return None
+        return False, "No rgb camera worker found."
     rgb_frame_handler = None
     frame = None
     rgb_frame_handler = CURTCommands.request(worker, params=["get_rgb_frame"])
@@ -544,6 +646,7 @@ def draw_detected_objects(names, coordinates, from_web=False):
     else:
         user_mode = "code"
     drawing_modes["Object Detection"] = [names, coordinates]
+
 
 def draw_classified_image(names, from_web=False):
     global drawing_modes
@@ -712,7 +815,8 @@ def recognize_face(processor, for_streaming=False):
         else:
             if current_camera != "oakd":
                 face_detection_handler = CURTCommands.request(
-                    face_detection_worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                    face_detection_worker,
+                    params=["detect_face", 0.6, False, rgb_frame_handler],
                 )
             else:
                 face_detection_handler = CURTCommands.request(
@@ -807,11 +911,13 @@ def add_person(processor, name):
             else:
                 if current_camera != "oakd":
                     face_detection_handler = CURTCommands.request(
-                        face_detection_worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                        face_detection_worker,
+                        params=["detect_face", 0.6, False, rgb_frame_handler],
                     )
                 else:
                     face_detection_handler = CURTCommands.request(
-                        face_detection_worker, params=["detect_face_pipeline", 0.6, False]
+                        face_detection_worker,
+                        params=["detect_face_pipeline", 0.6, False],
                     )
         else:
             face_detection_handler = CURTCommands.request(
@@ -916,7 +1022,7 @@ def detect_objects(processor, spatial=False, for_streaming=False):
         objects = CURTCommands.get_result(object_detection_handler, for_streaming)[
             "dataValue"
         ]["data"]
-        #logging.warning("Objects: " + str(objects))
+        # logging.warning("Objects: " + str(objects))
         if not isinstance(objects, list):
             objects = []
     width = 640
@@ -977,9 +1083,9 @@ def classify_image(for_streaming=False):
         image_classification_handler = CURTCommands.request(
             worker, params=[rgb_frame_handler]
         )
-        image_classes = CURTCommands.get_result(image_classification_handler, for_streaming)["dataValue"][
-            "data"
-        ]
+        image_classes = CURTCommands.get_result(
+            image_classification_handler, for_streaming
+        )["dataValue"]["data"]
         if image_classes is None:
             image_classes = []
     return image_classes
@@ -1025,7 +1131,8 @@ def face_emotions_estimation(for_streaming=False):
     else:
         if current_camera != "oakd":
             face_detection_handler = CURTCommands.request(
-                face_detection_worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                face_detection_worker,
+                params=["detect_face", 0.6, False, rgb_frame_handler],
             )
         else:
             face_detection_handler = CURTCommands.request(
@@ -1047,7 +1154,7 @@ def face_emotions_estimation(for_streaming=False):
         ]["data"]
         if emotions is None:
             return []
-            
+
         for emotion in emotions:
             raw_emtotions = emotion[0]
             emo = {}
@@ -1105,7 +1212,8 @@ def facemesh_estimation(for_streaming=False):
     else:
         if current_camera != "oakd":
             face_detection_handler = CURTCommands.request(
-                face_detection_worker, params=["detect_face", 0.6, False, rgb_frame_handler]
+                face_detection_worker,
+                params=["detect_face", 0.6, False, rgb_frame_handler],
             )
         else:
             face_detection_handler = CURTCommands.request(
@@ -1247,6 +1355,7 @@ def get_body_landmarks(for_streaming=False):
 
     return body_ladmarks
 
+
 def say(message_topic, entities=[]):
     global voice_mode
     message = message_topic
@@ -1275,12 +1384,19 @@ def say(message_topic, entities=[]):
     CURTCommands.request(voice_input_worker, params=["resume"])
     return True
 
+
 def create_file_list(directory_path):
-    file_list = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]    
+    file_list = [
+        f
+        for f in os.listdir(directory_path)
+        if os.path.isfile(os.path.join(directory_path, f))
+    ]
     return file_list
+
 
 audio_playing = False
 current_audio_file = ""
+
 
 def play_audio_func():
     global audio_playing
@@ -1296,8 +1412,10 @@ def play_audio_func():
         else:
             time.sleep(0.001)
 
-#play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
-#play_audio_thread.start()
+
+# play_audio_thread = threading.Thread(target=play_audio_func, daemon=True)
+# play_audio_thread.start()
+
 
 def play_audio(file_path):
     global audio_playing
@@ -1306,8 +1424,9 @@ def play_audio(file_path):
         audio_playing = True
         out = os.system("aplay " + file_path)
         audio_playing = False
-        #current_audio_file = file_path
+        # current_audio_file = file_path
     return True
+
 
 def listen():
     global voice_mode
@@ -1690,12 +1809,9 @@ def get_devices(device_type):
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
         return []
-    smarthome_params = {
-        "control_type": "get_devices",
-        "parameter": device_type
-    }
+    smarthome_params = {"control_type": "get_devices", "parameter": device_type}
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
-    devices = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]    
+    devices = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
     return devices
 
 
@@ -1711,9 +1827,9 @@ def control_light(device_name, operation, parameter=None):
     )
     smarthome_params = {
         "control_type": "light",
-        'device_name': device_name,
-        'operation': operation,
-        "parameter": parameter
+        "device_name": device_name,
+        "operation": operation,
+        "parameter": parameter,
     }
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
     result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
@@ -1732,8 +1848,8 @@ def control_media_player(device_name, operation):
     )
     smarthome_params = {
         "control_type": "media_player",
-        'device_name': device_name,
-        'operation': operation
+        "device_name": device_name,
+        "operation": operation,
     }
     smarthome_handler = CURTCommands.request(ha_worker, params=[smarthome_params])
     result = CURTCommands.get_result(smarthome_handler)["dataValue"]["data"]
@@ -1773,7 +1889,9 @@ def streaming_func():
                             camera_img, drawing_modes["Face Emotions"]
                         )
                     if drawing_modes["Face Mesh"] != []:
-                        camera_img = draw_facemesh(camera_img, drawing_modes["Face Mesh"])
+                        camera_img = draw_facemesh(
+                            camera_img, drawing_modes["Face Mesh"]
+                        )
                     if drawing_modes["Object Detection"] != []:
                         camera_img = draw_object_detection(
                             camera_img,
@@ -1781,7 +1899,9 @@ def streaming_func():
                             drawing_modes["Object Detection"][1],
                         )
                     if drawing_modes["Image Classification"] != []:
-                        camera_img = draw_image_classification(camera_img, drawing_modes["Image Classification"])
+                        camera_img = draw_image_classification(
+                            camera_img, drawing_modes["Image Classification"]
+                        )
                     if drawing_modes["Pose Landmarks"] != []:
                         camera_img = draw_body_landmarks(
                             camera_img, drawing_modes["Pose Landmarks"]
@@ -1802,9 +1922,13 @@ def streaming_func():
                 print("Stream thread exiting")
                 break
     except Exception as e:
-        logging.warning("***************STREAMING THREAD EXCEPTION:*************************")
+        logging.warning(
+            "***************STREAMING THREAD EXCEPTION:*************************"
+        )
         logging.warning(str(e))
-        logging.warning("*******************************************************************")
+        logging.warning(
+            "*******************************************************************"
+        )
 
 
 def reset_modules():
@@ -1814,6 +1938,7 @@ def reset_modules():
     global control_initialized
     global smarthome_initialized
     global vision_mode
+    global current_camera
     global stream_thread
     global pid_controller
     global drawing_modes

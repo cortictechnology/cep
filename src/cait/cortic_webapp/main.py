@@ -272,7 +272,7 @@ def getusbdev():
     usb_devices = []
     for udev in devices:
         if udev["tag"] == "Intel Movidius MyriadX":
-            dev = {"tag": udev["tag"], "device": udev["device"]}
+            dev = {"tag": "OpenCV AI Kit", "device": udev["device"]}
             usb_devices.append(dev)
     return jsonify(usb_devices)
 
@@ -731,7 +731,7 @@ def release_components():
     logging.warning("Releasing components")
     if current_vision_user == current_user.id:
         current_vision_user = ""
-        success = essentials.deactivate_vision()
+        # success = essentials.deactivate_vision()
     if current_voice_user == current_user.id:
         current_voice_user = ""
         success = essentials.deactivate_voice()

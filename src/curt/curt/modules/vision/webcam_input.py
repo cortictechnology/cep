@@ -61,5 +61,6 @@ class WebcamInput(BaseVisionInput):
         if self.input_handler is not None:
             self.input_handler.release()
             self.input_handler = None
+            logging.warning("Released USB webcam")
         else:
             logging.warning("Please configure a camera device first")

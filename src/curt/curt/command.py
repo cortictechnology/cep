@@ -36,12 +36,14 @@ class CURTCommands:
         retrieved_worker = None
         worker_identifiers = worker.split("/")
         all_modules = CURTCommands.get_modules()
-        selected_modules = all_modules[worker_identifiers[1]]
-        for module in selected_modules:
-            if worker_identifiers[0] in module.config_channel:
-                for worker in module.worker_list:
-                    if worker.name == worker_identifiers[-1]:
-                        retrieved_worker = worker
+        if worker_identifiers[1] in all_modules:
+            selected_modules = all_modules[worker_identifiers[1]]
+            for module in selected_modules:
+                if worker_identifiers[0] in module.config_channel:
+                    for worker in module.worker_list:
+                        if worker.name == worker_identifiers[-1]:
+                            retrieved_worker = worker
+
         return retrieved_worker
 
     @staticmethod
@@ -50,13 +52,15 @@ class CURTCommands:
         if isinstance(worker, str):
             selected_worker = CURTCommands.base_command.select_worker(worker)
         if isinstance(params, dict):
-            sync_handler = params['sync_handler']
+            sync_handler = params["sync_handler"]
             return_handler = None
             for window in params:
                 if window != "sync_handler":
                     for handler in params[window]:
                         config = {window: [handler]}
-                        rendering_handler = CURTCommands.render(selected_worker, config=config)
+                        rendering_handler = CURTCommands.render(
+                            selected_worker, config=config
+                        )
                         if handler.guid == sync_handler.guid:
                             return_handler = rendering_handler
             return return_handler
@@ -82,7 +86,6 @@ class CURTCommands:
                 handler.output_channel
             )
         return handler
-
 
     @staticmethod
     def config_worker(worker, config_params):

@@ -18,49 +18,59 @@ import numpy as np
 from six.moves import queue
 import time, logging
 
+
 class Audio(object):
     """Streams raw audio from microphone. Data is received in a separate thread, and stored in a buffer, to be read from."""
 
     FORMAT = pyaudio.paInt16
     # Network/VAD rate-space
     RATE_PROCESS = 16000
-    CHANNELS = 1
-    BLOCKS_PER_SECOND = 50
 
-    def __init__(self, mic_index, callback=None, device=None, input_rate=RATE_PROCESS, file=None):
+    def __init__(
+        self,
+        mic_index,
+        callback=None,
+        device=None,
+        input_rate=RATE_PROCESS,
+        file=None,
+        blocks_per_second=50,
+        channels=1,
+    ):
         def proxy_callback(in_data, frame_count, time_info, status):
-            #pylint: disable=unused-argument
+            # pylint: disable=unused-argument
             if self.chunk is not None:
                 in_data = self.wf.readframes(self.chunk)
             callback(in_data)
             return (None, pyaudio.paContinue)
-        if callback is None: callback = lambda in_data: self.buffer_queue.put(in_data)
+
+        if callback is None:
+            callback = lambda in_data: self.buffer_queue.put(in_data)
         self.buffer_queue = queue.Queue()
         self.device = device
         self.input_rate = input_rate
         self.sample_rate = self.RATE_PROCESS
-        self.block_size = int(self.RATE_PROCESS / float(self.BLOCKS_PER_SECOND))
-        self.block_size_input = int(self.input_rate / float(self.BLOCKS_PER_SECOND))
+        self.block_size = int(self.RATE_PROCESS / float(blocks_per_second))
+        self.block_size_input = int(self.input_rate / float(blocks_per_second))
         self.mic_index = mic_index
         self.pa = pyaudio.PyAudio()
 
         kwargs = {
-            'format': self.FORMAT,
-            'channels': self.CHANNELS,
-            'rate': self.input_rate,
-            'input': True,
-            'frames_per_buffer': self.block_size_input,
-            'stream_callback': proxy_callback,
-            'input_device_index' : self.mic_index
+            "format": self.FORMAT,
+            "channels": channels,
+            "rate": self.input_rate,
+            "input": True,
+            "frames_per_buffer": self.block_size_input,
+            "stream_callback": proxy_callback,
+            "input_device_index": self.mic_index,
         }
 
         self.chunk = None
         # if not default device
         if self.device:
-            kwargs['input_device_index'] = self.device
+            kwargs["input_device_index"] = self.device
         elif file is not None:
             self.chunk = 320
-            self.wf = wave.open(file, 'rb')
+            self.wf = wave.open(file, "rb")
 
         self.stream = self.pa.open(**kwargs)
         self.stream.start_stream()
@@ -82,8 +92,7 @@ class Audio(object):
 
     def read_resampled(self):
         """Return a block of audio data resampled to 16000hz, blocking if necessary."""
-        return self.resample(data=self.buffer_queue.get(),
-                             input_rate=self.input_rate)
+        return self.resample(data=self.buffer_queue.get(), input_rate=self.input_rate)
 
     def read(self):
         """Return a block of audio data, blocking if necessary."""
@@ -94,11 +103,13 @@ class Audio(object):
         self.stream.close()
         self.pa.terminate()
 
-    frame_duration_ms = property(lambda self: 1000 * self.block_size // self.sample_rate)
+    frame_duration_ms = property(
+        lambda self: 1000 * self.block_size // self.sample_rate
+    )
 
     def write_wav(self, filename, data):
         logging.info("write wav %s", filename)
-        wf = wave.open(filename, 'wb')
+        wf = wave.open(filename, "wb")
         wf.setnchannels(self.CHANNELS)
         # wf.setsampwidth(self.pa.get_sample_size(FORMAT))
         assert self.FORMAT == pyaudio.paInt16
@@ -111,9 +122,26 @@ class Audio(object):
 class VADAudio(Audio):
     """Filter & segment audio with voice activity detection."""
 
-    def __init__(self, mic_index, aggressiveness=3, device=None, input_rate=None, file=None):
-        super().__init__(mic_index, device=device, input_rate=input_rate, file=file)
+    def __init__(
+        self,
+        mic_index,
+        aggressiveness=3,
+        device=None,
+        input_rate=None,
+        file=None,
+        blocks_per_second=50,
+        channels=1,
+    ):
+        super().__init__(
+            mic_index,
+            device=device,
+            input_rate=input_rate,
+            file=file,
+            blocks_per_second=blocks_per_second,
+            channels=channels,
+        )
         self.vad = webrtcvad.Vad(aggressiveness)
+        self.channels = channels
 
     def frame_generator(self):
         """Generator that yields all audio frames from microphone."""
@@ -126,11 +154,12 @@ class VADAudio(Audio):
 
     def vad_collector(self, padding_ms=300, ratio=0.75, frames=None):
         """Generator that yields series of consecutive audio frames comprising each utterence, separated by yielding a single None.
-            Determines voice activity by ratio of frames in padding_ms. Uses a buffer to include padding_ms prior to being triggered.
-            Example: (frame, ..., frame, None, frame, ..., frame, None, ...)
-                      |---utterence---|        |---utterence---|
+        Determines voice activity by ratio of frames in padding_ms. Uses a buffer to include padding_ms prior to being triggered.
+        Example: (frame, ..., frame, None, frame, ..., frame, None, ...)
+                  |---utterence---|        |---utterence---|
         """
-        if frames is None: frames = self.frame_generator()
+        if frames is None:
+            frames = self.frame_generator()
         num_padding_frames = padding_ms // self.frame_duration_ms
         ring_buffer = collections.deque(maxlen=num_padding_frames)
         triggered = False
@@ -138,7 +167,14 @@ class VADAudio(Audio):
         for frame in frames:
             if len(frame) < 640:
                 return
-            is_speech = self.vad.is_speech(frame, self.sample_rate)
+            is_speech = False
+            if self.channels > 1:
+                frame = np.fromstring(frame, dtype="int16")
+                is_speech = self.vad.is_speech(
+                    frame[0 :: self.channels].tobytes(), self.sample_rate
+                )
+            else:
+                is_speech = self.vad.is_speech(frame, self.sample_rate)
 
             if not triggered:
                 ring_buffer.append((frame, is_speech))
@@ -157,4 +193,3 @@ class VADAudio(Audio):
                     triggered = False
                     yield None
                     ring_buffer.clear()
-
