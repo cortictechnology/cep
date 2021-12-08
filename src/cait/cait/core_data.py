@@ -10,6 +10,8 @@ import ast
 import os
 import numpy as np
 
+reset_all = False
+
 # Font used in drawing
 ft = cv2.freetype.createFreeType2()
 curt_path = os.getenv("CURT_PATH")
@@ -151,6 +153,7 @@ current_nlp_model = ""
 
 vision_mode = []
 voice_mode = "offline"
+use_respeaker = False
 
 oakd_nodes = {}
 

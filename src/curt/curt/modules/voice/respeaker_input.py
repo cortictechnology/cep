@@ -40,6 +40,7 @@ class RespeakerInput(BaseVoiceInput):
         else:
             self.audio_index = params["audio_in_index"]
             logging.warning("Creating VADAudio")
+            logging.warning(str(self.audio_index))
             self.input_handler = VADAudio(
                 self.audio_index,
                 aggressiveness=3,
@@ -49,36 +50,45 @@ class RespeakerInput(BaseVoiceInput):
             )
             return True
 
+    def recording_func(self):
+        speech_chunks = []
+        frames = self.input_handler.vad_collector()
+        logging.warning("Recording now")
+        for frame in frames:
+            if not self.started_recording:
+                break
+            if frame is not None:
+                speech_chunks.append(np.frombuffer(frame, np.int16))
+            else:
+                logging.warning("Recording ended")
+                speech = b""
+                speech = speech.join(speech_chunks)
+                self.encoded_speech = base64.b64encode(speech)
+                break
+
     def get_current_recording(self):
         logging.warning("Call get recording function")
         if self.audio_index != -1:
             if not self.started_recording:
                 self.started_recording = True
-                speech_chunks = []
-                frames = self.input_handler.vad_collector()
-                logging.warning("Recording now")
-                for frame in frames:
-                    if frame is not None:
-                        speech_chunks.append(np.frombuffer(frame, np.int16))
-                    else:
-                        logging.warning("Recording ended")
-                        # self.input_handler.destroy()
-                        self.started_recording = False
-                        speech = b""
-                        speech = speech.join(speech_chunks)
-                        encoded_speech = base64.b64encode(speech)
-                        return encoded_speech.decode("ascii")
-                return b""
+                self.encoded_speech = None
+                self.recording_thread = threading.Thread(
+                    target=self.recording_func, daemon=True
+                )
+                self.recording_thread.start()
             else:
+                if self.encoded_speech is not None:
+                    self.recording_thread = None
+                    self.started_recording = False
+                    return self.encoded_speech.decode("ascii")
                 print("already recording, pass")
-                return b""
+                return base64.b64encode(b"").decode("ascii")
         else:
             logging.warning("No audio input device is configured")
-            return b""
+            return base64.b64encode(b"").decode("ascii")
 
     def pause_recording(self):
         self.started_recording = False
-        self.speech_chunks.clear()
         return True
 
     def release_input_handler(self):

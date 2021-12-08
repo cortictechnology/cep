@@ -198,13 +198,13 @@ function updateFunction(event) {
       }
 
       if (event.oldValue == "on device") {
-        block.getInput("cloud_accounts").setVisible(true);
+        //block.getInput("cloud_accounts").setVisible(true);
         block.getInput("ending").setVisible(true);
         block.getField("language").setVisible(true);
         block.render();
       }
       if (event.newValue == "on device") {
-        block.getInput("cloud_accounts").setVisible(false);
+        //block.getInput("cloud_accounts").setVisible(false);
         block.getInput("ending").setVisible(false);
         block.getField("language").setVisible(false);
         block.render();
@@ -556,12 +556,10 @@ function run_code() {
       alert("There are more than one camera block in the program, please only use one camera block");
       ready_to_execute_code = false;
     }
-    if (current_camera == "") {
+    if (current_camera == "" && code.indexOf('vision') != -1) {
       alert("You need to add an initialize vision block to the program first");
       ready_to_execute_code = false
     }
-
-    console.log(code.indexOf('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]'));
 
     if (current_camera == "camera") {
       if (code.indexOf('["add_mobilenetssd_node_pipeline", "object_detection", "ssdlite_mbv2_coco.blob", 300, 300, 0.5]') != -1) {

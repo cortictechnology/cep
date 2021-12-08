@@ -695,9 +695,10 @@ def initialize_component():
         account = current_user.id
     processor = request.form.get("processor")
     language = request.form.get("language")
+    device = request.form.get("device")
 
     success, msg = essentials.initialize_component(
-        component_name, mode, account, processor, language, from_web=True
+        component_name, mode, account, processor, language, device, from_web=True
     )
     if success == False:
         result = {"success": success, "error": msg}

@@ -131,6 +131,8 @@ def initialize_vision(processor="local", mode=[], from_web=False):
     global spatial_face_detection
     global spatial_object_detection
     global user_mode
+    global reset_all
+    reset_all = False
     drawing_modes = {
         "Depth Mode": False,
         "Face Detection": [],
@@ -314,9 +316,14 @@ def get_nlp_models():
     return model_list
 
 
-def initialize_voice(mode="online", account="default", language="english"):
+def initialize_voice(
+    mode="online", account="default", language="english", input_device=""
+):
     global voice_initialized
     global voice_mode
+    global use_respeaker
+    global reset_all
+    reset_all = False
     speaker_attached = False
     audio_devices = get_audio_devices()
     for device in audio_devices:
@@ -328,7 +335,13 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No audio output deveice is detected, or connected device is not supported",
         )
-
+    logging.warning(str(input_device) + "*******************")
+    if input_device == "":
+        voice_initialized = False
+        return (
+            False,
+            "No audio input deveice is detected, or connected device is not supported",
+        )
     if language == "english":
         processing_language = "en-UK"
         generation_language = "en"
@@ -343,9 +356,20 @@ def initialize_voice(mode="online", account="default", language="english"):
         generation_accents = ""
     voice_generation_worker = None
     voice_processing_worker = None
-    voice_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/respeaker_input"
-    )
+    index = int(input_device[0 : input_device.find(":")])
+    channel_count = 1
+    voice_input_worker = None
+    if input_device.find("seeed") != -1:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/respeaker_input"
+        )
+        use_respeaker = True
+        channel_count = 4
+    else:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/live_input"
+        )
+        use_respeaker = False
     voice_processing_worker = None
     if mode == "online":
         voice_mode = "online"
@@ -378,8 +402,9 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice generation is detected, or connected device is not supported",
         )
+    logging.warning("Audio input index:" + str(index))
     config_handler = CURTCommands.config_worker(
-        voice_input_worker, {"audio_in_index": 0}
+        voice_input_worker, {"audio_in_index": index}
     )
     success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
     if not success:
@@ -387,7 +412,7 @@ def initialize_voice(mode="online", account="default", language="english"):
             False,
             "No voice input device connected. Please connect the Respeaker 4 mic array HAT and try again.",
         )
-    CURTCommands.request(voice_input_worker, params=["start"])
+    # CURTCommands.request(voice_input_worker, params=["start"])
     # CURTCommands.start_voice_recording(voice_input_worker)
     if mode == "online":
         curt_path = os.getenv("CURT_PATH")
@@ -400,7 +425,7 @@ def initialize_voice(mode="online", account="default", language="english"):
                 "account_crediential": account_info,
                 "language": processing_language,
                 "sample_rate": 16000,
-                "channel_count": 4,
+                "channel_count": channel_count,
             },
         )
         success = CURTCommands.get_result(config_handler)["dataValue"]["data"]
@@ -427,6 +452,8 @@ def deactivate_voice():
 def initialize_nlp(mode="english_default"):
     global nlp_initialized
     global current_nlp_model
+    global reset_all
+    reset_all = False
     rasa_intent_worker = CURTCommands.get_worker(
         full_domain_name + "/nlp/nlp_intent_classify_service/rasa_intent_classifier"
     )
@@ -445,6 +472,8 @@ def deactivate_nlp():
 
 def initialize_control(hub_address):
     global control_initialized
+    global reset_all
+    reset_all = False
     robot_inventor_control_worker = CURTCommands.get_worker(
         full_domain_name + "/control/control_service/robot_inventor_control"
     )
@@ -483,6 +512,8 @@ def deactivate_control():
 
 def initialize_smarthome():
     global smarthome_initialized
+    global reset_all
+    reset_all = False
     ha_worker = CURTCommands.get_worker(
         full_domain_name + "/smarthome/smarthome_service/ha_provider"
     )
@@ -500,6 +531,8 @@ def initialize_smarthome():
 
 def initialize_pid(kp, ki, kd):
     global pid_controller
+    global reset_all
+    reset_all = False
     if pid_controller is None:
         pid_controller = PID(kP=kp, kI=ki, kD=kd)
         pid_controller.initialize()
@@ -1430,9 +1463,16 @@ def play_audio(file_path):
 
 def listen():
     global voice_mode
-    voice_input_worker = CURTCommands.get_worker(
-        full_domain_name + "/voice/voice_input_service/respeaker_input"
-    )
+    global use_respeaker
+    voice_input_worker = None
+    if use_respeaker:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/respeaker_input"
+        )
+    else:
+        voice_input_worker = CURTCommands.get_worker(
+            full_domain_name + "/voice/voice_input_service/live_input"
+        )
     if voice_mode == "online":
         voice_generation_worker = CURTCommands.get_worker(
             full_domain_name + "/voice/text_to_speech_service/online_voice_generation"
@@ -1441,16 +1481,18 @@ def listen():
         voice_generation_worker = CURTCommands.get_worker(
             full_domain_name + "/voice/text_to_speech_service/offline_voice_generation"
         )
-    CURTCommands.request(voice_input_worker, params=["pause"])
+    # CURTCommands.request(voice_input_worker, params=["pause"])
     voice_generation_handler = CURTCommands.request(
         voice_generation_worker, params=["notification_tone"]
     )
     generation_status = CURTCommands.get_result(voice_generation_handler)
     time.sleep(0.1)
-    CURTCommands.request(voice_input_worker, params=["resume"])
+    # CURTCommands.request(voice_input_worker, params=["resume"])
     time.sleep(0.05)
     speech = ""
     while speech == "":
+        if reset_all:
+            return
         voice_handler = CURTCommands.request(voice_input_worker, params=["get"])
         voice_processing_worker = None
         if voice_mode == "online":
@@ -1471,6 +1513,7 @@ def listen():
             speech = speech_result["dataValue"]["data"]
             if speech is None:
                 speech = ""
+        time.sleep(0.1)
     return True, speech
 
 
@@ -1932,6 +1975,7 @@ def streaming_func():
 
 
 def reset_modules():
+    global reset_all
     global vision_initialized
     global voice_initialized
     global nlp_initialized
@@ -1944,6 +1988,8 @@ def reset_modules():
     global drawing_modes
     global spatial_face_detection
     global spatial_object_detection
+    logging.warning("------------RESETTING MODULES-------------")
+    reset_all = True
     vision_initialized = False
     spatial_face_detection = False
     spatial_object_detection = False
@@ -1993,6 +2039,20 @@ def reset_modules():
             {"reset": True},
         )
     current_camera = ""
+
+    webcam_microphone_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/live_input"
+    )
+    if webcam_microphone_worker is not None:
+        voice_handler = CURTCommands.request(
+            webcam_microphone_worker, params=["release"]
+        )
+
+    respeaker_worker = CURTCommands.get_worker(
+        full_domain_name + "/voice/voice_input_service/respeaker_input"
+    )
+    if respeaker_worker is not None:
+        voice_handler = CURTCommands.request(respeaker_worker, params=["release"])
     return True
 
 

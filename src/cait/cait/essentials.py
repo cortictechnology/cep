@@ -37,6 +37,7 @@ def get_nlp_models():
     model_list = core.get_nlp_models()
     return {"models": model_list}
 
+
 def get_usb_devices():
     """Get a list of connected usb device
 
@@ -91,6 +92,7 @@ def initialize_component(
     account="default",
     processor="local",
     language="english",
+    device="",
     from_web=False,
 ):
     """Initalization function for different components
@@ -107,7 +109,7 @@ def initialize_component(
     if component_name == "vision":
         success, msg = core.initialize_vision(processor, mode, from_web=from_web)
     elif component_name == "voice":
-        success, msg = core.initialize_voice(mode, account, language)
+        success, msg = core.initialize_voice(mode, account, language, device)
     elif component_name == "nlp":
         success, msg = core.initialize_nlp(mode)
     elif component_name == "control":
@@ -240,6 +242,7 @@ def draw_detected_objects(objects, from_web=False):
     else:
         core.draw_detected_objects(objects[0], objects[1], from_web=from_web)
 
+
 def draw_classified_image(names, from_web=False):
     """Wrapper function to draw image category of camera scene
     Parameters:
@@ -247,9 +250,7 @@ def draw_classified_image(names, from_web=False):
 
     """
     if isinstance(names, dict):
-        core.draw_classified_image(
-            names['names'], from_web=from_web
-        )
+        core.draw_classified_image(names["names"], from_web=from_web)
     else:
         core.draw_classified_image(names, from_web=from_web)
 
@@ -503,6 +504,7 @@ def say(text):
 
     return success
 
+
 def create_file_list(directory_path):
     """Read all the files in a directory and return a list
 
@@ -517,11 +519,11 @@ def create_file_list(directory_path):
 
     file_list = core.create_file_list(directory_path)
 
-    return {'file_list': file_list}
+    return {"file_list": file_list}
 
 
 def play_audio(file_path):
-    """Play an audio file 
+    """Play an audio file
 
     Parameters:
         file_path (string): Path to the audio file.

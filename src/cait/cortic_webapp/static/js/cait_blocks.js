@@ -339,12 +339,12 @@ Blockly.defineBlocksWithJsonArray([
       },
       {
         "type": "input_dummy",
-        "name": "params",
+        "name": "microphones",
         "align": "CENTRE"
       },
       {
         "type": "input_dummy",
-        "name": "cloud_accounts",
+        "name": "params",
         "align": "CENTRE"
       },
       {
@@ -352,6 +352,7 @@ Blockly.defineBlocksWithJsonArray([
         "name": "ending",
         "text": ""
       },
+
       {
         "type": "field_dropdown",
         "name": "language",
@@ -372,7 +373,7 @@ Blockly.defineBlocksWithJsonArray([
       }
 
     ],
-    "extensions": ["dynamic_voice_mode_extension", "dynamic_cloud_accounts_extension"],
+    "extensions": ["dynamic_voice_mode_extension", "dynamic_microphones_extension"],
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#019191",
@@ -1431,12 +1432,32 @@ Blockly.Extensions.register('dynamic_cloud_accounts_extension',
           return options;
         }), 'accounts');
     if (cloud_accounts.length < 1 || this.getInput('voice_mode').fieldRow[1].value_ == "on device") {
-      this.getInput("cloud_accounts").setVisible(false);
+      //this.getInput("cloud_accounts").setVisible(false);
       this.getInput("ending").setVisible(false);
       this.getField("language").setVisible(false);
     }
+  });
 
-
+Blockly.Extensions.register('dynamic_microphones_extension',
+  function () {
+    this.getInput('microphones')
+      .appendField(new Blockly.FieldDropdown(
+        function () {
+          var options = [];
+          if (microphones.length > 0) {
+            for (i in microphones) {
+              options.push([microphones[i]['index'] + ": " + microphones[i]['device'], microphones[i]['index'] + ": " + microphones[i]['device']])
+            }
+          }
+          else {
+            options.push(['none', 'none']);
+          }
+          return options;
+        }), 'avail_microphones');
+    if (cloud_accounts.length < 1 || this.getInput('voice_mode').fieldRow[1].value_ == "on device") {
+      this.getInput("ending").setVisible(false);
+      this.getField("language").setVisible(false);
+    }
   });
 
 Blockly.Extensions.register('dynamic_model_list_extension',
@@ -1878,21 +1899,21 @@ Blockly.Python['add_pipeline_node'] = function (block) {
 
 Blockly.JavaScript['init_voice'] = function (block) {
   var dropdown_mode = block.getFieldValue('mode');
-  var dropdown_account = block.getFieldValue('accounts');
+  var dropdown_microphone = block.getFieldValue('avail_microphones');
   var dropdown_langauage = block.getFieldValue('language');
-  var code = "await cait_init_voice('" + dropdown_mode + "', '" + dropdown_account + "', '" + dropdown_langauage + "');\n";
+  var code = "await cait_init_voice('" + dropdown_mode + "', '" + "google_cloud" + "', '" + dropdown_langauage + "', '" + dropdown_microphone + "');\n";
   return code;
 };
 
 Blockly.Python['init_voice'] = function (block) {
   var dropdown_mode = block.getFieldValue('mode');
-  var dropdown_account = block.getFieldValue('accounts');
+  var dropdown_microphone = block.getFieldValue('avail_microphones');
   var dropdown_langauage = block.getFieldValue('language');
   if (dropdown_mode == "online") {
-    var code = "cait.essentials.initialize_component('voice', mode='online', account='" + dropdown_account + "', language='" + dropdown_langauage + "')\n";
+    var code = "cait.essentials.initialize_component('voice', mode='online', account='" + "google_cloud" + "', language='" + dropdown_langauage + "', device='" + dropdown_microphone + "')\n";
   }
   else {
-    var code = "cait.essentials.initialize_component('voice', mode='on_devie')\n";
+    var code = "cait.essentials.initialize_component('voice', mode='on_devie', device='" + dropdown_microphone + "')\n";
   }
   return code;
 };

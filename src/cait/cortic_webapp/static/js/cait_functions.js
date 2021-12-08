@@ -422,7 +422,7 @@ async function cait_control_motor_group(operation_list) {
 var loader_displayed = false;
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-async function cait_init(component_name, mode = "online", processor = "local", account = "default", language = "english") {
+async function cait_init(component_name, mode = "online", processor = "local", account = "default", language = "english", device = '') {
   var retry_count = 0;
   while (!cait_system_up) {
     console.log("curt not started");
@@ -447,10 +447,10 @@ async function cait_init(component_name, mode = "online", processor = "local", a
     document.getElementById("loading_text").innerHTML = "Initializing " + component_name + " component...";
     var res;
     if (typeof (mode) == "object") {
-      res = await ajax_post("/initialize_component", { 'component_name': component_name, 'mode': JSON.stringify(mode), 'processor': processor, 'account': account, 'language': language });
+      res = await ajax_post("/initialize_component", { 'component_name': component_name, 'mode': JSON.stringify(mode), 'processor': processor, 'account': account, 'language': language, 'device': device });
     }
     else {
-      res = await ajax_post("/initialize_component", { 'component_name': component_name, 'mode': mode, 'processor': processor, 'account': account, 'language': language });
+      res = await ajax_post("/initialize_component", { 'component_name': component_name, 'mode': mode, 'processor': processor, 'account': account, 'language': language, 'device': device });
     }
     loader.style.display = "none";
     if (res['success'] == false) {
@@ -488,8 +488,8 @@ async function cait_init_vision(mode, processor) {
   stopStreaming = false;
 }
 
-async function cait_init_voice(mode, account, language) {
-  await cait_init("voice", mode, "local", account, language);
+async function cait_init_voice(mode, account, language, device) {
+  await cait_init("voice", mode, "local", account, language, device);
 }
 
 async function cait_init_nlp(mode) {
