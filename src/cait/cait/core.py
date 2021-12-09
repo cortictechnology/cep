@@ -42,12 +42,13 @@ camera_img = None
 
 full_domain_name = socket.getfqdn()
 
-device_manager = DeviceManager()
-
 logging.getLogger().setLevel(logging.WARNING)
 
 logging.warning("*********Initializing CURT Command Interface*********")
 broker_address = CURTCommands.initialize()
+
+logging.warning("*********Creating Device Manager*********")
+device_manager = DeviceManager()
 
 streaming_channel = "cait/output/" + os.uname()[1].lower() + "/displayFrame"
 streaming_client = mqtt.Client()
