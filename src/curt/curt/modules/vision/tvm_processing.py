@@ -5,6 +5,7 @@ Written by Michael Ng <michaelng@cortic.ca>, 2021
 """
 
 import os
+import shutil
 import tvm
 from tvm.contrib import graph_runtime
 import numpy as np
@@ -12,19 +13,21 @@ from curt.modules.vision.base_vision_processing import BaseVisionProcessing
 import logging
 import errno
 
+
 def load_tvm_module(model_lib):
     try:
         loaded_lib = tvm.runtime.load_module(
-                os.path.dirname(os.path.realpath(__file__))
-                + "/../../../models/modules/vision/platforms/rpi32/"
-                + model_lib
-            )
+            os.path.dirname(os.path.realpath(__file__))
+            + "/../../../models/modules/vision/platforms/rpi32/"
+            + model_lib
+        )
         return loaded_lib
     except OSError as exc:
-            if exc.errno == errno.EEXIST:
-               return errno.EEXIST
-            else:
-                return None
+        if exc.errno == errno.EEXIST:
+            return errno.EEXIST
+        else:
+            return None
+
 
 class TVMProcessing(BaseVisionProcessing):
     def __init__(
@@ -57,9 +60,11 @@ class TVMProcessing(BaseVisionProcessing):
         while loaded_lib == errno.EEXIST:
             logging.warning("Temp dir already exist, removing existing temp dir")
             dir_name = model_lib.replace(".tar", "")
-            os.rmdir(os.path.dirname(os.path.realpath(__file__)) 
-                     + "/../../../models/modules/vision/platforms/rpi32/" 
-                     + dir_name)
+            shutil.rmtree(
+                os.path.dirname(os.path.realpath(__file__))
+                + "/../../../models/modules/vision/platforms/rpi32/"
+                + dir_name
+            )
             logging.warning("Temp dir removed, reloading model lib now")
             loaded_lib = load_tvm_module(model_lib)
             load_count += 1

@@ -19,6 +19,7 @@ from flask_login import (
 )
 from urllib.parse import urlparse
 from io import BytesIO
+import platform
 import time
 import base64
 import nbformat as nbf
@@ -142,6 +143,12 @@ def setup():
 @application.route("/prev_setup")
 def prev_setup():
     return render_template("setup.html")
+
+
+@application.route("/get_hostname", methods=["GET"])
+def get_hostname():
+    result = {"hostname": platform.node()}
+    return jsonify(result)
 
 
 @application.route("/isconnected", methods=["GET"])
@@ -367,7 +374,7 @@ def testspeaker():
 def testmicrophone():
     data = request.get_json()
     device = data["device"]
-    index = int(device[0:device.find(":")])
+    index = int(device[0 : device.find(":")])
     RESPEAKER_RATE = 16000
     RESPEAKER_CHANNELS = 1
     if device.find("seeed") != -1:
