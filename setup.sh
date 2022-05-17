@@ -32,7 +32,7 @@ sudo touch /opt/accounts
 sudo npm install -g configurable-http-proxy
 sudo pip3 install notebook
 sudo pip3 install jupyterhub
-cp -R setup_scripts/homeassistant /home/pi
+cp -R setup_scripts/homeassistant "/home/$USER"
 sudo cp setup_scripts/curt_containers.service /etc/systemd/system
 sudo cp setup_scripts/cait_webapp.service /etc/systemd/system
 sudo cp setup_scripts/start_curt_containers.sh /opt

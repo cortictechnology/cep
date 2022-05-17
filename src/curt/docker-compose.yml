@@ -16,7 +16,7 @@ services:
         environment:
         - TZ=America/Vancouver
         volumes:
-        - /home/pi/homeassistant/config/:/config
+        - /home/${USERNAME}/homeassistant/config/:/config
 
     curt_vision:
         network_mode: "host"

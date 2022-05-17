@@ -567,10 +567,11 @@ def signup():
     g_out = os.system("sudo usermod -a -G cait " + username)
     result = {"result": out}
     result = jsonify(result)
+    current_username = os.getenv("USER")
     if out == 0:
         os.system("sudo mkdir /home/" + username + "/cait_workspace")
         os.system(
-            "sudo cp -R /home/pi/cait_workspace/*.cait /home/"
+            "sudo cp -R /home/" + current_username + "/cait_workspace/*.cait /home/"
             + username
             + "/cait_workspace/"
         )
