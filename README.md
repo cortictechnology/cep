@@ -69,7 +69,7 @@ If you see this message, you’ll need to run the installation script again afte
 1. Make sure your Raspberry Pi device is connected to the Local Area Network (LAN).
 2. On a computer connected to the same LAN, go to ``http://<raspberry_pi_hostname>.local/setup`` on your browser and follow the instruction to complete the setup process. The Raspberry Pi device will reboot itself.
 3. After the setup process completes, you can access the visual programming interface at ``http://<raspberry_pi_hostname>.local/programming``. 
-4. You can use the link at the bottom of the login page to create a new local account or use the default ```pi``` account to sign in.
+4. You can use the link at the bottom of the login page to create a new local account.
 
 You can click on the ``Load`` icon to open any sample project with the ``.cait`` extension in the ``examples`` folder.
 
